@@ -20,11 +20,13 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 ## 3. Variaveis de Ambiente
 - `VITE_API_BASE_URL`: URL base da API backend
 - Fallback atual se ausente: `http://localhost:3000`
+- Arquivo de referencia: `.env.example`
 
 ## 4. Arquitetura de Frontend
 - Entrada: `src/main.tsx`
 - Composicao global: `src/App.tsx`
   - `QueryClientProvider`
+  - `ThemeProvider` (`next-themes`)
   - `AuthProvider`
   - `TooltipProvider`
   - Toasters (`Toaster` e `Sonner`)
@@ -132,12 +134,15 @@ Tela: `src/pages/DashboardPage.tsx`
 - Dashboard:
   - cache local de valor por emissao: `zera_dashboard_valores_v1`
   - snapshot local de stats: `zera_dashboard_snapshot_v1`
+  - composicao progressiva: render imediato de snapshot + enriquecimento em background
 
 ## 10. UI e Design System
 - Base: shadcn/ui + Radix
 - Tokens e tema: `src/index.css`
 - Tailwind: `tailwind.config.ts`
 - Alias: `@ -> src`
+- Tema claro/escuro ativo via `next-themes`
+- Botao de alternancia no header: `src/components/ThemeToggle.tsx`
 - Ajustes recentes de layout no detalhe de NFSe para evitar overflow horizontal
 
 ## 11. Testes e Qualidade
@@ -145,6 +150,7 @@ Tela: `src/pages/DashboardPage.tsx`
 - Setup: `src/test/setup.ts`
 - Cobertura atual: teste exemplo
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
+- `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
 
 ## 12. Riscos Tecnicos Atuais
 - Gargalo principal percebido: endpoint `/nfse` do backend pode levar ~8s (API local + MongoDB Atlas)
@@ -183,5 +189,4 @@ Checklist por commit:
 ## 16. Rastreabilidade de Atualizacao
 - Ultima atualizacao: 2026-02-13
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: alinhamento completo front <-> Swagger + otimizacoes de dashboard + ajustes de UX detalhamento NFSe
-
+- Tipo de atualizacao: alinhamento completo front <-> Swagger + otimizacoes de dashboard (snapshot/progressivo) + tema escuro + higiene de ambiente (`.env.example`/`.gitignore`)
