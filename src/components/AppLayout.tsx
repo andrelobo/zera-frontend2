@@ -11,6 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -65,7 +66,7 @@ function AppSidebar() {
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sidebar-accent">
                 <User className="h-3.5 w-3.5" />
               </div>
-              <span className="flex-1 text-left truncate">{user?.name || 'Usuário'}</span>
+              <span className="flex-1 text-left truncate">{user?.name || user?.email || 'Usuário'}</span>
               <ChevronDown className="h-3.5 w-3.5 opacity-50" />
             </button>
           </DropdownMenuTrigger>
@@ -91,6 +92,9 @@ const AppLayout = () => {
         <div className="flex flex-1 flex-col overflow-hidden">
           <header className="flex h-14 items-center border-b px-4 lg:px-6">
             <SidebarTrigger />
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
             <Outlet />

@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { roleLabel } from '@/lib/roles';
 
 const UsersPage = () => {
   const navigate = useNavigate();
@@ -58,10 +59,10 @@ const UsersPage = () => {
             <TableBody>
               {users.map(u => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
+                  <TableCell className="font-medium">{u.name || '—'}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant={u.role === 'ADMIN' ? 'default' : 'secondary'}>{u.role}</Badge>
+                    <Badge variant={u.role === 'admin' || u.role === 'ADMIN' ? 'default' : 'secondary'}>{roleLabel(u.role)}</Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(u.createdAt), 'dd/MM/yyyy')}
@@ -78,7 +79,7 @@ const UsersPage = () => {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
-                            <AlertDialogDescription>O usuário "{u.name}" será removido permanentemente.</AlertDialogDescription>
+                            <AlertDialogDescription>O usuário "{u.name || u.email}" será removido permanentemente.</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>

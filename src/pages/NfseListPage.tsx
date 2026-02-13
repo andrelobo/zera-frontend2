@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { nfseApi } from '@/services/api';
 import StatusBadge from '@/components/StatusBadge';
@@ -7,12 +7,13 @@ import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
+import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
+import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 
 const NfseListPage = () => {
   const navigate = useNavigate();
@@ -27,6 +28,21 @@ const NfseListPage = () => {
     queryKey: ['nfse', page, status, provider],
     queryFn: () => nfseApi.list({ page, limit, status, provider, sort: 'createdAt', order: 'DESC' }),
   });
+
+  const items = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const providerDetails = useQueries({
+    queries: items.map((nfse) => ({
+      queryKey: ['nfse-provider-list', nfse.id],
+      queryFn: () => nfseApi.providerResponse(nfse.id),
+      staleTime: 60_000,
+      retry: 0,
+    })),
+  });
+
+  const inferredById = Object.fromEntries(
+    items.map((nfse, idx) => [nfse.id, inferNfseDataFromProvider(providerDetails[idx]?.data)]),
+  );
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -47,9 +63,6 @@ const NfseListPage = () => {
 
   if (isLoading) return <LoadingState />;
   if (isError) return <ErrorState onRetry={() => refetch()} />;
-
-  const items = data?.data || [];
-  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -83,6 +96,7 @@ const NfseListPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Providers</SelectItem>
+            <SelectItem value="PLUGNOTAS">PlugNotas</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
             <SelectItem value="MOCK">Mock</SelectItem>
           </SelectContent>
@@ -113,11 +127,15 @@ const NfseListPage = () => {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/nfse/${nfse.id}`)}
                   >
-                    <TableCell className="font-medium">{nfse.numero || '—'}</TableCell>
+                    <TableCell className="font-medium">{nfse.numero || inferredById[nfse.id]?.numeroNfse || '—'}</TableCell>
                     <TableCell><StatusBadge status={nfse.status} /></TableCell>
-                    <TableCell className="max-w-[200px] truncate">{nfse.tomadorRazaoSocial || nfse.tomadorCnpjCpf || '—'}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {getNfseTomadorNome(nfse) !== '—'
+                        ? getNfseTomadorNome(nfse)
+                        : (inferredById[nfse.id]?.tomadorRazaoSocial || inferredById[nfse.id]?.tomadorCpfCnpj || getNfseTomadorDocumento(nfse))}
+                    </TableCell>
                     <TableCell className="text-right font-mono">
-                      {nfse.valorServico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      {(getNfseValor(nfse) > 0 ? getNfseValor(nfse) : (inferredById[nfse.id]?.valor || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </TableCell>
                     <TableCell className="text-xs uppercase text-muted-foreground">{nfse.provider}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">

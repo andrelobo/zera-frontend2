@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import type { CreateUserRequest } from '@/types/api';
+import type { CreateUserRequest, UserRole } from '@/types/api';
 import LoadingState from '@/components/LoadingState';
 
 const UserFormPage = () => {
@@ -25,12 +25,18 @@ const UserFormPage = () => {
   });
 
   const [form, setForm] = useState<CreateUserRequest>({
-    name: '', email: '', password: '', role: 'OPERATOR',
+    name: '', email: '', password: '', role: 'user', status: 'active',
   });
 
   useEffect(() => {
     if (existing) {
-      setForm({ name: existing.name, email: existing.email, password: '', role: existing.role });
+      setForm({
+        name: existing.name || '',
+        email: existing.email,
+        password: '',
+        role: existing.role,
+        status: existing.status || 'active',
+      });
     }
   }, [existing]);
 
@@ -78,11 +84,22 @@ const UserFormPage = () => {
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select value={form.role} onValueChange={v => setForm(p => ({ ...p, role: v as 'ADMIN' | 'OPERATOR' }))}>
+              <Select value={form.role || 'user'} onValueChange={v => setForm(p => ({ ...p, role: v as UserRole }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OPERATOR">Operador</SelectItem>
-                  <SelectItem value="ADMIN">Administrador</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="manager">Gestor</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={form.status || 'active'} onValueChange={v => setForm(p => ({ ...p, status: v as 'active' | 'inactive' }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>

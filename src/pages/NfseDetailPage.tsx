@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { nfseApi } from '@/services/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingState from '@/components/LoadingState';
@@ -10,11 +10,47 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
+import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+
+const first = (value: unknown): Record<string, unknown> | null => {
+  if (Array.isArray(value)) {
+    const item = value[0];
+    return item && typeof item === 'object' ? (item as Record<string, unknown>) : null;
+  }
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
+};
+
+const readFromRawProvider = (raw: unknown) => {
+  const root = first(raw);
+  if (!root) return {};
+
+  const retorno = first(root.retorno);
+  const tomador = first(root.tomador);
+  const servico = first(root.servico);
+  const valorObj = first(servico?.valor);
+
+  const numero = (retorno?.numeroNfse ?? root.numeroNfse) as string | number | undefined;
+  const tomadorNome = tomador?.razaoSocial as string | undefined;
+  const tomadorDoc = tomador?.cpfCnpj as string | undefined;
+  const descricao = servico?.discriminacao as string | undefined;
+  const codigo = servico?.codigo as string | undefined;
+  const valorRaw = valorObj?.servico as string | number | undefined;
+  const valor = typeof valorRaw === 'number' ? valorRaw : (typeof valorRaw === 'string' ? Number(valorRaw) : undefined);
+
+  return {
+    numeroNfse: typeof numero === 'number' ? String(numero) : numero,
+    tomadorRazaoSocial: tomadorNome,
+    tomadorCpfCnpj: tomadorDoc,
+    descricao,
+    codigoServico: codigo,
+    valor: Number.isFinite(valor as number) ? valor : undefined,
+  };
+};
 
 const NfseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data: nfse, isLoading, isError, refetch } = useQuery({
     queryKey: ['nfse', id],
@@ -28,7 +64,7 @@ const NfseDetailPage = () => {
     enabled: !!id,
   });
 
-  const { data: providerResp } = useQuery({
+  const { data: providerResp, isLoading: isProviderLoading, isError: isProviderError } = useQuery({
     queryKey: ['nfse-provider', id],
     queryFn: () => nfseApi.providerResponse(id!),
     enabled: !!id,
@@ -36,8 +72,8 @@ const NfseDetailPage = () => {
 
   const syncMutation = useMutation({
     mutationFn: () => nfseApi.syncArtifacts(id!),
-    onSuccess: () => {
-      toast({ title: 'Sincronização iniciada', description: 'Artifacts serão atualizados em breve.' });
+    onSuccess: (result) => {
+      toast({ title: 'Sincronização de artifacts', description: result.synced ? 'Artifacts sincronizados com sucesso.' : `Nenhuma alteração (${result.reason}).` });
       refetchArtifacts();
     },
   });
@@ -58,6 +94,14 @@ const NfseDetailPage = () => {
 
   if (isLoading) return <LoadingState />;
   if (isError || !nfse) return <ErrorState onRetry={() => refetch()} />;
+  const inferred = inferNfseDataFromProvider(providerResp);
+  const rawInferred = readFromRawProvider(providerResp?.raw);
+  const numeroNfse = nfse.numero || rawInferred.numeroNfse || inferred.numeroNfse;
+  const descricao = getNfseDescricao(nfse) !== '—' ? getNfseDescricao(nfse) : rawInferred.descricao || inferred.descricao || '—';
+  const valor = getNfseValor(nfse) > 0 ? getNfseValor(nfse) : rawInferred.valor || inferred.valor || 0;
+  const codigoServico = getNfseCodigoServico(nfse) !== '—' ? getNfseCodigoServico(nfse) : rawInferred.codigoServico || inferred.codigoServico || '—';
+  const tomador = getNfseTomadorNome(nfse) !== '—' ? getNfseTomadorNome(nfse) : rawInferred.tomadorRazaoSocial || inferred.tomadorRazaoSocial || '—';
+  const tomadorDoc = getNfseTomadorDocumento(nfse) !== '—' ? getNfseTomadorDocumento(nfse) : rawInferred.tomadorCpfCnpj || inferred.tomadorCpfCnpj || '—';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -67,7 +111,7 @@ const NfseDetailPage = () => {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">
-            NFSe {nfse.numero ? `#${nfse.numero}` : nfse.id.slice(0, 8)}
+            NFSe {numeroNfse ? `#${numeroNfse}` : nfse.id.slice(0, 8)}
           </h1>
           <p className="text-sm text-muted-foreground">
             Criada em {format(new Date(nfse.createdAt), 'dd/MM/yyyy HH:mm:ss')}
@@ -76,25 +120,25 @@ const NfseDetailPage = () => {
         <StatusBadge status={nfse.status} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 min-w-0">
         {/* Dados */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader><CardTitle className="text-sm">Dados da Emissão</CardTitle></CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <Row label="Descrição" value={nfse.descricaoServico} />
-            <Row label="Valor" value={nfse.valorServico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+          <CardContent className="space-y-3 text-sm overflow-hidden">
+            <Row label="Descrição" value={descricao} />
+            <Row label="Valor" value={valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
             <Row label="Alíquota ISS" value={nfse.aliquotaIss ? `${nfse.aliquotaIss}%` : '—'} />
             <Row label="Valor ISS" value={nfse.valorIss?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || '—'} />
-            <Row label="Cód. Serviço" value={nfse.codigoServico || '—'} />
+            <Row label="Cód. Serviço" value={codigoServico} />
             <Row label="Provider" value={nfse.provider} />
-            <Row label="Tomador" value={nfse.tomadorRazaoSocial || '—'} />
-            <Row label="CPF/CNPJ Tomador" value={nfse.tomadorCnpjCpf || '—'} />
+            <Row label="Tomador" value={tomador} />
+            <Row label="CPF/CNPJ Tomador" value={tomadorDoc} />
           </CardContent>
         </Card>
 
         {/* Erro */}
         {(nfse.status === 'ERROR' || nfse.status === 'REJECTED') && (
-          <Card className="border-destructive/30">
+          <Card className="border-destructive/30 min-w-0">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-4 w-4" /> Erro
@@ -109,10 +153,10 @@ const NfseDetailPage = () => {
 
         {/* Provider Response */}
         {providerResp && (
-          <Card>
+          <Card className="min-w-0">
             <CardHeader><CardTitle className="text-sm">Resposta do Provider</CardTitle></CardHeader>
             <CardContent>
-              <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-60 scrollbar-thin">
+              <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-60 scrollbar-thin whitespace-pre-wrap break-words">
                 {JSON.stringify(providerResp.raw, null, 2)}
               </pre>
               {providerResp.receivedAt && (
@@ -120,6 +164,16 @@ const NfseDetailPage = () => {
                   Recebida em {format(new Date(providerResp.receivedAt), 'dd/MM/yyyy HH:mm:ss')}
                 </p>
               )}
+            </CardContent>
+          </Card>
+        )}
+        {!providerResp && (
+          <Card className="min-w-0">
+            <CardHeader><CardTitle className="text-sm">Resposta do Provider</CardTitle></CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {isProviderLoading ? 'Carregando dados fiscais completos...' : null}
+              {isProviderError ? 'Não foi possível carregar provider-response para esta emissão.' : null}
+              {!isProviderLoading && !isProviderError ? 'Sem provider-response disponível para esta emissão.' : null}
             </CardContent>
           </Card>
         )}
@@ -155,17 +209,18 @@ const NfseDetailPage = () => {
               </Button>
             </div>
 
-            {/* Artifact list */}
-            {artifacts && artifacts.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {artifacts.map(a => (
-                  <div key={a.id} className="flex items-center gap-2 text-xs text-muted-foreground py-1">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>{a.filename}</span>
-                    <Badge variant="outline" className="text-[10px]">{a.type}</Badge>
-                    <Badge variant="outline" className="text-[10px]">{a.source}</Badge>
-                  </div>
-                ))}
+            {artifacts && (
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>XML</span>
+                  <Badge variant="outline" className="text-[10px]">{artifacts.hasXml ? 'DISPONÍVEL' : 'AUSENTE'}</Badge>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>PDF</span>
+                  <Badge variant="outline" className="text-[10px]">{artifacts.hasPdf ? 'DISPONÍVEL' : 'AUSENTE'}</Badge>
+                </div>
               </div>
             )}
           </CardContent>
@@ -175,10 +230,10 @@ const NfseDetailPage = () => {
   );
 };
 
-const Row = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-right">{value}</span>
+const Row = ({ label, value }: { label: string; value: string | undefined }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-[140px_minmax(0,1fr)] items-start gap-1 sm:gap-3">
+    <span className="text-muted-foreground text-xs sm:text-sm">{label}</span>
+    <span className="font-medium text-left break-words whitespace-pre-wrap overflow-hidden min-w-0">{value || '—'}</span>
   </div>
 );
 

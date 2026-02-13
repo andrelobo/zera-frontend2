@@ -58,7 +58,7 @@ const EmpresasPage = () => {
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.razaoSocial}</TableCell>
                   <TableCell className="font-mono text-sm">{e.cnpj}</TableCell>
-                  <TableCell>{e.cidade ? `${e.cidade}/${e.uf}` : '—'}</TableCell>
+                  <TableCell>{(e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade) ? `${e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade}/${e.uf || e.endereco?.uf || e.endereco?.estado || '—'}` : '—'}</TableCell>
                   <TableCell>{e.email || '—'}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">

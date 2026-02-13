@@ -21,55 +21,81 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
+  accessToken?: string;
+  access_token?: string;
 }
 
 export interface User {
   id: string;
   email: string;
-  name: string;
-  role: 'ADMIN' | 'OPERATOR';
+  name?: string;
+  role: UserRole;
+  status?: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
 }
+
+export type UserRole = 'admin' | 'manager' | 'user' | 'ADMIN' | 'OPERATOR';
 
 export interface CreateUserRequest {
   email: string;
   name: string;
   password: string;
-  role: 'ADMIN' | 'OPERATOR';
+  role?: UserRole;
+  status?: 'active' | 'inactive';
 }
 
 export interface UpdateUserRequest {
   email?: string;
   name?: string;
   password?: string;
-  role?: 'ADMIN' | 'OPERATOR';
+  role?: UserRole;
+  status?: 'active' | 'inactive';
 }
 
 // Empresa
 export interface Empresa {
   id: string;
+  _id?: string;
   razaoSocial: string;
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
-  endereco?: string;
+  endereco?: {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+    descricaoCidade?: string;
+    estado?: string;
+  };
   cidade?: string;
   uf?: string;
   cep?: string;
   telefone?: string;
+  fone?: string;
   email?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateEmpresaRequest {
-  razaoSocial: string;
+  razaoSocial?: string;
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
-  endereco?: string;
+  endereco?: string | {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+  };
   cidade?: string;
   uf?: string;
   cep?: string;
@@ -77,23 +103,51 @@ export interface CreateEmpresaRequest {
   email?: string;
 }
 
-export interface UpdateEmpresaRequest extends Partial<CreateEmpresaRequest> {}
+export type UpdateEmpresaRequest = Partial<CreateEmpresaRequest>;
 
 // NFSe
 export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELLED';
-export type NfseProvider = 'MANAUS' | 'MOCK';
+export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK';
+
+export interface NfseAddress {
+  logradouro?: string;
+  numero?: string;
+  bairro?: string;
+  municipio?: string;
+  uf?: string;
+  cep?: string;
+}
 
 export interface Nfse {
   id: string;
   numero?: string;
   status: NfseStatus;
-  provider: NfseProvider;
-  empresaId: string;
+  provider: NfseProvider | string;
+  externalId?: string;
+  empresaId?: string;
   empresa?: Empresa;
+  tomador?: {
+    cpfCnpj?: string;
+    razaoSocial?: string;
+    inscricaoMunicipal?: string;
+    endereco?: NfseAddress;
+  };
+  prestador?: {
+    cnpj?: string;
+    inscricaoMunicipal?: string;
+    razaoSocial?: string;
+  };
+  servico?: {
+    codigoNacional?: string;
+    codigoTributacao?: string;
+    codigoMunicipal?: string;
+    descricao?: string;
+    valor?: number;
+  };
   tomadorCnpjCpf?: string;
   tomadorRazaoSocial?: string;
-  descricaoServico: string;
-  valorServico: number;
+  descricaoServico?: string;
+  valorServico?: number;
   aliquotaIss?: number;
   valorIss?: number;
   codigoServico?: string;
@@ -104,13 +158,53 @@ export interface Nfse {
 }
 
 export interface EmitirNfseRequest {
-  empresaId: string;
-  tomadorCnpjCpf?: string;
-  tomadorRazaoSocial?: string;
-  descricaoServico: string;
-  valorServico: number;
-  aliquotaIss?: number;
-  codigoServico?: string;
+  prestador: {
+    cnpj: string;
+    inscricaoMunicipal?: string;
+    razaoSocial?: string;
+    regimeTributarioSn?: {
+      opSimpNac?: number;
+      regApTribSN?: number;
+      regEspTrib?: number;
+    };
+    endereco?: NfseAddress;
+  };
+  tomador: {
+    cpfCnpj: string;
+    razaoSocial: string;
+    inscricaoMunicipal?: string;
+    endereco?: NfseAddress;
+  };
+  servico: {
+    codigoNacional: string;
+    codigoTributacao?: string;
+    codigoMunicipal?: string;
+    descricao: string;
+    valor: number;
+    iss?: {
+      tipoTributacao?: number;
+      exigibilidade?: number;
+      retido?: boolean;
+      aliquota?: number;
+    };
+    tributacaoTotal?: {
+      federal?: number;
+      estadual?: number;
+      municipal?: number;
+    };
+  };
+  referenciaExterna: string;
+}
+
+export interface EmitirNfseResponse {
+  emissionId: string;
+  idempotentReplay: boolean;
+  result: {
+    protocol?: string;
+    status?: NfseStatus;
+    idNota?: string;
+    raw?: unknown;
+  };
 }
 
 export interface NfseArtifact {
@@ -124,9 +218,27 @@ export interface NfseArtifact {
 }
 
 export interface ProviderResponse {
+  id: string;
+  provider?: string;
+  externalId?: string | null;
+  status?: NfseStatus;
+  providerRequest?: unknown;
+  providerResponse?: unknown;
+  error?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   raw: unknown;
   protocol?: string;
   receivedAt: string;
+}
+
+export interface NfseArtifactsStatus {
+  id: string;
+  externalId?: string;
+  hasXml: boolean;
+  hasPdf: boolean;
+  status: NfseStatus;
+  updatedAt: string;
 }
 
 // Filters

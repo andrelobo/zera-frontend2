@@ -28,7 +28,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = useCallback(async () => {
     try {
       const me = await authApi.me();
-      setUser(me);
+      setUser({
+        ...me,
+        name: me.name || me.email,
+      });
     } catch {
       setUser(null);
       setToken(null);

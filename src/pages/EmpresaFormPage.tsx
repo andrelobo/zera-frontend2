@@ -8,8 +8,20 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import type { CreateEmpresaRequest } from '@/types/api';
 import LoadingState from '@/components/LoadingState';
+
+interface EmpresaFormData {
+  razaoSocial: string;
+  cnpj: string;
+  nomeFantasia: string;
+  inscricaoMunicipal: string;
+  endereco: string;
+  cidade: string;
+  uf: string;
+  cep: string;
+  telefone: string;
+  email: string;
+}
 
 const EmpresaFormPage = () => {
   const { id } = useParams();
@@ -23,7 +35,7 @@ const EmpresaFormPage = () => {
     enabled: isEdit,
   });
 
-  const [form, setForm] = useState<CreateEmpresaRequest>({
+  const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '',
     endereco: '', cidade: '', uf: '', cep: '', telefone: '', email: '',
   });
@@ -33,15 +45,27 @@ const EmpresaFormPage = () => {
       setForm({
         razaoSocial: existing.razaoSocial, cnpj: existing.cnpj,
         nomeFantasia: existing.nomeFantasia || '', inscricaoMunicipal: existing.inscricaoMunicipal || '',
-        endereco: existing.endereco || '', cidade: existing.cidade || '',
-        uf: existing.uf || '', cep: existing.cep || '',
-        telefone: existing.telefone || '', email: existing.email || '',
+        endereco: existing.endereco?.logradouro || '', cidade: existing.cidade || existing.endereco?.cidade || existing.endereco?.descricaoCidade || '',
+        uf: existing.uf || existing.endereco?.uf || existing.endereco?.estado || '', cep: existing.cep || existing.endereco?.cep || '',
+        telefone: existing.telefone || existing.fone || '', email: existing.email || '',
       });
     }
   }, [existing]);
 
   const mutation = useMutation({
-    mutationFn: () => isEdit ? empresasApi.update(id!, form) : empresasApi.create(form),
+    mutationFn: () => isEdit ? empresasApi.update(id!, {
+      razaoSocial: form.razaoSocial,
+      nomeFantasia: form.nomeFantasia,
+      inscricaoMunicipal: form.inscricaoMunicipal,
+      email: form.email,
+      telefone: form.telefone,
+      endereco: {
+        logradouro: form.endereco,
+        cidade: form.cidade,
+        uf: form.uf,
+        cep: form.cep,
+      },
+    }) : empresasApi.create({ cnpj: form.cnpj, razaoSocial: '' }),
     onSuccess: () => {
       toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
@@ -49,7 +73,7 @@ const EmpresaFormPage = () => {
     },
   });
 
-  const update = (key: keyof CreateEmpresaRequest, value: string) => {
+  const update = (key: keyof EmpresaFormData, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
@@ -70,11 +94,11 @@ const EmpresaFormPage = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Razão Social</Label>
-                <Input value={form.razaoSocial} onChange={e => update('razaoSocial', e.target.value)} required />
+                <Input value={form.razaoSocial} onChange={e => update('razaoSocial', e.target.value)} required={isEdit} disabled={!isEdit} />
               </div>
               <div className="space-y-2">
                 <Label>CNPJ</Label>
-                <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" />
+                <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" disabled={isEdit} />
               </div>
               <div className="space-y-2">
                 <Label>Nome Fantasia</Label>

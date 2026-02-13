@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { User, Mail, Shield, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { roleLabel } from '@/lib/roles';
 
 const MyAccountPage = () => {
   const { user, logout } = useAuth();
@@ -21,7 +22,7 @@ const MyAccountPage = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
               <User className="h-5 w-5 text-primary-foreground" />
             </div>
-            {user.name}
+            {user.name || user.email}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -31,8 +32,8 @@ const MyAccountPage = () => {
           </div>
           <div className="flex items-center gap-3">
             <Shield className="h-4 w-4 text-muted-foreground" />
-            <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
-              {user.role}
+            <Badge variant={user.role === 'admin' || user.role === 'ADMIN' ? 'default' : 'secondary'}>
+              {roleLabel(user.role)}
             </Badge>
           </div>
           <div className="flex items-center gap-3">

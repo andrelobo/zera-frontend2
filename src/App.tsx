@@ -17,6 +17,7 @@ import EmpresaFormPage from "@/pages/EmpresaFormPage";
 import UsersPage from "@/pages/UsersPage";
 import UserFormPage from "@/pages/UserFormPage";
 import NotFound from "@/pages/NotFound";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,37 +31,39 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/account" element={<MyAccountPage />} />
-              <Route path="/nfse" element={<NfseListPage />} />
-              <Route path="/nfse/nova" element={<NfseEmitPage />} />
-              <Route path="/nfse/:id" element={<NfseDetailPage />} />
-              <Route path="/empresas" element={<EmpresasPage />} />
-              <Route path="/empresas/nova" element={<EmpresaFormPage />} />
-              <Route path="/empresas/:id" element={<EmpresaFormPage />} />
-              <Route path="/users" element={<UsersPage />} />
-              <Route path="/users/novo" element={<UserFormPage />} />
-              <Route path="/users/:id" element={<UserFormPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/account" element={<MyAccountPage />} />
+                <Route path="/nfse" element={<NfseListPage />} />
+                <Route path="/nfse/nova" element={<NfseEmitPage />} />
+                <Route path="/nfse/:id" element={<NfseDetailPage />} />
+                <Route path="/empresas" element={<EmpresasPage />} />
+                <Route path="/empresas/nova" element={<EmpresaFormPage />} />
+                <Route path="/empresas/:id" element={<EmpresaFormPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/users/novo" element={<UserFormPage />} />
+                <Route path="/users/:id" element={<UserFormPage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
