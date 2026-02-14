@@ -64,6 +64,14 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## SPA refresh in production
+
+This app uses client-side routing. If refresh on routes like `/nfse/:id` returns 404, configure rewrite to `index.html`.
+
+- Netlify: `public/_redirects` already included.
+- Vercel: `vercel.json` already included.
+- No rewrite available: set `VITE_ROUTER_MODE=hash` and redeploy.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

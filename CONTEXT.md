@@ -2,12 +2,13 @@
 
 Documento canonico do projeto `zera-frontend2`.
 Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manutencao.
+Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica o `package.json`).
 
 ## 1. Identificacao do Projeto
 - Nome tecnico: `vite_react_shadcn_ts`
 - Dominio funcional: painel web para emissao e acompanhamento de NFSe (PlugNotas/NFS-e Nacional), com gestao de empresas e usuarios
 - Stack principal: React 18 + TypeScript + Vite + React Router + TanStack Query + Axios + Tailwind + shadcn/ui
-- Diretorio raiz do app: `zera-frontend2/`
+- Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
 
 ## 2. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -68,27 +69,30 @@ Comportamento global 401 (`src/lib/api.ts`):
 
 ## 7. Contratos de API (estado real)
 Fonte principal: Swagger `/docs-json` do backend local.
+Legenda de confianca:
+- `Confirmado no front`: comportamento verificado no codigo deste repositorio
+- `Depende de backend/Swagger`: contrato que exige validacao no backend em execucao
 
 ### 7.1 Auth
-- `POST /auth/login` -> retorna `accessToken`
-- `GET /auth/me` -> usuario com `role` (`admin|manager|user`) e `status` (`active|inactive`)
+- `POST /auth/login` -> retorna `accessToken` (`Confirmado no front`; formato final depende de backend/Swagger)
+- `GET /auth/me` -> usuario com `role` (`admin|manager|user`) e `status` (`active|inactive`) (`Confirmado no front`; valores finais dependem de backend/Swagger)
 
 ### 7.2 NFSe
-- `GET /nfse` retorna **resumo paginado**: `{ items, meta }`
-- `GET /nfse/:id` retorna **resumo** (sem dados fiscais completos)
+- `GET /nfse` retorna **resumo paginado**: `{ items, meta }` (`Confirmado no front`; shape final depende de backend/Swagger)
+- `GET /nfse/:id` retorna **resumo** (sem dados fiscais completos) (`Confirmado no front`; payload final depende de backend/Swagger)
 - Dados fiscais completos (numero, tomador, servico, valor) ficam em:
-  - `GET /nfse/:id/provider-response`
+  - `GET /nfse/:id/provider-response` (`Confirmado no front`; campos internos dependem de backend/provider)
 - Artifacts:
-  - `GET /nfse/:id/artifacts` -> `{ hasXml, hasPdf, ... }`
-  - downloads local/remoto por endpoints dedicados
+  - `GET /nfse/:id/artifacts` -> `{ hasXml, hasPdf, ... }` (`Confirmado no front`; shape final depende de backend/Swagger)
+  - downloads local/remoto por endpoints dedicados (`Confirmado no front`)
 
 ### 7.3 Empresas
-- `POST /empresas` cria por CNPJ (payload minimo: `{ cnpj }`)
-- `GET /empresas/cnpj/:cnpj` usado para buscar/preencher prestador
-- `PATCH /empresas/:id` aceita payload parcial (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `email`, `fone`, `endereco`)
+- `POST /empresas` cria por CNPJ (payload minimo: `{ cnpj }`) (`Confirmado no front`; validacao final depende de backend/Swagger)
+- `GET /empresas/cnpj/:cnpj` usado para buscar/preencher prestador (`Confirmado no front`)
+- `PATCH /empresas/:id` aceita payload parcial (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `email`, `fone`, `endereco`) (`Confirmado no front`; regra final depende de backend/Swagger)
 
 ### 7.4 Usuarios
-- Roles atuais da API: `admin | manager | user`
+- Roles atuais da API: `admin | manager | user` (`Confirmado no front`; fonte final depende de backend/Swagger)
 - Front faz mapeamento de roles antigas para compatibilidade
 
 ## 8. Fluxos Funcionais
@@ -187,6 +191,6 @@ Checklist por commit:
 3. Atualizar rastreabilidade
 
 ## 16. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-13
+- Ultima atualizacao: 2026-02-14
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: alinhamento completo front <-> Swagger + otimizacoes de dashboard (snapshot/progressivo) + tema escuro + higiene de ambiente (`.env.example`/`.gitignore`)
+- Tipo de atualizacao: clarificacao de escopo (raiz do app) + marcacao de confianca dos contratos (confirmado no front vs dependencia de backend/Swagger)
