@@ -22,7 +22,7 @@ const LoginPage = () => {
       const res = await authApi.login({ email, password });
       const token = res.accessToken || res.access_token;
       if (!token) return;
-      login(token);
+      await login(token);
       navigate('/');
     } catch {
       // Error handled by interceptor
