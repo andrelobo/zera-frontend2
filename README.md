@@ -1,81 +1,45 @@
-# Welcome to your Lovable project
+# ZERA Frontend
 
-## Project info
+Aplicação frontend do projeto ZERA, construída com React, TypeScript e Vite.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Requisitos
 
-## How can I edit this code?
+- Node.js 18+
+- npm 9+
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Rodando localmente
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Aplicação disponível em `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev`: inicia o servidor de desenvolvimento
+- `npm run build`: gera build de produção
+- `npm run build:dev`: gera build em modo desenvolvimento
+- `npm run preview`: executa preview local da build
+- `npm run lint`: executa lint
+- `npm run test`: executa testes uma vez
+- `npm run test:watch`: executa testes em modo watch
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Stack
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
+- React Router
+- TanStack Query
 - Tailwind CSS
+- shadcn/ui
 
-## How can I deploy this project?
+## Deploy e roteamento SPA
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Esta aplicação usa roteamento client-side. Em produção, configure rewrite para `index.html` para evitar 404 ao recarregar rotas internas.
 
-## SPA refresh in production
-
-This app uses client-side routing. If refresh on routes like `/nfse/:id` returns 404, configure rewrite to `index.html`.
-
-- Netlify: `public/_redirects` already included.
-- Vercel: `vercel.json` already included.
-- No rewrite available: set `VITE_ROUTER_MODE=hash` and redeploy.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Netlify: arquivo `public/_redirects`
+- Vercel: arquivo `vercel.json`
+- Sem suporte a rewrite: defina `VITE_ROUTER_MODE=hash`
