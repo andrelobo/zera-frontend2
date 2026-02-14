@@ -92,10 +92,10 @@ const NfseListPage = () => {
 
         <Select value={provider || 'all'} onValueChange={v => updateFilter('provider', v)}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Provider" />
+            <SelectValue placeholder="Provedor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos Providers</SelectItem>
+            <SelectItem value="all">Todos Provedores</SelectItem>
             <SelectItem value="PLUGNOTAS">PlugNotas</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
             <SelectItem value="MOCK">Mock</SelectItem>
@@ -116,7 +116,7 @@ const NfseListPage = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Tomador</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Provider</TableHead>
+                  <TableHead>Provedor</TableHead>
                   <TableHead>Data</TableHead>
                 </TableRow>
               </TableHeader>

@@ -19,12 +19,13 @@ const DASHBOARD_VALOR_CACHE_KEY = 'zera_dashboard_valores_v1';
 const DASHBOARD_SNAPSHOT_KEY = 'zera_dashboard_snapshot_v1';
 
 type DashboardValorCache = Record<string, { updatedAt: string; valor: number }>;
+type DashboardStatusDatum = { name: string; value: number; status?: string };
 type DashboardStatsSnapshot = {
   total: number;
   totalAuthorized: number;
   successRate: string;
   pending: number;
-  statusData: Array<{ name: string; value: number }>;
+  statusData: DashboardStatusDatum[];
   dailyData: Array<{ date: string; total: number; valor: number; dateLabel: string }>;
   savedAt: string;
 };
@@ -70,10 +71,25 @@ const STATUS_COLORS: Record<string, string> = {
   AUTHORIZED: 'hsl(142, 72%, 38%)',
   PENDING: 'hsl(38, 92%, 50%)',
   REJECTED: 'hsl(0, 72%, 51%)',
+  EJECTE: 'hsl(0, 72%, 51%)',
   ERROR: 'hsl(0, 62%, 45%)',
+  ERRORR: 'hsl(0, 62%, 45%)',
   PROCESSING: 'hsl(200, 90%, 48%)',
   CANCELLED: 'hsl(220, 10%, 60%)',
 };
+
+const STATUS_LABELS: Record<string, string> = {
+  AUTHORIZED: 'Autorizada',
+  PENDING: 'Pendente',
+  REJECTED: 'Rejeitada',
+  EJECTE: 'Rejeitada',
+  ERROR: 'Erro',
+  ERRORR: 'Erro',
+  PROCESSING: 'Processando',
+  CANCELLED: 'Cancelada',
+};
+
+const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
 
 const DashboardPage = () => {
   const queryClient = useQueryClient();
@@ -165,7 +181,11 @@ const DashboardPage = () => {
     items.forEach(n => {
       statusCounts[n.status] = (statusCounts[n.status] || 0) + 1;
     });
-    const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+    const statusData: DashboardStatusDatum[] = Object.entries(statusCounts).map(([status, value]) => ({
+      status,
+      name: getStatusLabel(status),
+      value,
+    }));
 
     const dailyMap: Record<string, { date: string; total: number; valor: number }> = {};
     for (let i = 0; i < period; i++) {
@@ -205,6 +225,16 @@ const DashboardPage = () => {
   };
 
   const effectiveStats = items.length ? stats : statsSnapshot;
+  const statusChartData = useMemo<DashboardStatusDatum[]>(() => {
+    return (effectiveStats?.statusData || []).map((entry) => {
+      const rawStatus = entry.status || entry.name;
+      return {
+        ...entry,
+        status: rawStatus,
+        name: getStatusLabel(rawStatus),
+      };
+    });
+  }, [effectiveStats?.statusData]);
   if (isLoading && !effectiveStats) return <LoadingState />;
   if (isError) return <ErrorState onRetry={() => refetch()} />;
 
@@ -240,11 +270,11 @@ const DashboardPage = () => {
             <CardTitle className="text-sm font-medium">Emissões por Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {(effectiveStats?.statusData.length || 0) > 0 ? (
+            {statusChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
-                    data={effectiveStats?.statusData || []}
+                    data={statusChartData}
                     cx="50%"
                     cy="50%"
                     innerRadius={55}
@@ -252,8 +282,8 @@ const DashboardPage = () => {
                     dataKey="value"
                     paddingAngle={3}
                   >
-                    {(effectiveStats?.statusData || []).map((entry) => (
-                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name] || '#ccc'} />
+                    {statusChartData.map((entry) => (
+                      <Cell key={entry.status || entry.name} fill={STATUS_COLORS[entry.status || ''] || '#ccc'} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number, name: string) => [value, name]} />

@@ -73,7 +73,7 @@ const NfseDetailPage = () => {
   const syncMutation = useMutation({
     mutationFn: () => nfseApi.syncArtifacts(id!),
     onSuccess: (result) => {
-      toast({ title: 'Sincronização de artifacts', description: result.synced ? 'Artifacts sincronizados com sucesso.' : `Nenhuma alteração (${result.reason}).` });
+      toast({ title: 'Sincronização de arquivos', description: result.synced ? 'Arquivos sincronizados com sucesso.' : `Nenhuma alteração (${result.reason}).` });
       refetchArtifacts();
     },
   });
@@ -130,7 +130,7 @@ const NfseDetailPage = () => {
             <Row label="Alíquota ISS" value={nfse.aliquotaIss ? `${nfse.aliquotaIss}%` : '—'} />
             <Row label="Valor ISS" value={nfse.valorIss?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || '—'} />
             <Row label="Cód. Serviço" value={codigoServico} />
-            <Row label="Provider" value={nfse.provider} />
+            <Row label="Provedor" value={nfse.provider} />
             <Row label="Tomador" value={tomador} />
             <Row label="CPF/CNPJ Tomador" value={tomadorDoc} />
           </CardContent>
@@ -151,10 +151,10 @@ const NfseDetailPage = () => {
           </Card>
         )}
 
-        {/* Provider Response */}
+        {/* Resposta do Provedor */}
         {providerResp && (
           <Card className="min-w-0">
-            <CardHeader><CardTitle className="text-sm">Resposta do Provider</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">Resposta do Provedor</CardTitle></CardHeader>
             <CardContent>
               <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-60 scrollbar-thin whitespace-pre-wrap break-words">
                 {JSON.stringify(providerResp.raw, null, 2)}
@@ -169,19 +169,19 @@ const NfseDetailPage = () => {
         )}
         {!providerResp && (
           <Card className="min-w-0">
-            <CardHeader><CardTitle className="text-sm">Resposta do Provider</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">Resposta do Provedor</CardTitle></CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {isProviderLoading ? 'Carregando dados fiscais completos...' : null}
-              {isProviderError ? 'Não foi possível carregar provider-response para esta emissão.' : null}
-              {!isProviderLoading && !isProviderError ? 'Sem provider-response disponível para esta emissão.' : null}
+              {isProviderError ? 'Não foi possível carregar a resposta do provedor para esta emissão.' : null}
+              {!isProviderLoading && !isProviderError ? 'Sem resposta do provedor disponível para esta emissão.' : null}
             </CardContent>
           </Card>
         )}
 
-        {/* Artifacts */}
+        {/* Arquivos */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">Artifacts</CardTitle>
+            <CardTitle className="text-sm">Arquivos</CardTitle>
             <Button
               variant="outline"
               size="sm"
@@ -189,7 +189,7 @@ const NfseDetailPage = () => {
               disabled={syncMutation.isPending}
             >
               <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
-              Sync
+              Sincronizar
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">

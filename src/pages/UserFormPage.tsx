@@ -83,7 +83,7 @@ const UserFormPage = () => {
               <Input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required={!isEdit} />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>Perfil</Label>
               <Select value={form.role || 'user'} onValueChange={v => setForm(p => ({ ...p, role: v as UserRole }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>

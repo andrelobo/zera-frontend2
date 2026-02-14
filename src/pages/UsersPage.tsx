@@ -51,7 +51,7 @@ const UsersPage = () => {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Perfil</TableHead>
                 <TableHead>Criado em</TableHead>
                 <TableHead className="w-24">Ações</TableHead>
               </TableRow>
