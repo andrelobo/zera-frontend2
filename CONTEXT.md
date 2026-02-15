@@ -31,7 +31,7 @@ Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica
   - `AuthProvider`
   - `TooltipProvider`
   - Toasters (`Toaster` e `Sonner`)
-  - `BrowserRouter`
+  - `BrowserRouter` ou `HashRouter` (controlado por `VITE_ROUTER_MODE`)
 - Layout autenticado: `src/components/AppLayout.tsx`
 - Guarda de rota: `src/components/ProtectedRoute.tsx`
 
@@ -62,6 +62,7 @@ Fonte: `src/contexts/AuthContext.tsx`
 - Login aceita `accessToken` (contrato atual) e fallback `access_token`
 - `refreshUser()` chama `/auth/me` e normaliza usuario (nome fallback para email)
 - `isAuthenticated` depende de `user` carregado
+- `login()` foi ajustado para fluxo assincrono: salva token e aguarda `refreshUser()` antes de concluir navegacao (evita necessidade de "2 tentativas" de login)
 
 Comportamento global 401 (`src/lib/api.ts`):
 - remove token
@@ -117,7 +118,7 @@ Tela: `src/pages/NfseDetailPage.tsx`
 
 - Usa `/nfse/:id` + `/nfse/:id/provider-response` + `/nfse/:id/artifacts`
 - Dados exibidos sao extraidos de `provider-response.raw` (fallback robusto para formatos array/obj/string)
-- Botao `Sync` chama `POST /nfse/:id/sync-artifacts`
+- Botao `Sincronizar` chama `POST /nfse/:id/sync-artifacts`
 
 ### 8.4 Dashboard
 Tela: `src/pages/DashboardPage.tsx`
@@ -148,6 +149,15 @@ Tela: `src/pages/DashboardPage.tsx`
 - Tema claro/escuro ativo via `next-themes`
 - Botao de alternancia no header: `src/components/ThemeToggle.tsx`
 - Ajustes recentes de layout no detalhe de NFSe para evitar overflow horizontal
+- Branding/metadados atualizados:
+  - titulo da aba: `ZERA`
+  - favicon temporario em `public/favicon.svg` (azul)
+  - `README.md` reescrito para contexto real do projeto
+- Removidas referencias ao Lovable no front:
+  - `index.html` (meta tags/titulo)
+  - `vite.config.ts` (remocao de `lovable-tagger`)
+  - `package.json` e `yarn.lock` (dependencia removida)
+- Traducoes de UI aplicadas em textos visiveis e acessibilidade (`aria-label`/`sr-only`) sem alterar contratos tecnicos
 
 ## 11. Testes e Qualidade
 - Vitest: `vitest.config.ts` (`jsdom`)
@@ -155,6 +165,7 @@ Tela: `src/pages/DashboardPage.tsx`
 - Cobertura atual: teste exemplo
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
+- Build de validacao executado com sucesso apos mudancas de hoje (`npm run build`)
 
 ## 12. Riscos Tecnicos Atuais
 - Gargalo principal percebido: endpoint `/nfse` do backend pode levar ~8s (API local + MongoDB Atlas)
@@ -193,4 +204,4 @@ Checklist por commit:
 ## 16. Rastreabilidade de Atualizacao
 - Ultima atualizacao: 2026-02-14
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: clarificacao de escopo (raiz do app) + marcacao de confianca dos contratos (confirmado no front vs dependencia de backend/Swagger)
+- Tipo de atualizacao: branding/metadados (remocao Lovable, titulo ZERA, favicon), traducao de UI, ajuste de autenticacao (login sem 2 tentativas) e validacao por build
