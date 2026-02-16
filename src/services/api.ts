@@ -1,9 +1,9 @@
 import api from '@/lib/api';
 import type {
   LoginRequest, LoginResponse, User, CreateUserRequest, UpdateUserRequest,
-  Empresa, CreateEmpresaRequest, UpdateEmpresaRequest,
+  Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
-  NfseFilters, PaginatedResponse,
+  NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
@@ -35,6 +35,8 @@ export const nfseApi = {
     api.get<Nfse>(`/nfse/${id}`).then(r => r.data),
   emitir: (data: EmitirNfseRequest) =>
     api.post<EmitirNfseResponse>('/nfse/emitir', data).then(r => r.data),
+  emitirQuick: (data: EmitirNfseQuickRequest) =>
+    api.post<EmitirNfseQuickResponse>('/nfse/quick', data).then(r => r.data),
   providerResponse: (id: string) =>
     api.get<Record<string, unknown>>(`/nfse/${id}/provider-response`).then(r => {
       const data = r.data;
@@ -88,6 +90,15 @@ export const empresasApi = {
     }).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
   delete: (id: string) =>
     api.delete(`/empresas/${id}`).then(r => r.data),
+  importCertificadoDigital: (data: ImportCertificadoDigitalRequest) => {
+    const formData = new FormData();
+    formData.append('cnpj', data.cnpj);
+    formData.append('senhaCertificado', data.senhaCertificado);
+    formData.append('file', data.file);
+    return api.post<ImportCertificadoDigitalResponse>('/empresas/certificado/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data);
+  },
 };
 
 // Users

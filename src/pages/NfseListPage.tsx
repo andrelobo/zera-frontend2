@@ -9,7 +9,7 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -68,9 +68,14 @@ const NfseListPage = () => {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Notas Fiscais</h1>
-        <Button onClick={() => navigate('/nfse/nova')}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Emissão
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/nfse/rapida')}>
+            <Zap className="mr-2 h-4 w-4" /> Emissão Rápida
+          </Button>
+          <Button onClick={() => navigate('/nfse/nova')}>
+            <Plus className="mr-2 h-4 w-4" /> Nova Emissão
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
