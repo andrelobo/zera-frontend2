@@ -37,13 +37,17 @@ export const nfseApi = {
     api.post<EmitirNfseResponse>('/nfse/emitir', data).then(r => r.data),
   emitirQuick: (data: EmitirNfseQuickRequest) =>
     api.post<EmitirNfseQuickResponse>('/nfse/quick', data).then(r => r.data),
-  servicosList: (input?: { q?: string; limit?: number; page?: number }) =>
+  servicosList: (
+    input?: { q?: string; limit?: number; page?: number },
+    options?: { skipGlobalErrorToast?: boolean },
+  ) =>
     api.get<{ items: ServicoCatalogItem[]; total: number }>('/nfse/servicos', {
       params: {
         q: input?.q?.trim() || undefined,
         limit: input?.limit,
         page: input?.page,
       },
+      skipGlobalErrorToast: options?.skipGlobalErrorToast,
     }).then(r => r.data),
   servicosAutocomplete: (input?: { q?: string; limit?: number }) =>
     api.get<{ items: ServicoCatalogItem[]; total: number }>('/nfse/servicos/autocomplete', {

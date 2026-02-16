@@ -2,6 +2,15 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    skipGlobalErrorToast?: boolean;
+  }
+  interface InternalAxiosRequestConfig {
+    skipGlobalErrorToast?: boolean;
+  }
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export const api = axios.create({
@@ -26,6 +35,7 @@ api.interceptors.response.use(
   (error: AxiosError<ApiError>) => {
     const data = error.response?.data;
     const status = error.response?.status;
+    const skipGlobalErrorToast = Boolean(error.config?.skipGlobalErrorToast);
 
     if (status === 401) {
       localStorage.removeItem('zera_token');
@@ -34,14 +44,15 @@ api.interceptors.response.use(
       }
     }
 
-    const message = data?.message || error.message || 'Erro inesperado';
-    const correlationId = data?.correlationId;
-
-    toast({
-      title: 'Erro',
-      description: correlationId ? `${message} (ID: ${correlationId})` : message,
-      variant: 'destructive',
-    });
+    if (!skipGlobalErrorToast) {
+      const message = data?.message || error.message || 'Erro inesperado';
+      const correlationId = data?.correlationId;
+      toast({
+        title: 'Erro',
+        description: correlationId ? `${message} (ID: ${correlationId})` : message,
+        variant: 'destructive',
+      });
+    }
 
     return Promise.reject(error);
   }

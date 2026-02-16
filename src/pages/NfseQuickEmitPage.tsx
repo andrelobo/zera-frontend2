@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Loader2, Send, ShieldAlert } from 'lucide-react';
 
@@ -57,13 +56,14 @@ const getApiError = (error: unknown): ApiError => {
 
 const NfseQuickEmitPage = () => {
   const navigate = useNavigate();
-  const [empresaId, setEmpresaId] = useState('');
   const [empresaSearch, setEmpresaSearch] = useState('');
+  const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [cpfTomador, setCpfTomador] = useState('');
   const [valorDigits, setValorDigits] = useState<string>('');
   const [codigoServico, setCodigoServico] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
+  const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<ApiError | null>(null);
   const [success, setSuccess] = useState<EmitirNfseQuickResponse | null>(null);
@@ -74,31 +74,45 @@ const NfseQuickEmitPage = () => {
   const codigoServicoClean = useMemo(() => codigoServico.replace(/\D/g, ''), [codigoServico]);
   const valorNumber = useMemo(() => Number(valorDigits || '0') / 100, [valorDigits]);
   const valorMasked = useMemo(() => formatCurrencyFromDigits(valorDigits), [valorDigits]);
-  const canSearchService = serviceSearch.trim().length >= 2;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setEmpresaSearchDebounced(empresaSearch), 250);
+    return () => clearTimeout(timer);
+  }, [empresaSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setServiceSearchDebounced(serviceSearch), 250);
+    return () => clearTimeout(timer);
+  }, [serviceSearch]);
+
+  const canSearchService = serviceSearchDebounced.trim().length >= 2;
   const { data: empresas = [], isLoading: empresasLoading } = useQuery({
     queryKey: ['empresas', 'quick-emit'],
     queryFn: empresasApi.list,
     staleTime: 60_000,
   });
-  const canSearchEmpresa = empresaSearch.trim().length >= 2;
+  const canSearchEmpresa = empresaSearchDebounced.trim().length >= 2;
   const filteredEmpresas = useMemo(() => {
     if (!canSearchEmpresa) return [];
-    const search = empresaSearch.trim().toLowerCase();
+    const search = empresaSearchDebounced.trim().toLowerCase();
     return empresas
       .filter((empresa) =>
         empresa.razaoSocial.toLowerCase().includes(search) ||
         empresa.cnpj.replace(/\D/g, '').includes(search.replace(/\D/g, '')),
       )
       .slice(0, 8);
-  }, [canSearchEmpresa, empresaSearch, empresas]);
+  }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
 
   const serviceQuery = useQuery({
-    queryKey: ['nfse-quick-service-autocomplete', serviceSearch],
+    queryKey: ['nfse-quick-service-autocomplete', serviceSearchDebounced],
     queryFn: async () => {
       try {
-        return await nfseApi.servicosList({ q: serviceSearch, limit: 8 });
+        return await nfseApi.servicosList(
+          { q: serviceSearchDebounced, limit: 8 },
+          { skipGlobalErrorToast: true },
+        );
       } catch {
-        return nfseApi.servicosAutocomplete({ q: serviceSearch, limit: 8 });
+        return nfseApi.servicosAutocomplete({ q: serviceSearchDebounced, limit: 8 });
       }
     },
     enabled: canSearchService,
@@ -185,7 +199,6 @@ const NfseQuickEmitPage = () => {
                       type="button"
                       className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
                       onClick={() => {
-                        setEmpresaId(empresa.id);
                         setCnpj(formatCnpj(empresa.cnpj));
                         setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
                       }}
@@ -198,32 +211,6 @@ const NfseQuickEmitPage = () => {
               {canSearchEmpresa && !empresasLoading && filteredEmpresas.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhuma empresa encontrada.</p>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Empresa emissora</Label>
-              <Select
-                value={empresaId}
-                onValueChange={(value) => {
-                  setEmpresaId(value);
-                  const selected = empresas.find((empresa) => empresa.id === value);
-                  if (selected?.cnpj) {
-                    setCnpj(formatCnpj(selected.cnpj));
-                    setEmpresaSearch(`${selected.razaoSocial} (${selected.cnpj})`);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={empresasLoading ? 'Carregando empresas...' : 'Selecione a empresa'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {empresas.map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id}>
-                      {empresa.razaoSocial} ({empresa.cnpj})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -265,15 +252,24 @@ const NfseQuickEmitPage = () => {
               <Input
                 id="serviceSearch"
                 value={serviceSearch}
-                onChange={(e) => setServiceSearch(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setServiceSearch(next);
+                  const onlyDigits = next.replace(/\D/g, '');
+                  if (onlyDigits.length === 6) {
+                    setCodigoServico(onlyDigits);
+                  } else if (!onlyDigits) {
+                    setCodigoServico('');
+                  }
+                }}
                 placeholder="Digite código ou descrição do serviço"
               />
               {serviceQuery.isLoading && canSearchService && (
                 <p className="text-sm text-muted-foreground">Buscando serviços...</p>
               )}
-              {serviceQuery.isSuccess && serviceQuery.data.items.length > 0 && (
+              {serviceQuery.isSuccess && (serviceQuery.data?.items?.length ?? 0) > 0 && (
                 <div className="max-h-44 overflow-auto rounded-md border p-1">
-                  {serviceQuery.data.items.map((item) => (
+                  {(serviceQuery.data?.items ?? []).map((item) => (
                     <button
                       key={`${item.codigoServico}-${item.sequencial ?? ''}`}
                       type="button"
@@ -288,20 +284,14 @@ const NfseQuickEmitPage = () => {
                   ))}
                 </div>
               )}
-              {serviceQuery.isSuccess && canSearchService && serviceQuery.data.items.length === 0 && (
+              {serviceQuery.isFetched && !serviceQuery.isFetching && canSearchService && (serviceQuery.data?.items?.length ?? 0) === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="codigoServico">Código do serviço selecionado</Label>
-              <Input
-                id="codigoServico"
-                value={codigoServico}
-                onChange={(e) => setCodigoServico(e.target.value)}
-                placeholder="Ex.: 060101"
-                required
-              />
+              <p className="text-xs text-muted-foreground">
+                {codigoServicoClean.length === 6
+                  ? `Código selecionado: ${codigoServicoClean}`
+                  : 'Selecione um item da lista ou digite o código com 6 dígitos.'}
+              </p>
             </div>
 
             {formError && (
