@@ -12,7 +12,7 @@ Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo 
 - Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
 
 ## 2. Matriz de Evidencias (auditoria rapida)
-Timestamp base desta revisao editorial: `2026-02-16T11:20:00-04:00`.
+Timestamp base desta revisao editorial: `2026-02-16T17:39:14-04:00`.
 
 - Evidencia E1 (codigo local): `package.json` confirma nome tecnico, scripts (`dev/build/lint/test`) e stack principal.
 - Evidencia E2 (codigo local): `src/App.tsx` confirma composicao global, provider chain e rotas publicas/protegidas.
@@ -27,6 +27,9 @@ Timestamp base desta revisao editorial: `2026-02-16T11:20:00-04:00`.
 - Evidencia E11 (codigo local): `src/services/api.ts` confirma novos endpoints `POST /empresas/certificado/import` (multipart) e `POST /nfse/quick`.
 - Evidencia E12 (execucao local): `npm run test` e `npm run build` executados com sucesso em `2026-02-16T10:21:57-04:00`.
 - Evidencia E13 (execucao local): `yarn run test` executado com sucesso em `2026-02-16T11:19:03-04:00` (5 testes).
+- Evidencia E14 (codigo local): `src/pages/NfseQuickEmitPage.tsx` confirma UX sem duplicidade de seletor de empresa (somente autocomplete), debounce de busca (250ms) e refinamento de feedback para servicos.
+- Evidencia E15 (codigo local): `src/lib/api.ts` + `src/services/api.ts` confirmam opcao `skipGlobalErrorToast` para evitar toast transitario no fallback de `GET /nfse/servicos` -> `/nfse/servicos/autocomplete`.
+- Evidencia E16 (execucao local): `npm run test` e `npm run lint` executados com sucesso em `2026-02-16T17:39:14-04:00` (8 testes; lint sem erros, apenas warnings recorrentes).
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -188,8 +191,9 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 
 - Formulario: `cnpj` + `cpfTomador` + `valor` + `codigoServico`
 - UX atual de preenchimento:
-  - empresa emissora via autocomplete (com dados de `/empresas`) e fallback por select; ambos preenchem CNPJ automaticamente
-  - servico via busca no catalogo priorizando `GET /nfse/servicos` com fallback para `/nfse/servicos/autocomplete`
+  - empresa emissora via autocomplete (com dados de `/empresas`), preenchendo CNPJ automaticamente ao selecionar item
+  - servico via busca no catalogo priorizando `GET /nfse/servicos` com fallback para `/nfse/servicos/autocomplete`, com supressao de toast global no erro esperado do primeiro endpoint
+  - busca com debounce de 250ms (empresa e servico) para reduzir flicker/chamadas e evitar feedback prematuro
   - campos com mascara visual para reduzir erro de digitacao (`CNPJ`, `CPF` e `valor` em formato monetario BRL)
 - Envio para `POST /nfse/quick`
 - Feedback operacional:
@@ -232,6 +236,8 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - Setup: `src/test/setup.ts`
 - Cobertura atual: teste exemplo + testes unitarios da camada de servicos para novos fluxos (`src/services/api.new-flows.test.ts`)
 - Ultima execucao registrada: `yarn run test` em `2026-02-16T11:19:03-04:00` (2 arquivos, 5 testes, todos passando)
+- Revalidacao recente: `npm run test` em `2026-02-16T17:39:14-04:00` (2 arquivos, 8 testes, todos passando)
+- Revalidacao recente: `npm run lint` em `2026-02-16T17:39:14-04:00` (sem erros; warnings recorrentes de fast-refresh e `react-hooks/exhaustive-deps` em `DashboardPage`)
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
 - Build de validacao: registrar sempre data/hora explicita da ultima execucao (evitar "hoje"/"ontem")
@@ -273,6 +279,6 @@ Checklist por commit:
 5. Atualizar rastreabilidade
 
 ## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-16T11:20:00-04:00
+- Ultima atualizacao: 2026-02-16T17:39:14-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: consolidacao documental pos-implementacao (correcao da secao de certificado para endpoint interno ativo, regra operacional de nao bloqueio de empresa cadastrada, e rastreio atualizado de testes)
+- Tipo de atualizacao: atualizacao documental pos-ajuste de UX na emissao rapida (remocao de duplicidade de selecao de empresa, debounce de autocomplete e supressao de erro transitario no fallback de catalogo de servicos), com rastreio de testes/lint reexecutados
