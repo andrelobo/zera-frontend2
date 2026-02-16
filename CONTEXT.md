@@ -3,6 +3,7 @@
 Documento canonico do projeto `zera-frontend2`.
 Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manutencao.
 Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica o `package.json`).
+Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
 ## 1. Identificacao do Projeto
 - Nome tecnico: `vite_react_shadcn_ts`
@@ -10,7 +11,23 @@ Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica
 - Stack principal: React 18 + TypeScript + Vite + React Router + TanStack Query + Axios + Tailwind + shadcn/ui
 - Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
 
-## 2. Como Rodar
+## 2. Matriz de Evidencias (auditoria rapida)
+Timestamp base desta revisao editorial: `2026-02-16T10:21:57-04:00`.
+
+- Evidencia E1 (codigo local): `package.json` confirma nome tecnico, scripts (`dev/build/lint/test`) e stack principal.
+- Evidencia E2 (codigo local): `src/App.tsx` confirma composicao global, provider chain e rotas publicas/protegidas.
+- Evidencia E3 (codigo local): `src/contexts/AuthContext.tsx` confirma armazenamento de token (`zera_token`), `refreshUser()`, `login()` assincrono e criterio de `isAuthenticated`.
+- Evidencia E4 (codigo local): `src/lib/api.ts` confirma `VITE_API_BASE_URL` com fallback `http://localhost:3000`, interceptor JWT e tratamento global de `401`.
+- Evidencia E5 (codigo local): `src/services/api.ts` confirma contratos consumidos por Auth/NFSe/Empresas/Usuarios.
+- Evidencia E6 (codigo local): `src/pages/DashboardPage.tsx` confirma cache local (`zera_dashboard_valores_v1`) e snapshot (`zera_dashboard_snapshot_v1`).
+- Evidencia E7 (codigo local): `index.html`, `vite.config.ts` e `README.md` confirmam branding `ZERA` e remocao de referencias Lovable.
+- Evidencia E8 (codigo local): `src/test/setup.ts` e `src/test/example.test.ts` confirmam setup de testes e cobertura minima atual.
+- Evidencia E9 (codigo local): `src/pages/CertificadoDigitalPage.tsx` confirma fluxo de importacao de certificado (.pfx/.p12) com validacao e exibicao de retorno nao sensivel.
+- Evidencia E10 (codigo local): `src/pages/NfseQuickEmitPage.tsx` confirma fluxo de emissao rapida (`CPF + valor`) e tratamento de bloqueio por ausencia de certificado.
+- Evidencia E11 (codigo local): `src/services/api.ts` confirma novos endpoints `POST /empresas/certificado/import` (multipart) e `POST /nfse/quick`.
+- Evidencia E12 (execucao local): `npm run test` e `npm run build` executados com sucesso em `2026-02-16T10:21:57-04:00`.
+
+## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
 - Desenvolvimento: `npm run dev` (Vite em `http://localhost:8080`)
 - Build: `npm run build`
@@ -18,12 +35,12 @@ Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica
 - Lint: `npm run lint`
 - Testes: `npm run test`
 
-## 3. Variaveis de Ambiente
+## 4. Variaveis de Ambiente
 - `VITE_API_BASE_URL`: URL base da API backend
 - Fallback atual se ausente: `http://localhost:3000`
 - Arquivo de referencia: `.env.example`
 
-## 4. Arquitetura de Frontend
+## 5. Arquitetura de Frontend
 - Entrada: `src/main.tsx`
 - Composicao global: `src/App.tsx`
   - `QueryClientProvider`
@@ -35,7 +52,7 @@ Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica
 - Layout autenticado: `src/components/AppLayout.tsx`
 - Guarda de rota: `src/components/ProtectedRoute.tsx`
 
-## 5. Roteamento Atual
+## 6. Roteamento Atual
 Rotas publicas:
 - `/login`
 
@@ -44,10 +61,12 @@ Rotas protegidas:
 - `/account` -> Minha Conta
 - `/nfse` -> Lista NFSe
 - `/nfse/nova` -> Emissao NFSe
+- `/nfse/rapida` -> Emissao Rapida NFSe
 - `/nfse/:id` -> Detalhe NFSe
 - `/empresas` -> Lista Empresas
 - `/empresas/nova` -> Criacao Empresa (via CNPJ)
 - `/empresas/:id` -> Edicao Empresa
+- `/certificado-digital` -> Importacao de Certificado Digital
 - `/users` -> Lista Usuarios
 - `/users/novo` -> Criacao Usuario
 - `/users/:id` -> Edicao Usuario
@@ -55,7 +74,7 @@ Rotas protegidas:
 Fallback:
 - `*` -> `NotFound`
 
-## 6. Autenticacao e Sessao
+## 7. Autenticacao e Sessao
 Fonte: `src/contexts/AuthContext.tsx`
 
 - Token JWT em `localStorage` na chave `zera_token`
@@ -68,36 +87,55 @@ Comportamento global 401 (`src/lib/api.ts`):
 - remove token
 - redireciona para `/login`
 
-## 7. Contratos de API (estado real)
+## 8. Contratos de API (estado real)
 Fonte principal: Swagger `/docs-json` do backend local.
 Legenda de confianca:
 - `Confirmado no front`: comportamento verificado no codigo deste repositorio
 - `Depende de backend/Swagger`: contrato que exige validacao no backend em execucao
 
-### 7.1 Auth
+### 8.1 Auth
 - `POST /auth/login` -> retorna `accessToken` (`Confirmado no front`; formato final depende de backend/Swagger)
 - `GET /auth/me` -> usuario com `role` (`admin|manager|user`) e `status` (`active|inactive`) (`Confirmado no front`; valores finais dependem de backend/Swagger)
 
-### 7.2 NFSe
+### 8.2 NFSe
 - `GET /nfse` retorna **resumo paginado**: `{ items, meta }` (`Confirmado no front`; shape final depende de backend/Swagger)
 - `GET /nfse/:id` retorna **resumo** (sem dados fiscais completos) (`Confirmado no front`; payload final depende de backend/Swagger)
+- `POST /nfse/quick` aceita payload minimo `{ cpfTomador, valor }` e retorna contrato de emissao (`emissionId`, `idempotentReplay`, `result`) (`Confirmado no front`; regras finais dependem de backend/Swagger)
 - Dados fiscais completos (numero, tomador, servico, valor) ficam em:
   - `GET /nfse/:id/provider-response` (`Confirmado no front`; campos internos dependem de backend/provider)
 - Artifacts:
   - `GET /nfse/:id/artifacts` -> `{ hasXml, hasPdf, ... }` (`Confirmado no front`; shape final depende de backend/Swagger)
   - downloads local/remoto por endpoints dedicados (`Confirmado no front`)
 
-### 7.3 Empresas
+### 8.3 Empresas
 - `POST /empresas` cria por CNPJ (payload minimo: `{ cnpj }`) (`Confirmado no front`; validacao final depende de backend/Swagger)
 - `GET /empresas/cnpj/:cnpj` usado para buscar/preencher prestador (`Confirmado no front`)
 - `PATCH /empresas/:id` aceita payload parcial (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `email`, `fone`, `endereco`) (`Confirmado no front`; regra final depende de backend/Swagger)
+- `POST /empresas/certificado/import` aceita `multipart/form-data` (`cnpj`, `senhaCertificado`, `file`) para importacao de certificado A1 (`Confirmado no front`; metadados finais dependem de backend/Swagger)
 
-### 7.4 Usuarios
+### 8.4 Usuarios
 - Roles atuais da API: `admin | manager | user` (`Confirmado no front`; fonte final depende de backend/Swagger)
 - Front faz mapeamento de roles antigas para compatibilidade
 
-## 8. Fluxos Funcionais
-### 8.1 Emissao de NFSe
+## 9. Assuncoes do Backend (explicitas)
+Estas assuncoes NAO devem ser tratadas como fatos canonicos sem verificacao no backend real.
+
+- Assuncao A1: payload de `POST /auth/login` segue retornando `accessToken` (com tolerancia a `access_token` no front).
+- Assuncao A2: `GET /nfse` mantem shape `{ items, meta }` com metadados de paginacao (`total`, `page`, `limit`, `totalPages`).
+- Assuncao A3: `GET /nfse/:id` permanece resumo, e dados fiscais completos continuam no `GET /nfse/:id/provider-response`.
+- Assuncao A4: endpoints de artifacts/download (`/artifacts`, `/xml`, `/pdf`, `/remote/xml`, `/remote/pdf`) permanecem ativos com semantica atual.
+- Assuncao A5: `POST /empresas` continua aceitando payload minimo `{ cnpj }`.
+- Assuncao A6: `PATCH /empresas/:id` continua aceitando payload parcial com campos atuais (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `email`, `fone`, `endereco`).
+- Assuncao A7: roles da API seguem `admin | manager | user` e status seguem `active | inactive`.
+- Assuncao A8: erros de ausencia de certificado na emissao rapida seguem codigos operacionais (`CERTIFICADO_REQUIRED` ou `QUICK_PRESTADOR_NO_CERT`).
+
+Checklist de validacao de assuncoes (sempre que houver mudanca de contrato):
+1. Conferir Swagger/contrato do backend em execucao.
+2. Registrar timestamp da verificacao em `Rastreabilidade de Atualizacao`.
+3. Atualizar/remover assuncoes invalidadas.
+
+## 10. Fluxos Funcionais
+### 10.1 Emissao de NFSe
 Tela: `src/pages/NfseEmitPage.tsx`
 
 - Prestador pode ser obtido por:
@@ -107,20 +145,20 @@ Tela: `src/pages/NfseEmitPage.tsx`
   - `prestador`, `tomador`, `servico`, `referenciaExterna`
 - Front preenche campos inferidos do prestador (empresa) e envia tomador/servico do formulario
 
-### 8.2 Lista de NFSe
+### 10.2 Lista de NFSe
 Tela: `src/pages/NfseListPage.tsx`
 
 - Usa `/nfse` para pagina/status/provider
 - Como `/nfse` e resumo, a tela enriquece numero/tomador/valor consultando `provider-response` por linha
 
-### 8.3 Detalhe da NFSe
+### 10.3 Detalhe da NFSe
 Tela: `src/pages/NfseDetailPage.tsx`
 
 - Usa `/nfse/:id` + `/nfse/:id/provider-response` + `/nfse/:id/artifacts`
 - Dados exibidos sao extraidos de `provider-response.raw` (fallback robusto para formatos array/obj/string)
 - Botao `Sincronizar` chama `POST /nfse/:id/sync-artifacts`
 
-### 8.4 Dashboard
+### 10.4 Dashboard
 Tela: `src/pages/DashboardPage.tsx`
 
 - Carrega lista base via `/nfse`
@@ -129,7 +167,29 @@ Tela: `src/pages/DashboardPage.tsx`
 - Possui snapshot local de KPIs/graficos para renderizacao imediata
 - Botao `Recalcular do zero` limpa cache/snapshot e refaz calculo
 
-## 9. Estado, Cache e UX de Dados
+### 10.5 Importacao de Certificado Digital
+Tela: `src/pages/CertificadoDigitalPage.tsx`
+
+- Formulario minimo: `cnpj`, `senhaCertificado`, `file (.pfx/.p12)`
+- Validacao local antes de envio: campos obrigatorios e extensao permitida
+- Envio em multipart para `POST /empresas/certificado/import`
+- Feedback operacional:
+  - loading durante envio
+  - sucesso com `fileName`, `fileSize`, `uploadedAt`
+  - erro padronizado (`code`, `message`, `correlationId`)
+- Restricao de seguranca: sem exibicao de conteudo sensivel do certificado
+
+### 10.6 Emissao Rapida de NFSe
+Tela: `src/pages/NfseQuickEmitPage.tsx`
+
+- Formulario minimo: `cpfTomador` + `valor`
+- Envio para `POST /nfse/quick`
+- Feedback operacional:
+  - status `PENDING`: "Nota enviada para processamento."
+  - `idempotentReplay = true`: "Reaproveitada por idempotencia."
+- Regra de bloqueio: se backend retornar `CERTIFICADO_REQUIRED` ou `QUICK_PRESTADOR_NO_CERT`, emissao rapida fica bloqueada e direciona para importacao de certificado
+
+## 11. Estado, Cache e UX de Dados
 - React Query global:
   - `retry: 1`
   - `staleTime: 30_000`
@@ -141,7 +201,7 @@ Tela: `src/pages/DashboardPage.tsx`
   - snapshot local de stats: `zera_dashboard_snapshot_v1`
   - composicao progressiva: render imediato de snapshot + enriquecimento em background
 
-## 10. UI e Design System
+## 12. UI e Design System
 - Base: shadcn/ui + Radix
 - Tokens e tema: `src/index.css`
 - Tailwind: `tailwind.config.ts`
@@ -159,34 +219,34 @@ Tela: `src/pages/DashboardPage.tsx`
   - `package.json` e `yarn.lock` (dependencia removida)
 - Traducoes de UI aplicadas em textos visiveis e acessibilidade (`aria-label`/`sr-only`) sem alterar contratos tecnicos
 
-## 11. Testes e Qualidade
+## 13. Testes e Qualidade
 - Vitest: `vitest.config.ts` (`jsdom`)
 - Setup: `src/test/setup.ts`
 - Cobertura atual: teste exemplo
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
-- Build de validacao executado com sucesso apos mudancas de hoje (`npm run build`)
+- Build de validacao: registrar sempre data/hora explicita da ultima execucao (evitar "hoje"/"ontem")
 
-## 12. Riscos Tecnicos Atuais
+## 14. Riscos Tecnicos Atuais
 - Gargalo principal percebido: endpoint `/nfse` do backend pode levar ~8s (API local + MongoDB Atlas)
 - Mesmo com otimizacoes de cache/snapshot no front, primeiro carregamento depende desse tempo de backend
 - Front ainda depende de multiplas consultas de `provider-response` para enriquecer dados financeiros/visuais
 - Cobertura de testes automatizados baixa
 
-## 13. Convencoes para Novas Mudancas
+## 15. Convencoes para Novas Mudancas
 - Toda integracao HTTP em `src/services/api.ts`
 - Novos contratos tipados em `src/types/api.ts`
 - Rotas autenticadas sob `ProtectedRoute`
 - Novas telas devem ter loading/erro/vazio
 - Mudancas de contrato devem ser verificadas no Swagger real antes de codar
 
-## 14. Certificado Digital (PFX)
+## 16. Certificado Digital (PFX)
 - Fato importante de negocio: emissao depende de certificado digital A1 (PFX/P12) por empresa
 - No backend atual (Swagger local), **nao ha endpoint interno exposto** para upload/import de certificado
 - Documentacao operacional aponta upload de certificado no provider PlugNotas (`/certificado` externo)
 - Implicacao: fluxo completo de onboarding de certificado ainda depende do backend expor endpoint interno proprio ou de operacao fora do front
 
-## 15. Protocolo Canonico de Atualizacao (obrigatorio em todo commit)
+## 17. Protocolo Canonico de Atualizacao (obrigatorio em todo commit)
 Sempre atualizar este arquivo quando o commit alterar:
 - estrutura relevante
 - rotas
@@ -199,9 +259,11 @@ Sempre atualizar este arquivo quando o commit alterar:
 Checklist por commit:
 1. Atualizar secoes impactadas
 2. Validar contratos com Swagger/backend real
-3. Atualizar rastreabilidade
+3. Atualizar `Matriz de Evidencias` com data/hora e origem
+4. Atualizar `Assuncoes do Backend` quando aplicavel
+5. Atualizar rastreabilidade
 
-## 16. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-14
+## 18. Rastreabilidade de Atualizacao
+- Ultima atualizacao: 2026-02-16T10:21:57-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: branding/metadados (remocao Lovable, titulo ZERA, favicon), traducao de UI, ajuste de autenticacao (login sem 2 tentativas) e validacao por build
+- Tipo de atualizacao: implementacao de fluxos de importacao de certificado digital e emissao rapida de NFSe, com rotas, servicos, validacoes de UI, bloqueio por ausencia de certificado e testes de fluxo feliz/erro

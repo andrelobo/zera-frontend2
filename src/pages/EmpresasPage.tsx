@@ -7,6 +7,7 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -34,10 +35,21 @@ const EmpresasPage = () => {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
-        <Button onClick={() => navigate('/empresas/nova')}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Empresa
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/certificado-digital')}>
+            Certificado Digital
+          </Button>
+          <Button onClick={() => navigate('/empresas/nova')}>
+            <Plus className="mr-2 h-4 w-4" /> Nova Empresa
+          </Button>
+        </div>
       </div>
+
+      <Alert>
+        <AlertDescription>
+          Importe o certificado digital da empresa antes do cadastro operacional e da emissão de NFSe.
+        </AlertDescription>
+      </Alert>
 
       {!empresas?.length ? (
         <EmptyState message="Nenhuma empresa cadastrada." action={<Button onClick={() => navigate('/empresas/nova')}>Cadastrar empresa</Button>} />

@@ -12,8 +12,10 @@ import MyAccountPage from "@/pages/MyAccountPage";
 import NfseListPage from "@/pages/NfseListPage";
 import NfseDetailPage from "@/pages/NfseDetailPage";
 import NfseEmitPage from "@/pages/NfseEmitPage";
+import NfseQuickEmitPage from "@/pages/NfseQuickEmitPage";
 import EmpresasPage from "@/pages/EmpresasPage";
 import EmpresaFormPage from "@/pages/EmpresaFormPage";
+import CertificadoDigitalPage from "@/pages/CertificadoDigitalPage";
 import UsersPage from "@/pages/UsersPage";
 import UserFormPage from "@/pages/UserFormPage";
 import NotFound from "@/pages/NotFound";
@@ -52,10 +54,12 @@ const App = () => (
                 <Route path="/account" element={<MyAccountPage />} />
                 <Route path="/nfse" element={<NfseListPage />} />
                 <Route path="/nfse/nova" element={<NfseEmitPage />} />
+                <Route path="/nfse/rapida" element={<NfseQuickEmitPage />} />
                 <Route path="/nfse/:id" element={<NfseDetailPage />} />
                 <Route path="/empresas" element={<EmpresasPage />} />
                 <Route path="/empresas/nova" element={<EmpresaFormPage />} />
                 <Route path="/empresas/:id" element={<EmpresaFormPage />} />
+                <Route path="/certificado-digital" element={<CertificadoDigitalPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/users/novo" element={<UserFormPage />} />
                 <Route path="/users/:id" element={<UserFormPage />} />

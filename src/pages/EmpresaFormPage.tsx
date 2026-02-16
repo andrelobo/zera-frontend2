@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
@@ -87,6 +88,12 @@ const EmpresaFormPage = () => {
         </Button>
         <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Empresa' : 'Nova Empresa'}</h1>
       </div>
+
+      <Alert>
+        <AlertDescription>
+          Importe o certificado digital da empresa antes do cadastro operacional e da emissão de NFSe.
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardContent className="pt-6">

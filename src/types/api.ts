@@ -4,6 +4,7 @@ export interface ApiError {
   code: string;
   message: string;
   correlationId?: string;
+  details?: unknown;
 }
 
 export interface PaginatedResponse<T> {
@@ -249,4 +250,38 @@ export interface NfseFilters {
   provider?: NfseProvider;
   sort?: string;
   order?: 'ASC' | 'DESC';
+}
+
+// Certificado digital
+export interface ImportCertificadoDigitalRequest {
+  cnpj: string;
+  senhaCertificado: string;
+  file: File;
+}
+
+export interface ImportCertificadoDigitalResponse {
+  cnpj: string;
+  fileName: string;
+  fileSize: number;
+  uploadedAt: string;
+  expiresAt?: string;
+  issuer?: string;
+}
+
+// Emissao rapida
+export interface EmitirNfseQuickRequest {
+  cpfTomador: string;
+  valor: number;
+}
+
+export interface EmitirNfseQuickResponse {
+  emissionId: string;
+  idempotentReplay: boolean;
+  result: {
+    status: NfseStatus;
+    provider: NfseProvider | string;
+    externalId?: string;
+    providerResponse?: unknown;
+    providerRequest?: unknown;
+  };
 }
