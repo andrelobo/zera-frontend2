@@ -26,6 +26,12 @@ const NfseEmitPage = () => {
   const [prestadorCnpj, setPrestadorCnpj] = useState('');
   const [tomadorCpfCnpj, setTomadorCpfCnpj] = useState('');
   const [tomadorRazaoSocial, setTomadorRazaoSocial] = useState('');
+  const [tomadorLogradouro, setTomadorLogradouro] = useState('');
+  const [tomadorNumero, setTomadorNumero] = useState('');
+  const [tomadorBairro, setTomadorBairro] = useState('');
+  const [tomadorMunicipio, setTomadorMunicipio] = useState('');
+  const [tomadorUf, setTomadorUf] = useState('');
+  const [tomadorCep, setTomadorCep] = useState('');
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState<number>(0);
   const [codigoNacional, setCodigoNacional] = useState('171901');
@@ -59,6 +65,15 @@ const NfseEmitPage = () => {
     e.preventDefault();
     if (!empresaSelecionada) return;
 
+    const tomadorEndereco = {
+      logradouro: tomadorLogradouro || undefined,
+      numero: tomadorNumero || undefined,
+      bairro: tomadorBairro || undefined,
+      municipio: tomadorMunicipio || empresaSelecionada.endereco?.cidade || empresaSelecionada.endereco?.descricaoCidade || undefined,
+      uf: tomadorUf || empresaSelecionada.endereco?.uf || empresaSelecionada.endereco?.estado || undefined,
+      cep: tomadorCep || undefined,
+    };
+
     const payload: EmitirNfseRequest = {
       prestador: {
         cnpj: empresaSelecionada.cnpj,
@@ -81,6 +96,7 @@ const NfseEmitPage = () => {
       tomador: {
         cpfCnpj: tomadorCpfCnpj,
         razaoSocial: tomadorRazaoSocial,
+        endereco: tomadorEndereco,
       },
       servico: {
         codigoNacional,
@@ -164,6 +180,33 @@ const NfseEmitPage = () => {
               <div className="space-y-2">
                 <Label>Razão Social Tomador</Label>
                 <Input value={tomadorRazaoSocial} onChange={(ev) => setTomadorRazaoSocial(ev.target.value)} required />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Logradouro Tomador</Label>
+                <Input value={tomadorLogradouro} onChange={(ev) => setTomadorLogradouro(ev.target.value)} placeholder="Rua, avenida..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input value={tomadorNumero} onChange={(ev) => setTomadorNumero(ev.target.value)} placeholder="S/N" />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input value={tomadorBairro} onChange={(ev) => setTomadorBairro(ev.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Município</Label>
+                <Input value={tomadorMunicipio} onChange={(ev) => setTomadorMunicipio(ev.target.value)} placeholder="Ex.: Manaus" />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input value={tomadorUf} onChange={(ev) => setTomadorUf(ev.target.value.toUpperCase())} maxLength={2} placeholder="AM" />
+              </div>
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input value={tomadorCep} onChange={(ev) => setTomadorCep(ev.target.value)} placeholder="Somente números" />
               </div>
             </div>
 
