@@ -72,7 +72,7 @@ describe('new API flows', () => {
     })).rejects.toEqual(backendError);
   });
 
-  it('emits quick NFSe with minimal payload', async () => {
+  it('emits quick NFSe with required payload', async () => {
     const { nfseApi } = await import('@/services/api');
     const response = {
       emissionId: 'em-123',
@@ -84,10 +84,80 @@ describe('new API flows', () => {
     };
     mockPost.mockResolvedValue({ data: response });
 
-    const result = await nfseApi.emitirQuick({ cpfTomador: '12345678901', valor: 89.9 });
+    const result = await nfseApi.emitirQuick({
+      cnpj: '43521115000134',
+      cpfTomador: '12345678901',
+      valor: 89.9,
+      codigoServico: '060101',
+    });
 
     expect(result).toEqual(response);
-    expect(mockPost).toHaveBeenCalledWith('/nfse/quick', { cpfTomador: '12345678901', valor: 89.9 });
+    expect(mockPost).toHaveBeenCalledWith('/nfse/quick', {
+      cnpj: '43521115000134',
+      cpfTomador: '12345678901',
+      valor: 89.9,
+      codigoServico: '060101',
+    });
+  });
+
+  it('emits quick NFSe preserving sent fields', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const response = {
+      emissionId: 'em-124',
+      idempotentReplay: false,
+      result: {
+        status: 'PENDING',
+        provider: 'PLUGNOTAS',
+      },
+    };
+    mockPost.mockResolvedValue({ data: response });
+
+    const result = await nfseApi.emitirQuick({
+      cnpj: '12345678000190',
+      cpfTomador: '12345678901',
+      valor: 120,
+      codigoServico: '060101',
+    });
+
+    expect(result).toEqual(response);
+    expect(mockPost).toHaveBeenCalledWith('/nfse/quick', {
+      cnpj: '12345678000190',
+      cpfTomador: '12345678901',
+      valor: 120,
+      codigoServico: '060101',
+    });
+  });
+
+  it('queries service autocomplete', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const response = {
+      items: [{ codigoServico: '060101', itemLc116: '6.01', descricao: 'Barbearia' }],
+      total: 1,
+    };
+    mockGet.mockResolvedValue({ data: response });
+
+    const result = await nfseApi.servicosAutocomplete({ q: 'barb', limit: 8 });
+
+    expect(result).toEqual(response);
+    expect(mockGet).toHaveBeenCalledWith('/nfse/servicos/autocomplete', {
+      params: { q: 'barb', limit: 8 },
+    });
+  });
+
+  it('queries service list endpoint', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const response = {
+      items: [{ codigoServico: '060101', itemLc116: '6.01', descricao: 'Barbearia' }],
+      total: 1,
+    };
+    mockGet.mockResolvedValue({ data: response });
+
+    const result = await nfseApi.servicosList({ q: 'barb', limit: 8, page: 1 });
+
+    expect(result).toEqual(response);
+    expect(mockGet).toHaveBeenCalledWith('/nfse/servicos', {
+      params: { q: 'barb', limit: 8, page: 1 },
+    });
   });
 
   it('propagates backend error on quick emission', async () => {
@@ -103,6 +173,11 @@ describe('new API flows', () => {
     };
     mockPost.mockRejectedValue(backendError);
 
-    await expect(nfseApi.emitirQuick({ cpfTomador: '12345678901', valor: 100 })).rejects.toEqual(backendError);
+    await expect(nfseApi.emitirQuick({
+      cnpj: '43521115000134',
+      cpfTomador: '12345678901',
+      valor: 100,
+      codigoServico: '060101',
+    })).rejects.toEqual(backendError);
   });
 });

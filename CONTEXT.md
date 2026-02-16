@@ -101,7 +101,9 @@ Legenda de confianca:
 ### 8.2 NFSe
 - `GET /nfse` retorna **resumo paginado**: `{ items, meta }` (`Confirmado no front`; shape final depende de backend/Swagger)
 - `GET /nfse/:id` retorna **resumo** (sem dados fiscais completos) (`Confirmado no front`; payload final depende de backend/Swagger)
-- `POST /nfse/quick` aceita payload minimo `{ cpfTomador, valor }` e retorna contrato de emissao (`emissionId`, `idempotentReplay`, `result`) (`Confirmado no front`; regras finais dependem de backend/Swagger)
+- `POST /nfse/quick` aceita payload `{ cnpj, cpfTomador, valor, codigoServico }` e retorna contrato de emissao (`emissionId`, `idempotentReplay`, `result`) (`Confirmado no front`; regras finais dependem de backend/Swagger)
+- `GET /nfse/servicos` usado para busca/listagem de catalogo de servicos (query `q`, `limit`, `page`) (`Confirmado no front`; shape final depende de backend/Swagger)
+- `GET /nfse/servicos/autocomplete` mantido como fallback de busca (`Confirmado no front`)
 - Dados fiscais completos (numero, tomador, servico, valor) ficam em:
   - `GET /nfse/:id/provider-response` (`Confirmado no front`; campos internos dependem de backend/provider)
 - Artifacts:
@@ -184,7 +186,11 @@ Tela: `src/pages/CertificadoDigitalPage.tsx`
 ### 10.6 Emissao Rapida de NFSe
 Tela: `src/pages/NfseQuickEmitPage.tsx`
 
-- Formulario minimo: `cpfTomador` + `valor`
+- Formulario: `cnpj` + `cpfTomador` + `valor` + `codigoServico`
+- UX atual de preenchimento:
+  - empresa emissora via autocomplete (com dados de `/empresas`) e fallback por select; ambos preenchem CNPJ automaticamente
+  - servico via busca no catalogo priorizando `GET /nfse/servicos` com fallback para `/nfse/servicos/autocomplete`
+  - campos com mascara visual para reduzir erro de digitacao (`CNPJ`, `CPF` e `valor` em formato monetario BRL)
 - Envio para `POST /nfse/quick`
 - Feedback operacional:
   - status `PENDING`: "Nota enviada para processamento."

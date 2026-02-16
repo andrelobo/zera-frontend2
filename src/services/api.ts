@@ -3,7 +3,7 @@ import type {
   LoginRequest, LoginResponse, User, CreateUserRequest, UpdateUserRequest,
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
-  NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse,
+  NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
@@ -37,6 +37,23 @@ export const nfseApi = {
     api.post<EmitirNfseResponse>('/nfse/emitir', data).then(r => r.data),
   emitirQuick: (data: EmitirNfseQuickRequest) =>
     api.post<EmitirNfseQuickResponse>('/nfse/quick', data).then(r => r.data),
+  servicosList: (input?: { q?: string; limit?: number; page?: number }) =>
+    api.get<{ items: ServicoCatalogItem[]; total: number }>('/nfse/servicos', {
+      params: {
+        q: input?.q?.trim() || undefined,
+        limit: input?.limit,
+        page: input?.page,
+      },
+    }).then(r => r.data),
+  servicosAutocomplete: (input?: { q?: string; limit?: number }) =>
+    api.get<{ items: ServicoCatalogItem[]; total: number }>('/nfse/servicos/autocomplete', {
+      params: {
+        q: input?.q?.trim() || undefined,
+        limit: input?.limit,
+      },
+    }).then(r => r.data),
+  servicoByCodigo: (codigo: string) =>
+    api.get<ServicoCatalogItem>(`/nfse/servicos/${codigo}`).then(r => r.data),
   providerResponse: (id: string) =>
     api.get<Record<string, unknown>>(`/nfse/${id}/provider-response`).then(r => {
       const data = r.data;

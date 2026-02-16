@@ -242,6 +242,13 @@ export interface NfseArtifactsStatus {
   updatedAt: string;
 }
 
+export interface ServicoCatalogItem {
+  codigoServico: string;
+  itemLc116?: string;
+  sequencial?: number;
+  descricao: string;
+}
+
 // Filters
 export interface NfseFilters {
   page?: number;
@@ -270,8 +277,10 @@ export interface ImportCertificadoDigitalResponse {
 
 // Emissao rapida
 export interface EmitirNfseQuickRequest {
+  cnpj: string;
   cpfTomador: string;
   valor: number;
+  codigoServico: string;
 }
 
 export interface EmitirNfseQuickResponse {
