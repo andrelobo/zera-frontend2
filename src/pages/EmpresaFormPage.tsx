@@ -91,7 +91,7 @@ const EmpresaFormPage = () => {
 
       <Alert>
         <AlertDescription>
-          Importe o certificado digital da empresa antes do cadastro operacional e da emissão de NFSe.
+          Empresas já cadastradas continuam operando normalmente. O certificado digital é exigido apenas no momento da emissão de NFSe.
         </AlertDescription>
       </Alert>
 
