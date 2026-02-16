@@ -12,7 +12,7 @@ Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo 
 - Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
 
 ## 2. Matriz de Evidencias (auditoria rapida)
-Timestamp base desta revisao editorial: `2026-02-16T10:21:57-04:00`.
+Timestamp base desta revisao editorial: `2026-02-16T11:20:00-04:00`.
 
 - Evidencia E1 (codigo local): `package.json` confirma nome tecnico, scripts (`dev/build/lint/test`) e stack principal.
 - Evidencia E2 (codigo local): `src/App.tsx` confirma composicao global, provider chain e rotas publicas/protegidas.
@@ -26,6 +26,7 @@ Timestamp base desta revisao editorial: `2026-02-16T10:21:57-04:00`.
 - Evidencia E10 (codigo local): `src/pages/NfseQuickEmitPage.tsx` confirma fluxo de emissao rapida (`CPF + valor`) e tratamento de bloqueio por ausencia de certificado.
 - Evidencia E11 (codigo local): `src/services/api.ts` confirma novos endpoints `POST /empresas/certificado/import` (multipart) e `POST /nfse/quick`.
 - Evidencia E12 (execucao local): `npm run test` e `npm run build` executados com sucesso em `2026-02-16T10:21:57-04:00`.
+- Evidencia E13 (execucao local): `yarn run test` executado com sucesso em `2026-02-16T11:19:03-04:00` (5 testes).
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -177,6 +178,7 @@ Tela: `src/pages/CertificadoDigitalPage.tsx`
   - loading durante envio
   - sucesso com `fileName`, `fileSize`, `uploadedAt`
   - erro padronizado (`code`, `message`, `correlationId`)
+- Regra operacional: empresa ja cadastrada nao e bloqueada por ausencia de certificado; exigencia ocorre no momento da emissao.
 - Restricao de seguranca: sem exibicao de conteudo sensivel do certificado
 
 ### 10.6 Emissao Rapida de NFSe
@@ -222,7 +224,8 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 ## 13. Testes e Qualidade
 - Vitest: `vitest.config.ts` (`jsdom`)
 - Setup: `src/test/setup.ts`
-- Cobertura atual: teste exemplo
+- Cobertura atual: teste exemplo + testes unitarios da camada de servicos para novos fluxos (`src/services/api.new-flows.test.ts`)
+- Ultima execucao registrada: `yarn run test` em `2026-02-16T11:19:03-04:00` (2 arquivos, 5 testes, todos passando)
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
 - Build de validacao: registrar sempre data/hora explicita da ultima execucao (evitar "hoje"/"ontem")
@@ -242,9 +245,9 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 
 ## 16. Certificado Digital (PFX)
 - Fato importante de negocio: emissao depende de certificado digital A1 (PFX/P12) por empresa
-- No backend atual (Swagger local), **nao ha endpoint interno exposto** para upload/import de certificado
-- Documentacao operacional aponta upload de certificado no provider PlugNotas (`/certificado` externo)
-- Implicacao: fluxo completo de onboarding de certificado ainda depende do backend expor endpoint interno proprio ou de operacao fora do front
+- Backend exposto para o front: `POST /empresas/certificado/import` (multipart com `cnpj`, `senhaCertificado`, `file`)
+- Front implementa importacao sem exibir conteudo sensivel do certificado
+- Persistem dependencias externas de provider para ciclo completo de emissao/renovacao, conforme regras do backend em execucao
 
 ## 17. Protocolo Canonico de Atualizacao (obrigatorio em todo commit)
 Sempre atualizar este arquivo quando o commit alterar:
@@ -264,6 +267,6 @@ Checklist por commit:
 5. Atualizar rastreabilidade
 
 ## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-16T10:21:57-04:00
+- Ultima atualizacao: 2026-02-16T11:20:00-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: implementacao de fluxos de importacao de certificado digital e emissao rapida de NFSe, com rotas, servicos, validacoes de UI, bloqueio por ausencia de certificado e testes de fluxo feliz/erro
+- Tipo de atualizacao: consolidacao documental pos-implementacao (correcao da secao de certificado para endpoint interno ativo, regra operacional de nao bloqueio de empresa cadastrada, e rastreio atualizado de testes)
