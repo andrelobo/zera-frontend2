@@ -279,6 +279,27 @@ const NfseEmitPage = () => {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>CEP</Label>
+              <Input
+                value={tomadorCep}
+                onChange={(ev) => setTomadorCep(formatCep(ev.target.value))}
+                placeholder="00000-000"
+                inputMode="numeric"
+              />
+              {tomadorCepDigits.length > 0 && tomadorCepDigits.length < 8 && (
+                <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
+              )}
+              {cepLookupQuery.isFetching && (
+                <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
+              )}
+              {cepLookupQuery.isError && (
+                <p className="text-xs text-destructive">
+                  {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
+                </p>
+              )}
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Logradouro Tomador</Label>
@@ -299,26 +320,6 @@ const NfseEmitPage = () => {
               <div className="space-y-2">
                 <Label>UF</Label>
                 <Input value={tomadorUf} onChange={(ev) => setTomadorUf(ev.target.value.toUpperCase())} maxLength={2} placeholder="AM" />
-              </div>
-              <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input
-                  value={tomadorCep}
-                  onChange={(ev) => setTomadorCep(formatCep(ev.target.value))}
-                  placeholder="00000-000"
-                  inputMode="numeric"
-                />
-                {tomadorCepDigits.length > 0 && tomadorCepDigits.length < 8 && (
-                  <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
-                )}
-                {cepLookupQuery.isFetching && (
-                  <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
-                )}
-                {cepLookupQuery.isError && (
-                  <p className="text-xs text-destructive">
-                    {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
-                  </p>
-                )}
               </div>
             </div>
 

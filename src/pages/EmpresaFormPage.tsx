@@ -137,6 +137,26 @@ const EmpresaFormPage = () => {
                 <Label>Inscrição Municipal</Label>
                 <Input value={form.inscricaoMunicipal} onChange={e => update('inscricaoMunicipal', e.target.value)} />
               </div>
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={form.cep}
+                  onChange={e => update('cep', formatCep(e.target.value))}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                />
+                {cepDigits.length > 0 && cepDigits.length < 8 && (
+                  <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
+                )}
+                {cepLookupQuery.isFetching && (
+                  <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
+                )}
+                {cepLookupQuery.isError && (
+                  <p className="text-xs text-destructive">
+                    {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
+                  </p>
+                )}
+              </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Endereço</Label>
                 <Input value={form.endereco} onChange={e => update('endereco', e.target.value)} />
@@ -145,31 +165,9 @@ const EmpresaFormPage = () => {
                 <Label>Cidade</Label>
                 <Input value={form.cidade} onChange={e => update('cidade', e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>UF</Label>
-                  <Input value={form.uf} onChange={e => update('uf', e.target.value)} maxLength={2} />
-                </div>
-                <div className="space-y-2">
-                  <Label>CEP</Label>
-                  <Input
-                    value={form.cep}
-                    onChange={e => update('cep', formatCep(e.target.value))}
-                    placeholder="00000-000"
-                    inputMode="numeric"
-                  />
-                  {cepDigits.length > 0 && cepDigits.length < 8 && (
-                    <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
-                  )}
-                  {cepLookupQuery.isFetching && (
-                    <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
-                  )}
-                  {cepLookupQuery.isError && (
-                    <p className="text-xs text-destructive">
-                      {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input value={form.uf} onChange={e => update('uf', e.target.value)} maxLength={2} />
               </div>
               <div className="space-y-2">
                 <Label>Telefone</Label>
