@@ -271,23 +271,41 @@ const NfseEmitPage = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>CPF/CNPJ Tomador</Label>
-                <Input value={tomadorCpfCnpj} onChange={(ev) => setTomadorCpfCnpj(ev.target.value)} placeholder="Somente números" required />
+                <Label htmlFor="tomadorCpfCnpj">CPF/CNPJ Tomador</Label>
+                <Input
+                  id="tomadorCpfCnpj"
+                  name="tomadorCpfCnpj"
+                  autoComplete="off"
+                  value={tomadorCpfCnpj}
+                  onChange={(ev) => setTomadorCpfCnpj(ev.target.value)}
+                  placeholder="Somente números"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label>Razão Social Tomador</Label>
-                <Input value={tomadorRazaoSocial} onChange={(ev) => setTomadorRazaoSocial(ev.target.value)} required />
+                <Label htmlFor="tomadorRazaoSocial">Razão Social Tomador</Label>
+                <Input
+                  id="tomadorRazaoSocial"
+                  name="tomadorRazaoSocial"
+                  autoComplete="name"
+                  value={tomadorRazaoSocial}
+                  onChange={(ev) => setTomadorRazaoSocial(ev.target.value)}
+                  required
+                />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>CEP</Label>
-              <Input
-                value={tomadorCep}
-                onChange={(ev) => setTomadorCep(formatCep(ev.target.value))}
-                placeholder="00000-000"
-                inputMode="numeric"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="tomadorCep">CEP</Label>
+                <Input
+                  id="tomadorCep"
+                  name="tomadorCep"
+                  autoComplete="postal-code"
+                  value={tomadorCep}
+                  onChange={(ev) => setTomadorCep(formatCep(ev.target.value))}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                />
               {tomadorCepDigits.length > 0 && tomadorCepDigits.length < 8 && (
                 <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
               )}
@@ -303,24 +321,59 @@ const NfseEmitPage = () => {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Logradouro Tomador</Label>
-                <Input value={tomadorLogradouro} onChange={(ev) => setTomadorLogradouro(ev.target.value)} placeholder="Rua, avenida..." />
+                <Label htmlFor="tomadorLogradouro">Logradouro Tomador</Label>
+                <Input
+                  id="tomadorLogradouro"
+                  name="tomadorLogradouro"
+                  autoComplete="address-line1"
+                  value={tomadorLogradouro}
+                  onChange={(ev) => setTomadorLogradouro(ev.target.value)}
+                  placeholder="Rua, avenida..."
+                />
               </div>
               <div className="space-y-2">
-                <Label>Número</Label>
-                <Input value={tomadorNumero} onChange={(ev) => setTomadorNumero(ev.target.value)} placeholder="S/N" />
+                <Label htmlFor="tomadorNumero">Número</Label>
+                <Input
+                  id="tomadorNumero"
+                  name="tomadorNumero"
+                  autoComplete="address-line2"
+                  value={tomadorNumero}
+                  onChange={(ev) => setTomadorNumero(ev.target.value)}
+                  placeholder="S/N"
+                />
               </div>
               <div className="space-y-2">
-                <Label>Bairro</Label>
-                <Input value={tomadorBairro} onChange={(ev) => setTomadorBairro(ev.target.value)} />
+                <Label htmlFor="tomadorBairro">Bairro</Label>
+                <Input
+                  id="tomadorBairro"
+                  name="tomadorBairro"
+                  autoComplete="address-level3"
+                  value={tomadorBairro}
+                  onChange={(ev) => setTomadorBairro(ev.target.value)}
+                />
               </div>
               <div className="space-y-2">
-                <Label>Município</Label>
-                <Input value={tomadorMunicipio} onChange={(ev) => setTomadorMunicipio(ev.target.value)} placeholder="Ex.: Manaus" />
+                <Label htmlFor="tomadorMunicipio">Município</Label>
+                <Input
+                  id="tomadorMunicipio"
+                  name="tomadorMunicipio"
+                  autoComplete="address-level2"
+                  value={tomadorMunicipio}
+                  onChange={(ev) => setTomadorMunicipio(ev.target.value)}
+                  placeholder="Ex.: Manaus"
+                />
               </div>
               <div className="space-y-2">
-                <Label>UF</Label>
-                <Input value={tomadorUf} onChange={(ev) => setTomadorUf(ev.target.value.toUpperCase())} maxLength={2} placeholder="AM" />
+                <Label htmlFor="tomadorUf">UF</Label>
+                <Input
+                  id="tomadorUf"
+                  name="tomadorUf"
+                  autoComplete="address-level1"
+                  value={tomadorUf}
+                  onChange={(ev) => setTomadorUf(ev.target.value.toUpperCase())}
+                  maxLength={2}
+                  placeholder="AM"
+                />
               </div>
             </div>
 
