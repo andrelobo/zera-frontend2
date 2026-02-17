@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
+import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,11 +48,32 @@ const EmpresaFormPage = () => {
         razaoSocial: existing.razaoSocial, cnpj: existing.cnpj,
         nomeFantasia: existing.nomeFantasia || '', inscricaoMunicipal: existing.inscricaoMunicipal || '',
         endereco: existing.endereco?.logradouro || '', cidade: existing.cidade || existing.endereco?.cidade || existing.endereco?.descricaoCidade || '',
-        uf: existing.uf || existing.endereco?.uf || existing.endereco?.estado || '', cep: existing.cep || existing.endereco?.cep || '',
+        uf: existing.uf || existing.endereco?.uf || existing.endereco?.estado || '', cep: formatCep(existing.cep || existing.endereco?.cep || ''),
         telefone: existing.telefone || existing.fone || '', email: existing.email || '',
       });
     }
   }, [existing]);
+
+  const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
+
+  const cepLookupQuery = useQuery({
+    queryKey: ['cep-lookup', 'empresa-form', cepDigits],
+    queryFn: () => lookupCep(cepDigits),
+    enabled: cepDigits.length === 8,
+    staleTime: 60 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!cepLookupQuery.data) return;
+    const address = cepLookupQuery.data;
+    setForm((prev) => ({
+      ...prev,
+      endereco: address.logradouro || prev.endereco,
+      cidade: address.cidade || prev.cidade,
+      uf: address.uf || prev.uf,
+      cep: formatCep(address.cep),
+    }));
+  }, [cepLookupQuery.data]);
 
   const mutation = useMutation({
     mutationFn: () => isEdit ? empresasApi.update(id!, {
@@ -64,7 +86,7 @@ const EmpresaFormPage = () => {
         logradouro: form.endereco,
         cidade: form.cidade,
         uf: form.uf,
-        cep: form.cep,
+        cep: normalizeCep(form.cep) || undefined,
       },
     }) : empresasApi.create({ cnpj: form.cnpj, razaoSocial: '' }),
     onSuccess: () => {
@@ -130,7 +152,23 @@ const EmpresaFormPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>CEP</Label>
-                  <Input value={form.cep} onChange={e => update('cep', e.target.value)} />
+                  <Input
+                    value={form.cep}
+                    onChange={e => update('cep', formatCep(e.target.value))}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                  />
+                  {cepDigits.length > 0 && cepDigits.length < 8 && (
+                    <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
+                  )}
+                  {cepLookupQuery.isFetching && (
+                    <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
+                  )}
+                  {cepLookupQuery.isError && (
+                    <p className="text-xs text-destructive">
+                      {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">

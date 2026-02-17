@@ -12,7 +12,7 @@ Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo 
 - Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
 
 ## 2. Matriz de Evidencias (auditoria rapida)
-Timestamp base desta revisao editorial: `2026-02-16T17:39:14-04:00`.
+Timestamp base desta revisao editorial: `2026-02-17T12:06:06-04:00`.
 
 - Evidencia E1 (codigo local): `package.json` confirma nome tecnico, scripts (`dev/build/lint/test`) e stack principal.
 - Evidencia E2 (codigo local): `src/App.tsx` confirma composicao global, provider chain e rotas publicas/protegidas.
@@ -30,6 +30,9 @@ Timestamp base desta revisao editorial: `2026-02-16T17:39:14-04:00`.
 - Evidencia E14 (codigo local): `src/pages/NfseQuickEmitPage.tsx` confirma UX sem duplicidade de seletor de empresa (somente autocomplete), debounce de busca (250ms) e refinamento de feedback para servicos.
 - Evidencia E15 (codigo local): `src/lib/api.ts` + `src/services/api.ts` confirmam opcao `skipGlobalErrorToast` para evitar toast transitario no fallback de `GET /nfse/servicos` -> `/nfse/servicos/autocomplete`.
 - Evidencia E16 (execucao local): `npm run test` e `npm run lint` executados com sucesso em `2026-02-16T17:39:14-04:00` (8 testes; lint sem erros, apenas warnings recorrentes).
+- Evidencia E17 (codigo local): `src/pages/NfseEmitPage.tsx` e `src/pages/NfseQuickEmitPage.tsx` confirmam padronizacao de autocomplete (empresa e servico), debounce de 250ms e sincronizacao do codigo de servico com o texto digitado para evitar selecao stale.
+- Evidencia E18 (codigo local): `src/services/cep.ts`, `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx` confirmam lookup de CEP para autocomplete de endereco (logradouro/bairro/cidade/UF), com mascara e normalizacao de CEP.
+- Evidencia E19 (execucao local): `yarn run test` executado com sucesso em `2026-02-17T12:06:06-04:00` (3 arquivos, 17 testes, todos passando).
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -150,6 +153,11 @@ Tela: `src/pages/NfseEmitPage.tsx`
 - Payload enviado segue `EmitirNfseDto` (Swagger):
   - `prestador`, `tomador`, `servico`, `referenciaExterna`
 - Front preenche campos inferidos do prestador (empresa) e envia tomador/servico do formulario
+- UX atual de preenchimento:
+  - empresa emissora via autocomplete (razao social/CNPJ) com debounce de 250ms
+  - busca de servico via catalogo (`GET /nfse/servicos` com fallback `/nfse/servicos/autocomplete`) para sugerir `codigoNacional`
+  - endereco do tomador com autocomplete por CEP (consulta externa), preenchendo logradouro/bairro/municipio/UF ao informar CEP valido
+  - fallback operacional por CNPJ manual (`GET /empresas/cnpj/:cnpj`) permanece disponivel para carregar prestador
 
 ### 10.2 Lista de NFSe
 Tela: `src/pages/NfseListPage.tsx`
@@ -186,6 +194,18 @@ Tela: `src/pages/CertificadoDigitalPage.tsx`
 - Regra operacional: empresa ja cadastrada nao e bloqueada por ausencia de certificado; exigencia ocorre no momento da emissao.
 - Restricao de seguranca: sem exibicao de conteudo sensivel do certificado
 
+### 10.7 Endereco por CEP
+Telas: `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx`
+
+- CEP com mascara visual `00000-000` e normalizacao para 8 digitos no envio de payload
+- Consulta automatica de CEP ao completar 8 digitos (fonte externa via `src/services/cep.ts`)
+- Preenchimento assistido dos campos de endereco:
+  - Empresa: `endereco`, `cidade`, `uf`
+  - Tomador da emissao: `logradouro`, `bairro`, `municipio`, `uf`
+- Feedback de UX:
+  - estado de busca ("Buscando endereco pelo CEP...")
+  - erro operacional quando CEP invalido/nao encontrado
+
 ### 10.6 Emissao Rapida de NFSe
 Tela: `src/pages/NfseQuickEmitPage.tsx`
 
@@ -194,6 +214,7 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
   - empresa emissora via autocomplete (com dados de `/empresas`), preenchendo CNPJ automaticamente ao selecionar item
   - servico via busca no catalogo priorizando `GET /nfse/servicos` com fallback para `/nfse/servicos/autocomplete`, com supressao de toast global no erro esperado do primeiro endpoint
   - busca com debounce de 250ms (empresa e servico) para reduzir flicker/chamadas e evitar feedback prematuro
+  - codigo de servico sincronizado com o texto digitado no autocomplete (evita manter codigo antigo quando o usuario altera a busca)
   - campos com mascara visual para reduzir erro de digitacao (`CNPJ`, `CPF` e `valor` em formato monetario BRL)
 - Envio para `POST /nfse/quick`
 - Feedback operacional:
@@ -279,6 +300,6 @@ Checklist por commit:
 5. Atualizar rastreabilidade
 
 ## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-16T17:39:14-04:00
+- Ultima atualizacao: 2026-02-17T12:06:06-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: atualizacao documental pos-ajuste de UX na emissao rapida (remocao de duplicidade de selecao de empresa, debounce de autocomplete e supressao de erro transitario no fallback de catalogo de servicos), com rastreio de testes/lint reexecutados
+- Tipo de atualizacao: atualizacao documental pos-implementacao de autocomplete de endereco por CEP (empresa e emissao normal), incluindo mascara/normalizacao de CEP e revalidacao da suite de testes

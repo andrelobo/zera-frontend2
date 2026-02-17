@@ -38,6 +38,12 @@ const formatCurrencyFromDigits = (value: string) => {
   return amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+const extractServiceCode = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 6) return '';
+  return digits.slice(0, 6);
+};
+
 const getApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data as Partial<ApiError>;
@@ -255,12 +261,7 @@ const NfseQuickEmitPage = () => {
                 onChange={(e) => {
                   const next = e.target.value;
                   setServiceSearch(next);
-                  const onlyDigits = next.replace(/\D/g, '');
-                  if (onlyDigits.length === 6) {
-                    setCodigoServico(onlyDigits);
-                  } else if (!onlyDigits) {
-                    setCodigoServico('');
-                  }
+                  setCodigoServico(extractServiceCode(next));
                 }}
                 placeholder="Digite código ou descrição do serviço"
               />

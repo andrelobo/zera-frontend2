@@ -1,25 +1,37 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { nfseApi, empresasApi } from '@/services/api';
+import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Search, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { EmitirNfseRequest } from '@/types/api';
 
 const buildReferencia = () => `nfse-front-${Date.now()}`;
+const MIN_AUTOCOMPLETE_CHARS = 2;
+
+const extractServiceCode = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 6) return '';
+  return digits.slice(0, 6);
+};
 
 const NfseEmitPage = () => {
   const navigate = useNavigate();
 
-  const { data: empresas } = useQuery({
+  const [empresaSearch, setEmpresaSearch] = useState('');
+  const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
+  const { data: empresas = [], isLoading: empresasLoading } = useQuery({
     queryKey: ['empresas'],
     queryFn: empresasApi.list,
+    staleTime: 60_000,
   });
 
   const [empresaId, setEmpresaId] = useState('');
@@ -38,17 +50,76 @@ const NfseEmitPage = () => {
   const [codigoTributacao, setCodigoTributacao] = useState('100');
   const [referenciaExterna, setReferenciaExterna] = useState(buildReferencia());
   const [empresaByCnpj, setEmpresaByCnpj] = useState<(typeof empresas extends Array<infer T> ? T : never) | null>(null);
+  const tomadorCepDigits = useMemo(() => normalizeCep(tomadorCep), [tomadorCep]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setEmpresaSearchDebounced(empresaSearch), 250);
+    return () => clearTimeout(timer);
+  }, [empresaSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setServiceSearchDebounced(serviceSearch), 250);
+    return () => clearTimeout(timer);
+  }, [serviceSearch]);
 
   const empresaSelecionada = useMemo(() => {
     if (empresaByCnpj) return empresaByCnpj;
-    return (empresas || []).find((e) => e.id === empresaId) || null;
+    return empresas.find((e) => e.id === empresaId) || null;
   }, [empresas, empresaByCnpj, empresaId]);
+
+  const canSearchEmpresa = empresaSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
+  const filteredEmpresas = useMemo(() => {
+    if (!canSearchEmpresa) return [];
+    const search = empresaSearchDebounced.trim().toLowerCase();
+    return empresas
+      .filter((empresa) =>
+        empresa.razaoSocial.toLowerCase().includes(search) ||
+        empresa.cnpj.replace(/\D/g, '').includes(search.replace(/\D/g, '')),
+      )
+      .slice(0, 8);
+  }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
+
+  const canSearchService = serviceSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
+  const serviceQuery = useQuery({
+    queryKey: ['nfse-emit-service-autocomplete', serviceSearchDebounced],
+    queryFn: async () => {
+      try {
+        return await nfseApi.servicosList(
+          { q: serviceSearchDebounced, limit: 8 },
+          { skipGlobalErrorToast: true },
+        );
+      } catch {
+        return nfseApi.servicosAutocomplete({ q: serviceSearchDebounced, limit: 8 });
+      }
+    },
+    enabled: canSearchService,
+    staleTime: 60_000,
+  });
+
+  const cepLookupQuery = useQuery({
+    queryKey: ['cep-lookup', 'nfse-emit-tomador', tomadorCepDigits],
+    queryFn: () => lookupCep(tomadorCepDigits),
+    enabled: tomadorCepDigits.length === 8,
+    staleTime: 60 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!cepLookupQuery.data) return;
+    const address = cepLookupQuery.data;
+    setTomadorLogradouro((prev) => address.logradouro || prev);
+    setTomadorBairro((prev) => address.bairro || prev);
+    setTomadorMunicipio((prev) => address.cidade || prev);
+    setTomadorUf((prev) => address.uf || prev);
+    setTomadorCep(formatCep(address.cep));
+  }, [cepLookupQuery.data]);
 
   const buscarEmpresaMutation = useMutation({
     mutationFn: (cnpj: string) => empresasApi.getByCnpj(cnpj),
     onSuccess: (empresa) => {
       setEmpresaByCnpj(empresa);
+      setEmpresaId(empresa.id);
       setPrestadorCnpj(empresa.cnpj);
+      setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
       toast({ title: 'Prestador carregado', description: `${empresa.razaoSocial} (${empresa.cnpj})` });
     },
   });
@@ -71,7 +142,7 @@ const NfseEmitPage = () => {
       bairro: tomadorBairro || undefined,
       municipio: tomadorMunicipio || empresaSelecionada.endereco?.cidade || empresaSelecionada.endereco?.descricaoCidade || undefined,
       uf: tomadorUf || empresaSelecionada.endereco?.uf || empresaSelecionada.endereco?.estado || undefined,
-      cep: tomadorCep || undefined,
+      cep: normalizeCep(tomadorCep) || undefined,
     };
 
     const payload: EmitirNfseRequest = {
@@ -130,23 +201,42 @@ const NfseEmitPage = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Empresa Emissora</Label>
-              <Select
-                value={empresaId}
-                onValueChange={(value) => {
-                  setEmpresaId(value);
+              <Label htmlFor="empresaSearch">Empresa Emissora (autocomplete)</Label>
+              <Input
+                id="empresaSearch"
+                value={empresaSearch}
+                onChange={(ev) => {
+                  setEmpresaSearch(ev.target.value);
+                  setEmpresaId('');
                   setEmpresaByCnpj(null);
                 }}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
-                <SelectContent>
-                  {(empresas || []).map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id}>
-                      {empresa.razaoSocial} ({empresa.cnpj})
-                    </SelectItem>
+                placeholder="Digite razão social ou CNPJ"
+              />
+              {empresasLoading && (
+                <p className="text-sm text-muted-foreground">Carregando empresas...</p>
+              )}
+              {filteredEmpresas.length > 0 && (
+                <div className="max-h-44 overflow-auto rounded-md border p-1">
+                  {filteredEmpresas.map((empresa) => (
+                    <button
+                      key={`emit-empresa-${empresa.id}`}
+                      type="button"
+                      className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
+                      onClick={() => {
+                        setEmpresaId(empresa.id);
+                        setEmpresaByCnpj(null);
+                        setPrestadorCnpj(empresa.cnpj);
+                        setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+                      }}
+                    >
+                      <span className="font-medium">{empresa.razaoSocial}</span> ({empresa.cnpj})
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
+              {canSearchEmpresa && !empresasLoading && filteredEmpresas.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhuma empresa encontrada.</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -163,6 +253,12 @@ const NfseEmitPage = () => {
                 </Button>
               </div>
             </div>
+
+            {empresaSelecionada && (
+              <p className="text-xs text-muted-foreground">
+                Prestador selecionado: {empresaSelecionada.razaoSocial} ({empresaSelecionada.cnpj})
+              </p>
+            )}
 
             <div className="space-y-2">
               <Label>Referência Externa</Label>
@@ -206,13 +302,66 @@ const NfseEmitPage = () => {
               </div>
               <div className="space-y-2">
                 <Label>CEP</Label>
-                <Input value={tomadorCep} onChange={(ev) => setTomadorCep(ev.target.value)} placeholder="Somente números" />
+                <Input
+                  value={tomadorCep}
+                  onChange={(ev) => setTomadorCep(formatCep(ev.target.value))}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                />
+                {tomadorCepDigits.length > 0 && tomadorCepDigits.length < 8 && (
+                  <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
+                )}
+                {cepLookupQuery.isFetching && (
+                  <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
+                )}
+                {cepLookupQuery.isError && (
+                  <p className="text-xs text-destructive">
+                    {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Descrição do Serviço</Label>
               <Textarea value={descricao} onChange={(ev) => setDescricao(ev.target.value)} required rows={3} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serviceSearch">Serviço (autocomplete)</Label>
+              <Input
+                id="serviceSearch"
+                value={serviceSearch}
+                onChange={(ev) => {
+                  const next = ev.target.value;
+                  setServiceSearch(next);
+                  setCodigoNacional(extractServiceCode(next));
+                }}
+                placeholder="Digite código ou descrição do serviço"
+              />
+              {serviceQuery.isLoading && canSearchService && (
+                <p className="text-sm text-muted-foreground">Buscando serviços...</p>
+              )}
+              {serviceQuery.isSuccess && (serviceQuery.data?.items?.length ?? 0) > 0 && (
+                <div className="max-h-44 overflow-auto rounded-md border p-1">
+                  {(serviceQuery.data?.items ?? []).map((item) => (
+                    <button
+                      key={`emit-service-${item.codigoServico}-${item.sequencial ?? ''}`}
+                      type="button"
+                      className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
+                      onClick={() => {
+                        setCodigoNacional(item.codigoServico);
+                        setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
+                      }}
+                    >
+                      <span className="font-medium">{item.codigoServico}</span> - {item.descricao}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {serviceQuery.isFetched && !serviceQuery.isFetching && canSearchService && (serviceQuery.data?.items?.length ?? 0) === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">

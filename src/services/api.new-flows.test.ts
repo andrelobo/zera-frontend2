@@ -160,6 +160,112 @@ describe('new API flows', () => {
     });
   });
 
+  it('queries service list endpoint with trimmed params and request options', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const response = { items: [], total: 0 };
+    mockGet.mockResolvedValue({ data: response });
+
+    await nfseApi.servicosList(
+      { q: '  corte  ', limit: 5, page: 2 },
+      { skipGlobalErrorToast: true },
+    );
+
+    expect(mockGet).toHaveBeenCalledWith('/nfse/servicos', {
+      params: { q: 'corte', limit: 5, page: 2 },
+      skipGlobalErrorToast: true,
+    });
+  });
+
+  it('maps paginated NFSe list and normalizes provider filter', async () => {
+    const { nfseApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: {
+        items: [{ id: 'n1', status: 'PENDING' }],
+        meta: { total: 12, page: 3, limit: 5, totalPages: 3 },
+      },
+    });
+
+    const result = await nfseApi.list({ provider: 'PLUGNOTAS', page: 3, limit: 5 });
+
+    expect(mockGet).toHaveBeenCalledWith('/nfse', {
+      params: { provider: 'plugnotas', page: 3, limit: 5 },
+    });
+    expect(result).toEqual({
+      data: [{ id: 'n1', status: 'PENDING' }],
+      total: 12,
+      page: 3,
+      limit: 5,
+      totalPages: 3,
+    });
+  });
+
+  it('applies NFSe list defaults when backend omits meta and items', async () => {
+    const { nfseApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({ data: {} });
+
+    const result = await nfseApi.list();
+
+    expect(result).toEqual({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+    });
+  });
+
+  it('maps provider response envelope to normalized shape', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const payload = {
+      id: 'prov-1',
+      provider: 'PLUGNOTAS',
+      externalId: 'ext-1',
+      status: 'AUTHORIZED',
+      providerRequest: { sent: true },
+      providerResponse: { ok: true },
+      error: null,
+      createdAt: '2026-02-10T10:00:00.000Z',
+      updatedAt: '2026-02-10T10:01:00.000Z',
+    };
+    mockGet.mockResolvedValue({ data: payload });
+
+    const result = await nfseApi.providerResponse('emission-1');
+
+    expect(mockGet).toHaveBeenCalledWith('/nfse/emission-1/provider-response');
+    expect(result).toEqual({
+      id: 'prov-1',
+      provider: 'PLUGNOTAS',
+      externalId: 'ext-1',
+      status: 'AUTHORIZED',
+      providerRequest: { sent: true },
+      providerResponse: { ok: true },
+      error: null,
+      createdAt: '2026-02-10T10:00:00.000Z',
+      updatedAt: '2026-02-10T10:01:00.000Z',
+      raw: { ok: true },
+      protocol: 'ext-1',
+      receivedAt: '2026-02-10T10:01:00.000Z',
+    });
+  });
+
+  it('normalizes empresa id from _id fallback', async () => {
+    const { empresasApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: [
+        { _id: 'mongo-1', razaoSocial: 'Empresa A', cnpj: '123' },
+        { id: 'api-2', _id: 'mongo-2', razaoSocial: 'Empresa B', cnpj: '456' },
+      ],
+    });
+
+    const result = await empresasApi.list();
+
+    expect(mockGet).toHaveBeenCalledWith('/empresas');
+    expect(result).toEqual([
+      { _id: 'mongo-1', id: 'mongo-1', razaoSocial: 'Empresa A', cnpj: '123' },
+      { id: 'api-2', _id: 'mongo-2', razaoSocial: 'Empresa B', cnpj: '456' },
+    ]);
+  });
+
   it('propagates backend error on quick emission', async () => {
     const { nfseApi } = await import('@/services/api');
     const backendError = {
