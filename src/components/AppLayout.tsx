@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -25,6 +25,11 @@ const navItems = [
 function AppSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavigate = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar className="border-r">
@@ -46,6 +51,7 @@ function AppSidebar() {
                     <NavLink
                       to={item.to}
                       end={item.to === '/'}
+                      onClick={handleNavigate}
                       className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
