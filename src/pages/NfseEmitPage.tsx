@@ -50,6 +50,7 @@ const NfseEmitPage = () => {
   const [codigoTributacao, setCodigoTributacao] = useState('100');
   const [referenciaExterna, setReferenciaExterna] = useState(buildReferencia());
   const [empresaByCnpj, setEmpresaByCnpj] = useState<(typeof empresas extends Array<infer T> ? T : never) | null>(null);
+  const codigoNacionalClean = useMemo(() => codigoNacional.replace(/\D/g, ''), [codigoNacional]);
   const tomadorCepDigits = useMemo(() => normalizeCep(tomadorCep), [tomadorCep]);
 
   useEffect(() => {
@@ -363,6 +364,11 @@ const NfseEmitPage = () => {
               {serviceQuery.isFetched && !serviceQuery.isFetching && canSearchService && (serviceQuery.data?.items?.length ?? 0) === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
               )}
+              <p className="text-xs text-muted-foreground">
+                {codigoNacionalClean.length === 6
+                  ? `Código selecionado: ${codigoNacionalClean}`
+                  : 'Selecione um item da lista ou digite o código com 6 dígitos.'}
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
