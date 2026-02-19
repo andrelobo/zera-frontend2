@@ -12,6 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import ThemeToggle from '@/components/ThemeToggle';
+import BrandLogo from '@/components/BrandLogo';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -34,10 +35,7 @@ function AppSidebar() {
   return (
     <Sidebar className="border-r">
       <div className="flex h-14 items-center gap-2 border-b px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-          <FileText className="h-4 w-4 text-sidebar-primary-foreground" />
-        </div>
-        <span className="text-lg font-bold tracking-tight">ZERA</span>
+        <BrandLogo size="sm" className="gap-2" />
       </div>
 
       <SidebarContent>

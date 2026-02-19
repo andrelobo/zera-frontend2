@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, FileText } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -35,11 +36,9 @@ const LoginPage = () => {
     <div className="flex min-h-screen items-center justify-center bg-primary p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <FileText className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">ZERA</CardTitle>
-          <CardDescription>Painel de Emissão de NFSe — Manaus</CardDescription>
+          <BrandLogo size="lg" showTagline centered className="mx-auto flex-col gap-2" />
+          <CardTitle className="text-xl font-semibold tracking-tight">Painel de Emissão de NFSe</CardTitle>
+          <CardDescription>Operação Manaus</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

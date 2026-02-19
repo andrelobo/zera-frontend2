@@ -33,6 +33,7 @@ Timestamp base desta revisao editorial: `2026-02-17T12:06:06-04:00`.
 - Evidencia E17 (codigo local): `src/pages/NfseEmitPage.tsx` e `src/pages/NfseQuickEmitPage.tsx` confirmam padronizacao de autocomplete (empresa e servico), debounce de 250ms e sincronizacao do codigo de servico com o texto digitado para evitar selecao stale.
 - Evidencia E18 (codigo local): `src/services/cep.ts`, `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx` confirmam lookup de CEP para autocomplete de endereco (logradouro/bairro/cidade/UF), com mascara e normalizacao de CEP.
 - Evidencia E19 (execucao local): `yarn run test` executado com sucesso em `2026-02-17T12:06:06-04:00` (3 arquivos, 17 testes, todos passando).
+- Evidencia E20 (codigo local): `tailwind.config.ts` e `src/index.css` confirmam extensao de paleta `zera.*` (light/dark) e remapeamento de tokens shadcn (`--primary`, `--secondary`, `--accent`, `--background`, `--foreground`, `--border`, `--muted`, `--ring`) para o novo padrao visual.
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -241,6 +242,8 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - Alias: `@ -> src`
 - Tema claro/escuro ativo via `next-themes`
 - Botao de alternancia no header: `src/components/ThemeToggle.tsx`
+- Paleta estendida no Tailwind: namespace `zera` (brand e dark tokens) em `tailwind.config.ts`
+- Tokens HSL do shadcn atualizados em `src/index.css` para alinhar tema claro/escuro ao novo padrao de cor (brand navy/teal/amber)
 - Ajustes recentes de layout no detalhe de NFSe para evitar overflow horizontal
 - Branding/metadados atualizados:
   - titulo da aba: `ZERA`
@@ -300,6 +303,6 @@ Checklist por commit:
 5. Atualizar rastreabilidade
 
 ## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-17T12:06:06-04:00
+- Ultima atualizacao: 2026-02-19T12:09:28-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: atualizacao documental pos-implementacao de autocomplete de endereco por CEP (empresa e emissao normal), incluindo mascara/normalizacao de CEP e revalidacao da suite de testes
+- Tipo de atualizacao: atualizacao documental pos-ajuste de tema e paleta de cores (light/dark), com extensao `zera.*` no Tailwind e remapeamento de tokens shadcn em `src/index.css`

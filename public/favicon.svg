@@ -1,4 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0f172a" />
-  <path d="M14 16h36v8L24 40h26v8H14v-8l26-16H14z" fill="#3b82f6" />
+  <defs>
+    <linearGradient id="teal" x1="10" y1="8" x2="34" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#36C7B6" />
+      <stop offset="100%" stop-color="#20B7A5" />
+    </linearGradient>
+    <linearGradient id="amber" x1="30" y1="8" x2="56" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F0C46A" />
+      <stop offset="100%" stop-color="#E2B04F" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#162238" />
+  <circle cx="25" cy="30" r="12" fill="none" stroke="url(#teal)" stroke-width="5" />
+  <circle cx="39" cy="30" r="12" fill="none" stroke="url(#amber)" stroke-width="5" />
+  <path d="M34 37 L38 34 L38.5 40 Z" fill="#20B7A5" />
+  <path d="M30 22.5 L26 26.5 L25.5 21 Z" fill="#E2B04F" />
+  <circle cx="32" cy="30" r="6" fill="#162238" />
+  <text x="32" y="33" text-anchor="middle" font-size="10" font-weight="700" fill="#E8EDF5" font-family="Inter, system-ui, sans-serif">0</text>
 </svg>

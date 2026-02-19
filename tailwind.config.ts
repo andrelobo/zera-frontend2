@@ -15,6 +15,41 @@ export default {
     },
     extend: {
       colors: {
+        zera: {
+          primary: {
+            900: "#162238",
+            800: "#1F2F4D",
+            600: "#2D4472",
+            100: "#E8EDF5",
+          },
+          teal: {
+            700: "#169587",
+            600: "#20B7A5",
+            100: "#E6F7F4",
+          },
+          amber: {
+            600: "#C6952D",
+            500: "#E2B04F",
+            100: "#FFF4DA",
+          },
+          dark: {
+            bg: "#0B1220",
+            s1: "#0F1A2E",
+            s2: "#14213A",
+            border: "#22314F",
+            text: "#E7EEF9",
+            muted: "#A8B3C7",
+            subtle: "#7C8AA6",
+            primary: "#2D4472",
+            primaryHover: "#3A5A93",
+            teal: "#20B7A5",
+            tealHover: "#36C7B6",
+            amber: "#E2B04F",
+            amberHover: "#F0C46A",
+            error: "#F87171",
+            info: "#60A5FA",
+          },
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

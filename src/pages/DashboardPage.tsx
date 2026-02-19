@@ -68,14 +68,14 @@ const writeStatsSnapshot = (snapshot: DashboardStatsSnapshot) => {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  AUTHORIZED: 'hsl(142, 72%, 38%)',
-  PENDING: 'hsl(38, 92%, 50%)',
-  REJECTED: 'hsl(0, 72%, 51%)',
-  EJECTE: 'hsl(0, 72%, 51%)',
-  ERROR: 'hsl(0, 62%, 45%)',
-  ERRORR: 'hsl(0, 62%, 45%)',
-  PROCESSING: 'hsl(200, 90%, 48%)',
-  CANCELLED: 'hsl(220, 10%, 60%)',
+  AUTHORIZED: 'hsl(var(--success))',
+  PENDING: 'hsl(var(--warning))',
+  REJECTED: 'hsl(var(--destructive))',
+  EJECTE: 'hsl(var(--destructive))',
+  ERROR: 'hsl(var(--destructive))',
+  ERRORR: 'hsl(var(--destructive))',
+  PROCESSING: 'hsl(var(--info))',
+  CANCELLED: 'hsl(var(--muted-foreground))',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -283,7 +283,7 @@ const DashboardPage = () => {
                     paddingAngle={3}
                   >
                     {statusChartData.map((entry) => (
-                      <Cell key={entry.status || entry.name} fill={STATUS_COLORS[entry.status || ''] || '#ccc'} />
+                      <Cell key={entry.status || entry.name} fill={STATUS_COLORS[entry.status || ''] || 'hsl(var(--muted))'} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number, name: string) => [value, name]} />
