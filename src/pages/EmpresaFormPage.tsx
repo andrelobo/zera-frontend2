@@ -121,6 +121,7 @@ const EmpresaFormPage = () => {
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', email: '',
   });
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
+  const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
 
   useEffect(() => {
     if (existing) {
@@ -245,6 +246,7 @@ const EmpresaFormPage = () => {
       return;
     }
     if (previewMutation.isPending || lastPreviewCnpj === cnpj) return;
+    setLastPreviewAttemptCnpj(cnpj);
     previewMutation.mutate(cnpj);
   };
 
@@ -252,9 +254,14 @@ const EmpresaFormPage = () => {
     if (isEdit) return;
     const cnpj = form.cnpj.replace(/\D/g, '');
     if (cnpj.length !== 14) return;
-    if (previewMutation.isPending || lastPreviewCnpj === cnpj) return;
+    if (
+      previewMutation.isPending
+      || lastPreviewCnpj === cnpj
+      || lastPreviewAttemptCnpj === cnpj
+    ) return;
+    setLastPreviewAttemptCnpj(cnpj);
     previewMutation.mutate(cnpj);
-  }, [form.cnpj, isEdit, lastPreviewCnpj, previewMutation]);
+  }, [form.cnpj, isEdit, lastPreviewAttemptCnpj, lastPreviewCnpj, previewMutation]);
 
   if (isEdit && isLoading) return <LoadingState />;
 
