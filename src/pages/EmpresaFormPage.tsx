@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Building2, FileText, Loader2, MapPin, Phone, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
+import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
   razaoSocial: string;
@@ -59,6 +60,47 @@ const fromBooleanSelectValue = (value: string): boolean | null | undefined => {
   return undefined;
 };
 
+const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
+  const legacy = empresa as Record<string, unknown>;
+  const endereco = (empresa.endereco || {}) as Record<string, unknown>;
+
+  return {
+    razaoSocial: empresa.razaoSocial || String(legacy.razao_social || previous.razaoSocial),
+    cnpj: empresa.cnpj || previous.cnpj,
+    nomeFantasia: empresa.nomeFantasia || String(legacy.nome_fantasia || previous.nomeFantasia),
+    inscricaoMunicipal: empresa.inscricaoMunicipal || String(legacy.inscricao_municipal || previous.inscricaoMunicipal),
+    situacaoCadastral: empresa.situacaoCadastral || String(legacy.situacao_cadastral || previous.situacaoCadastral),
+    dataSituacaoCadastral: toDateInputValue(empresa.dataSituacaoCadastral || (legacy.data_situacao_cadastral as string | undefined)) || previous.dataSituacaoCadastral,
+    dataInicioAtividade: toDateInputValue(empresa.dataInicioAtividade || (legacy.data_inicio_atividade as string | undefined)) || previous.dataInicioAtividade,
+    cnaeFiscal: String(empresa.cnaeFiscal || legacy.cnae_fiscal || previous.cnaeFiscal),
+    cnaeFiscalDescricao: empresa.cnaeFiscalDescricao || String(legacy.cnae_fiscal_descricao || previous.cnaeFiscalDescricao),
+    porte: empresa.porte || String(legacy.porte || previous.porte),
+    naturezaJuridica: empresa.naturezaJuridica || String(legacy.natureza_juridica || previous.naturezaJuridica),
+    capitalSocial: String(empresa.capitalSocial || legacy.capital_social || previous.capitalSocial),
+    opcaoPeloSimples: toBooleanSelectValue(
+      empresa.opcaoPeloSimples ?? (legacy.opcao_pelo_simples as boolean | null | undefined),
+    ) || previous.opcaoPeloSimples,
+    opcaoPeloMei: toBooleanSelectValue(
+      empresa.opcaoPeloMei ?? (legacy.opcao_pelo_mei as boolean | null | undefined),
+    ) || previous.opcaoPeloMei,
+    dataOpcaoPeloSimples: toDateInputValue(
+      empresa.dataOpcaoPeloSimples ?? (legacy.data_opcao_pelo_simples as string | null | undefined),
+    ) || previous.dataOpcaoPeloSimples,
+    dataExclusaoDoSimples: toDateInputValue(
+      empresa.dataExclusaoDoSimples ?? (legacy.data_exclusao_do_simples as string | null | undefined),
+    ) || previous.dataExclusaoDoSimples,
+    endereco: String(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
+    numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
+    complemento: String(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
+    bairro: String(empresa.endereco?.bairro || endereco.bairro || previous.bairro),
+    cidade: empresa.cidade || empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || String(endereco.municipio || previous.cidade),
+    uf: empresa.uf || empresa.endereco?.uf || empresa.endereco?.estado || previous.uf,
+    cep: formatCep(empresa.cep || empresa.endereco?.cep || String(endereco.cep || previous.cep)),
+    telefone: empresa.telefone || empresa.fone || String(legacy.ddd_telefone_1 || previous.telefone),
+    email: empresa.email || String(legacy.email || previous.email),
+  };
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -78,38 +120,11 @@ const EmpresaFormPage = () => {
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', email: '',
   });
+  const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
 
   useEffect(() => {
     if (existing) {
-      const legacy = existing as Record<string, unknown>;
-      const endereco = (existing.endereco || {}) as Record<string, unknown>;
-      setForm({
-        razaoSocial: existing.razaoSocial || String(legacy.razao_social || ''),
-        cnpj: existing.cnpj,
-        nomeFantasia: existing.nomeFantasia || String(legacy.nome_fantasia || ''),
-        inscricaoMunicipal: existing.inscricaoMunicipal || String(legacy.inscricao_municipal || ''),
-        situacaoCadastral: existing.situacaoCadastral || String(legacy.situacao_cadastral || ''),
-        dataSituacaoCadastral: toDateInputValue(existing.dataSituacaoCadastral || (legacy.data_situacao_cadastral as string | undefined)),
-        dataInicioAtividade: toDateInputValue(existing.dataInicioAtividade || (legacy.data_inicio_atividade as string | undefined)),
-        cnaeFiscal: String(existing.cnaeFiscal || legacy.cnae_fiscal || ''),
-        cnaeFiscalDescricao: existing.cnaeFiscalDescricao || String(legacy.cnae_fiscal_descricao || ''),
-        porte: existing.porte || String(legacy.porte || ''),
-        naturezaJuridica: existing.naturezaJuridica || String(legacy.natureza_juridica || ''),
-        capitalSocial: String(existing.capitalSocial || legacy.capital_social || ''),
-        opcaoPeloSimples: toBooleanSelectValue(existing.opcaoPeloSimples ?? (legacy.opcao_pelo_simples as boolean | null | undefined)),
-        opcaoPeloMei: toBooleanSelectValue(existing.opcaoPeloMei ?? (legacy.opcao_pelo_mei as boolean | null | undefined)),
-        dataOpcaoPeloSimples: toDateInputValue(existing.dataOpcaoPeloSimples ?? (legacy.data_opcao_pelo_simples as string | null | undefined)),
-        dataExclusaoDoSimples: toDateInputValue(existing.dataExclusaoDoSimples ?? (legacy.data_exclusao_do_simples as string | null | undefined)),
-        endereco: String(existing.endereco?.logradouro || endereco.logradouro || ''),
-        numero: String(existing.endereco?.numero || endereco.numero || ''),
-        complemento: String(existing.endereco?.complemento || endereco.complemento || ''),
-        bairro: String(existing.endereco?.bairro || endereco.bairro || ''),
-        cidade: existing.cidade || existing.endereco?.cidade || existing.endereco?.descricaoCidade || String(endereco.municipio || ''),
-        uf: existing.uf || existing.endereco?.uf || existing.endereco?.estado || '',
-        cep: formatCep(existing.cep || existing.endereco?.cep || String(endereco.cep || '')),
-        telefone: existing.telefone || existing.fone || String(legacy.ddd_telefone_1 || ''),
-        email: existing.email || String(legacy.email || ''),
-      });
+      setForm((prev) => mapEmpresaToForm(existing, prev));
     }
   }, [existing]);
 
@@ -196,9 +211,50 @@ const EmpresaFormPage = () => {
     },
   });
 
+  const previewMutation = useMutation({
+    mutationFn: (cnpj: string) => empresasApi.previewByCnpj(cnpj),
+    onSuccess: (empresa) => {
+      setLastPreviewCnpj(empresa.cnpj.replace(/\D/g, ''));
+      setForm((prev) => mapEmpresaToForm(empresa, prev));
+      toast({
+        title: 'Dados preenchidos',
+        description: 'Autocompletar por CNPJ concluiu o preenchimento dos campos disponíveis.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Falha ao autocompletar',
+        description: error instanceof Error ? error.message : 'Não foi possível buscar dados para este CNPJ.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const update = (key: keyof EmpresaFormData, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
+
+  const handleAutocompleteByCnpj = () => {
+    const cnpj = form.cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) {
+      toast({
+        title: 'CNPJ inválido',
+        description: 'Informe um CNPJ com 14 dígitos para autocompletar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (previewMutation.isPending || lastPreviewCnpj === cnpj) return;
+    previewMutation.mutate(cnpj);
+  };
+
+  useEffect(() => {
+    if (isEdit) return;
+    const cnpj = form.cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) return;
+    if (previewMutation.isPending || lastPreviewCnpj === cnpj) return;
+    previewMutation.mutate(cnpj);
+  }, [form.cnpj, isEdit, lastPreviewCnpj, previewMutation]);
 
   if (isEdit && isLoading) return <LoadingState />;
 
@@ -232,7 +288,19 @@ const EmpresaFormPage = () => {
             </div>
             <div className="space-y-2">
               <Label>CNPJ</Label>
-              <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" disabled={isEdit} />
+              <div className="flex gap-2">
+                <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" disabled={isEdit} />
+                {!isEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAutocompleteByCnpj}
+                    disabled={previewMutation.isPending}
+                  >
+                    {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Autocompletar'}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Nome Fantasia</Label>
