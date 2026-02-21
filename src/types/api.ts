@@ -74,6 +74,9 @@ export interface Empresa {
   dataOpcaoPeloSimples?: string | null;
   dataExclusaoDoSimples?: string | null;
   opcaoPeloMei?: boolean | null;
+  regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
+  aliquotaSimplesNacional?: number | string;
+  apuracaoSimplesNacional?: string;
   endereco?: {
     logradouro?: string;
     numero?: string;
@@ -112,6 +115,9 @@ export interface CreateEmpresaRequest {
   dataOpcaoPeloSimples?: string | null;
   dataExclusaoDoSimples?: string | null;
   opcaoPeloMei?: boolean | null;
+  regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
+  aliquotaSimplesNacional?: number | string;
+  apuracaoSimplesNacional?: string;
   endereco?: string | {
     logradouro?: string;
     numero?: string;

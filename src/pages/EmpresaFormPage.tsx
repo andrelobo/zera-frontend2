@@ -30,6 +30,9 @@ interface EmpresaFormData {
   opcaoPeloMei: '' | 'true' | 'false';
   dataOpcaoPeloSimples: string;
   dataExclusaoDoSimples: string;
+  regimeTributario: '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
+  aliquotaSimplesNacional: string;
+  apuracaoSimplesNacional: string;
   endereco: string;
   numero: string;
   complemento: string;
@@ -92,6 +95,23 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     dataExclusaoDoSimples: toDateInputValue(
       empresa.dataExclusaoDoSimples ?? (legacy.data_exclusao_do_simples as string | null | undefined),
     ) || previous.dataExclusaoDoSimples,
+    regimeTributario: (
+      empresa as unknown as { regimeTributario?: EmpresaFormData['regimeTributario'] }
+    ).regimeTributario
+      || (legacy.regime_tributario as EmpresaFormData['regimeTributario'] | undefined)
+      || previous.regimeTributario,
+    aliquotaSimplesNacional:
+      String(
+        empresa.aliquotaSimplesNacional
+          || (legacy.aliquota_simples_nacional as string | undefined)
+          || previous.aliquotaSimplesNacional,
+      ),
+    apuracaoSimplesNacional:
+      String(
+        empresa.apuracaoSimplesNacional
+          || (legacy.apuracao_simples_nacional as string | undefined)
+          || previous.apuracaoSimplesNacional,
+      ),
     endereco: String(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
     numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
     complemento: String(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
@@ -121,6 +141,7 @@ const EmpresaFormPage = () => {
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
     cnaeFiscal: '', cnaeFiscalDescricao: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
+    regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', email: '',
   });
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
@@ -175,6 +196,9 @@ const EmpresaFormPage = () => {
         opcaoPeloMei: fromBooleanSelectValue(form.opcaoPeloMei),
         dataOpcaoPeloSimples: form.dataOpcaoPeloSimples || undefined,
         dataExclusaoDoSimples: form.dataExclusaoDoSimples || undefined,
+        regimeTributario: form.regimeTributario || undefined,
+        aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
+        apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
         email: form.email || undefined,
         telefone: form.telefone || undefined,
         endereco: {
@@ -203,6 +227,9 @@ const EmpresaFormPage = () => {
       opcaoPeloMei: payload.opcaoPeloMei,
       dataOpcaoPeloSimples: payload.dataOpcaoPeloSimples,
       dataExclusaoDoSimples: payload.dataExclusaoDoSimples,
+      regimeTributario: payload.regimeTributario,
+      aliquotaSimplesNacional: payload.aliquotaSimplesNacional,
+      apuracaoSimplesNacional: payload.apuracaoSimplesNacional,
       email: payload.email,
       telefone: payload.telefone,
       endereco: payload.endereco,
@@ -363,6 +390,76 @@ const EmpresaFormPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Regime Tributário</Label>
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => update('regimeTributario', 'simples_nacional')}
+                  className={`rounded-md border p-3 text-left transition-colors ${
+                    form.regimeTributario === 'simples_nacional'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent/40'
+                  }`}
+                >
+                  <p className="text-sm font-semibold">Simples Nacional</p>
+                  <p className="text-xs text-muted-foreground">MEI, ME e EPP optantes pelo Simples</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update('regimeTributario', 'lucro_presumido')}
+                  className={`rounded-md border p-3 text-left transition-colors ${
+                    form.regimeTributario === 'lucro_presumido'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent/40'
+                  }`}
+                >
+                  <p className="text-sm font-semibold">Lucro Presumido</p>
+                  <p className="text-xs text-muted-foreground">Tributação com base na presunção de lucro</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update('regimeTributario', 'lucro_real')}
+                  className={`rounded-md border p-3 text-left transition-colors ${
+                    form.regimeTributario === 'lucro_real'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent/40'
+                  }`}
+                >
+                  <p className="text-sm font-semibold">Lucro Real</p>
+                  <p className="text-xs text-muted-foreground">Apuração com base no lucro efetivo</p>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Parâmetro Fiscal</Label>
+              <div className="rounded-md border p-3">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Alíquota Simples Nacional</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={form.aliquotaSimplesNacional}
+                        onChange={e => update('aliquotaSimplesNacional', e.target.value)}
+                        placeholder="00,00"
+                        inputMode="decimal"
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Apuração Simples Nacional</Label>
+                    <Input
+                      value={form.apuracaoSimplesNacional}
+                      onChange={e => update('apuracaoSimplesNacional', e.target.value)}
+                      placeholder="Ex.: Mensal"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Optante pelo Simples</Label>
               <select
