@@ -70,6 +70,18 @@ const fromBooleanSelectValue = (value: string): boolean | null | undefined => {
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
   const endereco = (empresa.endereco || {}) as Record<string, unknown>;
+  const providerData = (legacy.providerData as Record<string, unknown> | undefined) ?? {};
+  const atividadePrincipal = Array.isArray(providerData.atividade_principal)
+    ? (providerData.atividade_principal[0] as Record<string, unknown> | undefined)
+    : undefined;
+  const simplesData = (providerData.simples as Record<string, unknown> | undefined) ?? {};
+
+  const hasSimples = (
+    empresa.opcaoPeloSimples === true
+    || legacy.opcao_pelo_simples === true
+    || providerData.opcao_pelo_simples === true
+    || simplesData.optante === true
+  );
 
   return {
     razaoSocial: empresa.razaoSocial || String(legacy.razao_social || previous.razaoSocial),
@@ -77,11 +89,31 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     nomeFantasia: empresa.nomeFantasia || String(legacy.nome_fantasia || previous.nomeFantasia),
     inscricaoMunicipal: empresa.inscricaoMunicipal || String(legacy.inscricao_municipal || previous.inscricaoMunicipal),
     situacaoCadastral: empresa.situacaoCadastral || String(legacy.situacao_cadastral || previous.situacaoCadastral),
-    dataSituacaoCadastral: toDateInputValue(empresa.dataSituacaoCadastral || (legacy.data_situacao_cadastral as string | undefined)) || previous.dataSituacaoCadastral,
-    dataInicioAtividade: toDateInputValue(empresa.dataInicioAtividade || (legacy.data_inicio_atividade as string | undefined)) || previous.dataInicioAtividade,
-    cnaeFiscal: String(empresa.cnaeFiscal || legacy.cnae_fiscal || previous.cnaeFiscal),
-    cnaeFiscalDescricao: empresa.cnaeFiscalDescricao || String(legacy.cnae_fiscal_descricao || previous.cnaeFiscalDescricao),
-    porte: empresa.porte || String(legacy.porte || previous.porte),
+    dataSituacaoCadastral: toDateInputValue(
+      empresa.dataSituacaoCadastral
+      || (legacy.data_situacao_cadastral as string | undefined)
+      || (providerData.data_situacao_cadastral as string | undefined),
+    ) || previous.dataSituacaoCadastral,
+    dataInicioAtividade: toDateInputValue(
+      empresa.dataInicioAtividade
+      || (legacy.data_inicio_atividade as string | undefined)
+      || (providerData.data_inicio_atividade as string | undefined),
+    ) || previous.dataInicioAtividade,
+    cnaeFiscal: String(
+      empresa.cnaeFiscal
+      || legacy.cnae_fiscal
+      || providerData.cnae_fiscal
+      || previous.cnaeFiscal,
+    ),
+    cnaeFiscalDescricao: empresa.cnaeFiscalDescricao
+      || String(
+        legacy.cnae_fiscal_descricao
+        || providerData.cnae_fiscal_descricao
+        || atividadePrincipal?.descricao
+        || previous.cnaeFiscalDescricao,
+      ),
+    porte: empresa.porte
+      || String(providerData.descricao_porte || legacy.porte || providerData.porte || previous.porte),
     naturezaJuridica: empresa.naturezaJuridica || String(legacy.natureza_juridica || previous.naturezaJuridica),
     capitalSocial: String(empresa.capitalSocial || legacy.capital_social || previous.capitalSocial),
     opcaoPeloSimples: toBooleanSelectValue(
@@ -100,6 +132,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       empresa as unknown as { regimeTributario?: EmpresaFormData['regimeTributario'] }
     ).regimeTributario
       || (legacy.regime_tributario as EmpresaFormData['regimeTributario'] | undefined)
+      || (hasSimples ? 'simples_nacional' : undefined)
       || previous.regimeTributario,
     aliquotaSimplesNacional:
       String(

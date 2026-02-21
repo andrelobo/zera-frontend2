@@ -13,11 +13,21 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
   const atividadePrincipal = Array.isArray(providerData.atividade_principal)
     ? (providerData.atividade_principal[0] as Record<string, unknown> | undefined)
     : undefined;
+  const simplesData = (providerData.simples as Record<string, unknown> | undefined) ?? {};
+  const simeiData = (providerData.simei as Record<string, unknown> | undefined) ?? {};
   const enderecoRaw = (legacy.endereco as Record<string, unknown> | undefined) ?? {};
   const pickString = (...values: unknown[]) => {
     for (const value of values) {
       if (value === null || value === undefined || value === '') continue;
       return String(value);
+    }
+    return undefined;
+  };
+  const pickBoolean = (...values: unknown[]) => {
+    for (const value of values) {
+      if (typeof value === 'boolean') return value;
+      if (value === 'true') return true;
+      if (value === 'false') return false;
     }
     return undefined;
   };
@@ -87,16 +97,18 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : undefined;
     })(),
-    opcaoPeloSimples: typeof legacy.opcaoPeloSimples === 'boolean'
-      ? legacy.opcaoPeloSimples
-      : typeof legacy.opcao_pelo_simples === 'boolean'
-        ? legacy.opcao_pelo_simples
-        : undefined,
-    opcaoPeloMei: typeof legacy.opcaoPeloMei === 'boolean'
-      ? legacy.opcaoPeloMei
-      : typeof legacy.opcao_pelo_mei === 'boolean'
-        ? legacy.opcao_pelo_mei
-        : undefined,
+    opcaoPeloSimples: pickBoolean(
+      legacy.opcaoPeloSimples,
+      legacy.opcao_pelo_simples,
+      providerData.opcao_pelo_simples,
+      simplesData.optante,
+    ),
+    opcaoPeloMei: pickBoolean(
+      legacy.opcaoPeloMei,
+      legacy.opcao_pelo_mei,
+      providerData.opcao_pelo_mei,
+      simeiData.optante,
+    ),
     dataOpcaoPeloSimples: pickString(legacy.dataOpcaoPeloSimples, legacy.data_opcao_pelo_simples),
     dataExclusaoDoSimples: pickString(
       legacy.dataExclusaoDoSimples,
@@ -106,6 +118,15 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       legacy.regimeTributario,
       legacy.regime_tributario,
       providerData.regime_tributario,
+    ) || (
+      pickBoolean(
+        legacy.opcaoPeloSimples,
+        legacy.opcao_pelo_simples,
+        providerData.opcao_pelo_simples,
+        simplesData.optante,
+      ) === true
+        ? 'simples_nacional'
+        : undefined
     ),
     aliquotaSimplesNacional: pickString(
       legacy.aliquotaSimplesNacional,
