@@ -296,7 +296,7 @@ const EmpresaFormPage = () => {
   if (isEdit && isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="space-y-6 animate-fade-in max-w-lg">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
           <ArrowLeft className="h-4 w-4" />
@@ -311,20 +311,20 @@ const EmpresaFormPage = () => {
       </Alert>
 
       <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-        <Card>
+        <Card className="section-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="section-title mb-0">
               <Building2 className="h-4 w-4 text-primary" />
               Dados da Empresa
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Razão Social</Label>
+              <Label className="field-label">Razão Social</Label>
               <Input value={form.razaoSocial} onChange={e => update('razaoSocial', e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label>CNPJ</Label>
+              <Label className="field-label">CNPJ</Label>
               <div className="flex gap-2">
                 <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" disabled={isEdit} />
                 {!isEdit && (
@@ -340,104 +340,119 @@ const EmpresaFormPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Nome Fantasia</Label>
+              <Label className="field-label">Nome Fantasia</Label>
               <Input value={form.nomeFantasia} onChange={e => update('nomeFantasia', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Inscrição Municipal</Label>
+              <Label className="field-label">Inscrição Municipal</Label>
               <Input value={form.inscricaoMunicipal} onChange={e => update('inscricaoMunicipal', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Situação Cadastral</Label>
+              <Label className="field-label">Situação Cadastral</Label>
               <Input value={form.situacaoCadastral} onChange={e => update('situacaoCadastral', e.target.value)} placeholder="ATIVA" />
             </div>
             <div className="space-y-2">
-              <Label>Data Situação Cadastral</Label>
+              <Label className="field-label">Data Situação Cadastral</Label>
               <Input type="date" value={form.dataSituacaoCadastral} onChange={e => update('dataSituacaoCadastral', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Início de Atividade</Label>
+              <Label className="field-label">Início de Atividade</Label>
               <Input type="date" value={form.dataInicioAtividade} onChange={e => update('dataInicioAtividade', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>CNAE Fiscal</Label>
+              <Label className="field-label">CNAE Fiscal</Label>
               <Input value={form.cnaeFiscal} onChange={e => update('cnaeFiscal', e.target.value)} />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Descrição CNAE</Label>
+              <Label className="field-label">Descrição CNAE</Label>
               <Input value={form.cnaeFiscalDescricao} onChange={e => update('cnaeFiscalDescricao', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Porte</Label>
+              <Label className="field-label">Porte</Label>
               <Input value={form.porte} onChange={e => update('porte', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Natureza Jurídica</Label>
+              <Label className="field-label">Natureza Jurídica</Label>
               <Input value={form.naturezaJuridica} onChange={e => update('naturezaJuridica', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Capital Social</Label>
+              <Label className="field-label">Capital Social</Label>
               <Input value={form.capitalSocial} onChange={e => update('capitalSocial', e.target.value)} placeholder="0,00" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="section-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="section-title mb-0">
               <FileText className="h-4 w-4 text-primary" />
               Enquadramento Fiscal
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label>Regime Tributário</Label>
+              <Label className="field-label">Regime Tributário</Label>
               <div className="grid gap-3">
                 <button
                   type="button"
                   onClick={() => update('regimeTributario', 'simples_nacional')}
-                  className={`rounded-md border p-3 text-left transition-colors ${
-                    form.regimeTributario === 'simples_nacional'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-accent/40'
+                  className={`radio-card text-left ${
+                    form.regimeTributario === 'simples_nacional' ? 'radio-card-selected' : ''
                   }`}
                 >
-                  <p className="text-sm font-semibold">Simples Nacional</p>
-                  <p className="text-xs text-muted-foreground">MEI, ME e EPP optantes pelo Simples</p>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    form.regimeTributario === 'simples_nacional' ? 'border-primary' : 'border-muted-foreground/40'
+                  }`}>
+                    {form.regimeTributario === 'simples_nacional' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Simples Nacional</p>
+                    <p className="text-xs text-muted-foreground">MEI, ME e EPP optantes pelo Simples</p>
+                  </div>
                 </button>
                 <button
                   type="button"
                   onClick={() => update('regimeTributario', 'lucro_presumido')}
-                  className={`rounded-md border p-3 text-left transition-colors ${
-                    form.regimeTributario === 'lucro_presumido'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-accent/40'
+                  className={`radio-card text-left ${
+                    form.regimeTributario === 'lucro_presumido' ? 'radio-card-selected' : ''
                   }`}
                 >
-                  <p className="text-sm font-semibold">Lucro Presumido</p>
-                  <p className="text-xs text-muted-foreground">Tributação com base na presunção de lucro</p>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    form.regimeTributario === 'lucro_presumido' ? 'border-primary' : 'border-muted-foreground/40'
+                  }`}>
+                    {form.regimeTributario === 'lucro_presumido' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Lucro Presumido</p>
+                    <p className="text-xs text-muted-foreground">Tributação com base na presunção de lucro</p>
+                  </div>
                 </button>
                 <button
                   type="button"
                   onClick={() => update('regimeTributario', 'lucro_real')}
-                  className={`rounded-md border p-3 text-left transition-colors ${
-                    form.regimeTributario === 'lucro_real'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-accent/40'
+                  className={`radio-card text-left ${
+                    form.regimeTributario === 'lucro_real' ? 'radio-card-selected' : ''
                   }`}
                 >
-                  <p className="text-sm font-semibold">Lucro Real</p>
-                  <p className="text-xs text-muted-foreground">Apuração com base no lucro efetivo</p>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    form.regimeTributario === 'lucro_real' ? 'border-primary' : 'border-muted-foreground/40'
+                  }`}>
+                    {form.regimeTributario === 'lucro_real' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Lucro Real</p>
+                    <p className="text-xs text-muted-foreground">Apuração com base no lucro efetivo</p>
+                  </div>
                 </button>
               </div>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label>Parâmetro Fiscal</Label>
-              <div className="rounded-md border p-3">
+              <h3 className="text-sm font-bold text-muted-foreground">Parâmetro Fiscal</h3>
+              <div className="rounded-lg bg-muted/50 border border-border p-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Alíquota Simples Nacional</Label>
+                    <Label className="field-label">Alíquota Simples Nacional</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         value={form.aliquotaSimplesNacional}
@@ -449,7 +464,7 @@ const EmpresaFormPage = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Apuração Simples Nacional</Label>
+                    <Label className="field-label">Apuração Simples Nacional</Label>
                     <Input
                       value={form.apuracaoSimplesNacional}
                       onChange={e => update('apuracaoSimplesNacional', e.target.value)}
@@ -461,7 +476,7 @@ const EmpresaFormPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Optante pelo Simples</Label>
+              <Label className="field-label">Optante pelo Simples</Label>
               <select
                 value={form.opcaoPeloSimples}
                 onChange={e => update('opcaoPeloSimples', e.target.value as EmpresaFormData['opcaoPeloSimples'])}
@@ -473,7 +488,7 @@ const EmpresaFormPage = () => {
               </select>
             </div>
             <div className="space-y-2">
-              <Label>Optante pelo MEI</Label>
+              <Label className="field-label">Optante pelo MEI</Label>
               <select
                 value={form.opcaoPeloMei}
                 onChange={e => update('opcaoPeloMei', e.target.value as EmpresaFormData['opcaoPeloMei'])}
@@ -485,26 +500,26 @@ const EmpresaFormPage = () => {
               </select>
             </div>
             <div className="space-y-2">
-              <Label>Data Opção Simples</Label>
+              <Label className="field-label">Data Opção Simples</Label>
               <Input type="date" value={form.dataOpcaoPeloSimples} onChange={e => update('dataOpcaoPeloSimples', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Data Exclusão Simples</Label>
+              <Label className="field-label">Data Exclusão Simples</Label>
               <Input type="date" value={form.dataExclusaoDoSimples} onChange={e => update('dataExclusaoDoSimples', e.target.value)} />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="section-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="section-title mb-0">
               <MapPin className="h-4 w-4 text-primary" />
               Endereço
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>CEP</Label>
+              <Label className="field-label">CEP</Label>
               <Input
                 value={form.cep}
                 onChange={e => update('cep', formatCep(e.target.value))}
@@ -524,46 +539,46 @@ const EmpresaFormPage = () => {
               )}
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Endereço</Label>
+              <Label className="field-label">Endereço</Label>
               <Input value={form.endereco} onChange={e => update('endereco', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Número</Label>
+              <Label className="field-label">Número</Label>
               <Input value={form.numero} onChange={e => update('numero', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Complemento</Label>
+              <Label className="field-label">Complemento</Label>
               <Input value={form.complemento} onChange={e => update('complemento', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Bairro</Label>
+              <Label className="field-label">Bairro</Label>
               <Input value={form.bairro} onChange={e => update('bairro', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Cidade</Label>
+              <Label className="field-label">Cidade</Label>
               <Input value={form.cidade} onChange={e => update('cidade', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>UF</Label>
+              <Label className="field-label">UF</Label>
               <Input value={form.uf} onChange={e => update('uf', e.target.value)} maxLength={2} />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="section-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="section-title mb-0">
               <Phone className="h-4 w-4 text-primary" />
               Contato
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Telefone</Label>
+              <Label className="field-label">Telefone</Label>
               <Input value={form.telefone} onChange={e => update('telefone', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>E-mail</Label>
+              <Label className="field-label">E-mail</Label>
               <Input type="email" value={form.email} onChange={e => update('email', e.target.value)} />
             </div>
           </CardContent>
