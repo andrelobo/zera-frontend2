@@ -238,6 +238,39 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - UX atual de preenchimento:
   - empresa emissora via autocomplete (com dados de `/empresas`), preenchendo CNPJ automaticamente ao selecionar item
   - servico via busca no catalogo priorizando `GET /nfse/servicos` com fallback para `/nfse/servicos/autocomplete`, com supressao de toast global no erro esperado do primeiro endpoint
+
+## 11. Atualizacao Operacional (2026-02-21)
+
+### 11.1 O que foi entregue em commits recentes (frontend)
+- `18b2978` `fix(empresas): melhora mapeamento do preview CNPJ e preenche campos fiscais pendentes`
+- `240ff61` `style(layout): remove limites de largura e usa tela inteira nos formularios`
+- `ecf9fcb` `feat(empresas): integra PrestadorSection e RegimeEParametrosSection no cadastro`
+- `2a67a00` `style(empresas): replica layout de regime tributario e parametro fiscal da tela de referencia`
+- `98f0b8e` `feat(empresas): adiciona layout de regime tributario e parametro fiscal no cadastro`
+- `d80ee4b` `fix(empresas): amplia fallback de campos no preview e corrige parsing de data cadastral`
+- `d891a66` `fix(empresas): adiciona aliases de preview por CNPJ para compatibilidade`
+- `057e756` `fix(empresas): evita loop de erro no preview automático por CNPJ`
+- `269e8d8` `fix(empresas): dispara preview automático ao completar CNPJ no cadastro`
+
+### 11.2 Estado atual reportado em produção
+- O fluxo de preview por CNPJ responde, porém ainda há relatos de campos sem preenchimento automático em alguns cenários.
+- Campos críticos reportados:
+  - `Data Situação Cadastral`
+  - `Início de Atividade`
+  - `CNAE Fiscal`
+  - `Descrição CNAE`
+  - `Porte`
+  - seleção de `Regime Tributário` (bolinha)
+  - `Alíquota Simples Nacional`
+  - `Apuração Simples Nacional`
+
+### 11.3 Dependência direta do backend
+- Para esses campos, o frontend depende de `POST /empresas/preview`.
+- A estratégia atual do frontend é:
+  1. consumir campos normalizados do payload raiz;
+  2. aplicar fallback via `providerData` quando disponível;
+  3. inferir `regimeTributario = simples_nacional` quando detectar optante do Simples.
+- Se os campos vierem ausentes já na resposta do backend, o front não consegue completar automaticamente.
   - busca com debounce de 250ms (empresa e servico) para reduzir flicker/chamadas e evitar feedback prematuro
   - codigo de servico sincronizado com o texto digitado no autocomplete (evita manter codigo antigo quando o usuario altera a busca)
   - campos com mascara visual para reduzir erro de digitacao (`CNPJ`, `CPF` e `valor` em formato monetario BRL)
