@@ -6,11 +6,12 @@ import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Building2, FileText, Loader2, MapPin, Phone, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
+import PrestadorSection from '@/components/PrestadorSection';
+import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -311,42 +312,40 @@ const EmpresaFormPage = () => {
       </Alert>
 
       <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-        <Card className="section-card">
-          <CardHeader>
-            <CardTitle className="section-title mb-0">
-              <Building2 className="h-4 w-4 text-primary" />
-              Dados da Empresa
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="field-label">Razão Social</Label>
-              <Input value={form.razaoSocial} onChange={e => update('razaoSocial', e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">CNPJ</Label>
-              <div className="flex gap-2">
-                <Input value={form.cnpj} onChange={e => update('cnpj', e.target.value)} required placeholder="00.000.000/0000-00" disabled={isEdit} />
-                {!isEdit && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAutocompleteByCnpj}
-                    disabled={previewMutation.isPending}
-                  >
-                    {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Autocompletar'}
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Nome Fantasia</Label>
-              <Input value={form.nomeFantasia} onChange={e => update('nomeFantasia', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Inscrição Municipal</Label>
-              <Input value={form.inscricaoMunicipal} onChange={e => update('inscricaoMunicipal', e.target.value)} />
-            </div>
+        <PrestadorSection
+          data={{
+            razaoSocial: form.razaoSocial,
+            nomeFantasia: form.nomeFantasia,
+            cnpj: form.cnpj,
+            inscricaoMunicipal: form.inscricaoMunicipal,
+            opcaoPeloSimples: form.opcaoPeloSimples,
+            cep: form.cep,
+            endereco: form.endereco,
+            numero: form.numero,
+            complemento: form.complemento,
+            bairro: form.bairro,
+            cidade: form.cidade,
+            uf: form.uf,
+            email: form.email,
+            telefone: form.telefone,
+          }}
+          isEdit={isEdit}
+          loadingCnpj={previewMutation.isPending}
+          onAutocompleteByCnpj={handleAutocompleteByCnpj}
+          onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+          onCepChange={(value) => update('cep', formatCep(value))}
+          cepHint={cepDigits.length > 0 && cepDigits.length < 8 ? 'Informe os 8 dígitos do CEP.' : undefined}
+          cepLoading={cepLookupQuery.isFetching}
+          cepError={cepLookupQuery.isError
+            ? cepLookupQuery.error instanceof Error
+              ? cepLookupQuery.error.message
+              : 'Falha ao consultar CEP.'
+            : undefined}
+        />
+
+        <div className="section-card">
+          <h2 className="section-title">Dados Complementares</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="field-label">Situação Cadastral</Label>
               <Input value={form.situacaoCadastral} onChange={e => update('situacaoCadastral', e.target.value)} placeholder="ATIVA" />
@@ -379,210 +378,19 @@ const EmpresaFormPage = () => {
               <Label className="field-label">Capital Social</Label>
               <Input value={form.capitalSocial} onChange={e => update('capitalSocial', e.target.value)} placeholder="0,00" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="section-card">
-          <CardHeader>
-            <CardTitle className="section-title mb-0">
-              <FileText className="h-4 w-4 text-primary" />
-              Enquadramento Fiscal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label className="field-label">Regime Tributário</Label>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => update('regimeTributario', 'simples_nacional')}
-                  className={`radio-card text-left ${
-                    form.regimeTributario === 'simples_nacional' ? 'radio-card-selected' : ''
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    form.regimeTributario === 'simples_nacional' ? 'border-primary' : 'border-muted-foreground/40'
-                  }`}>
-                    {form.regimeTributario === 'simples_nacional' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Simples Nacional</p>
-                    <p className="text-xs text-muted-foreground">MEI, ME e EPP optantes pelo Simples</p>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => update('regimeTributario', 'lucro_presumido')}
-                  className={`radio-card text-left ${
-                    form.regimeTributario === 'lucro_presumido' ? 'radio-card-selected' : ''
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    form.regimeTributario === 'lucro_presumido' ? 'border-primary' : 'border-muted-foreground/40'
-                  }`}>
-                    {form.regimeTributario === 'lucro_presumido' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Lucro Presumido</p>
-                    <p className="text-xs text-muted-foreground">Tributação com base na presunção de lucro</p>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => update('regimeTributario', 'lucro_real')}
-                  className={`radio-card text-left ${
-                    form.regimeTributario === 'lucro_real' ? 'radio-card-selected' : ''
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    form.regimeTributario === 'lucro_real' ? 'border-primary' : 'border-muted-foreground/40'
-                  }`}>
-                    {form.regimeTributario === 'lucro_real' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Lucro Real</p>
-                    <p className="text-xs text-muted-foreground">Apuração com base no lucro efetivo</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 sm:col-span-2">
-              <h3 className="text-sm font-bold text-muted-foreground">Parâmetro Fiscal</h3>
-              <div className="rounded-lg bg-muted/50 border border-border p-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="field-label">Alíquota Simples Nacional</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={form.aliquotaSimplesNacional}
-                        onChange={e => update('aliquotaSimplesNacional', e.target.value)}
-                        placeholder="00,00"
-                        inputMode="decimal"
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="field-label">Apuração Simples Nacional</Label>
-                    <Input
-                      value={form.apuracaoSimplesNacional}
-                      onChange={e => update('apuracaoSimplesNacional', e.target.value)}
-                      placeholder="Ex.: Mensal"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="field-label">Optante pelo Simples</Label>
-              <select
-                value={form.opcaoPeloSimples}
-                onChange={e => update('opcaoPeloSimples', e.target.value as EmpresaFormData['opcaoPeloSimples'])}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-              >
-                <option value="">Não informado</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Optante pelo MEI</Label>
-              <select
-                value={form.opcaoPeloMei}
-                onChange={e => update('opcaoPeloMei', e.target.value as EmpresaFormData['opcaoPeloMei'])}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-              >
-                <option value="">Não informado</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Data Opção Simples</Label>
-              <Input type="date" value={form.dataOpcaoPeloSimples} onChange={e => update('dataOpcaoPeloSimples', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Data Exclusão Simples</Label>
-              <Input type="date" value={form.dataExclusaoDoSimples} onChange={e => update('dataExclusaoDoSimples', e.target.value)} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="section-card">
-          <CardHeader>
-            <CardTitle className="section-title mb-0">
-              <MapPin className="h-4 w-4 text-primary" />
-              Endereço
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="field-label">CEP</Label>
-              <Input
-                value={form.cep}
-                onChange={e => update('cep', formatCep(e.target.value))}
-                placeholder="00000-000"
-                inputMode="numeric"
-              />
-              {cepDigits.length > 0 && cepDigits.length < 8 && (
-                <p className="text-xs text-muted-foreground">Informe os 8 dígitos do CEP.</p>
-              )}
-              {cepLookupQuery.isFetching && (
-                <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
-              )}
-              {cepLookupQuery.isError && (
-                <p className="text-xs text-destructive">
-                  {cepLookupQuery.error instanceof Error ? cepLookupQuery.error.message : 'Falha ao consultar CEP.'}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label className="field-label">Endereço</Label>
-              <Input value={form.endereco} onChange={e => update('endereco', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Número</Label>
-              <Input value={form.numero} onChange={e => update('numero', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Complemento</Label>
-              <Input value={form.complemento} onChange={e => update('complemento', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Bairro</Label>
-              <Input value={form.bairro} onChange={e => update('bairro', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Cidade</Label>
-              <Input value={form.cidade} onChange={e => update('cidade', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">UF</Label>
-              <Input value={form.uf} onChange={e => update('uf', e.target.value)} maxLength={2} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="section-card">
-          <CardHeader>
-            <CardTitle className="section-title mb-0">
-              <Phone className="h-4 w-4 text-primary" />
-              Contato
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="field-label">Telefone</Label>
-              <Input value={form.telefone} onChange={e => update('telefone', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">E-mail</Label>
-              <Input type="email" value={form.email} onChange={e => update('email', e.target.value)} />
-            </div>
-          </CardContent>
-        </Card>
+        <RegimeEParametrosSection
+          regimeTributario={form.regimeTributario}
+          aliquotaSimplesNacional={form.aliquotaSimplesNacional}
+          apuracaoSimplesNacional={form.apuracaoSimplesNacional}
+          opcaoPeloSimples={form.opcaoPeloSimples}
+          opcaoPeloMei={form.opcaoPeloMei}
+          dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
+          dataExclusaoDoSimples={form.dataExclusaoDoSimples}
+          onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+        />
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={mutation.isPending}>
