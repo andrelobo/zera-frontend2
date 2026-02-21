@@ -59,12 +59,24 @@ const NfseEmitPage = () => {
   }, [serviceSearch]);
 
   const canSearchEmpresa = empresaSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
-  const { data: filteredEmpresas = [], isLoading: empresasLoading } = useQuery({
-    queryKey: ['empresas', 'emit-autocomplete', empresaSearchDebounced],
-    queryFn: () => empresasApi.list({ q: empresaSearchDebounced, limit: 8 }),
-    enabled: canSearchEmpresa,
+  const { data: empresas = [], isLoading: empresasLoading } = useQuery({
+    queryKey: ['empresas'],
+    queryFn: empresasApi.list,
     staleTime: 60_000,
   });
+  const filteredEmpresas = useMemo(() => {
+    if (!canSearchEmpresa) return [];
+    const searchRaw = empresaSearchDebounced.trim().toLowerCase();
+    const searchDigits = searchRaw.replace(/\D/g, '');
+    return empresas
+      .filter((empresa) => {
+        const razao = empresa.razaoSocial.toLowerCase();
+        const fantasia = (empresa.nomeFantasia || '').toLowerCase();
+        const cnpj = empresa.cnpj.replace(/\D/g, '');
+        return razao.includes(searchRaw) || fantasia.includes(searchRaw) || cnpj.includes(searchDigits);
+      })
+      .slice(0, 8);
+  }, [canSearchEmpresa, empresas, empresaSearchDebounced]);
 
   const empresaSelecionada = useMemo(() => {
     if (empresaByCnpj) return empresaByCnpj;

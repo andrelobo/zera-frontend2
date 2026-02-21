@@ -93,12 +93,21 @@ const NfseQuickEmitPage = () => {
 
   const canSearchService = serviceSearchDebounced.trim().length >= 2;
   const canSearchEmpresa = empresaSearchDebounced.trim().length >= 2;
-  const { data: filteredEmpresas = [], isLoading: empresasLoading } = useQuery({
-    queryKey: ['empresas', 'quick-emit-autocomplete', empresaSearchDebounced],
-    queryFn: () => empresasApi.list({ q: empresaSearchDebounced, limit: 8 }),
-    enabled: canSearchEmpresa,
+  const { data: empresas = [], isLoading: empresasLoading } = useQuery({
+    queryKey: ['empresas', 'quick-emit'],
+    queryFn: empresasApi.list,
     staleTime: 60_000,
   });
+  const filteredEmpresas = useMemo(() => {
+    if (!canSearchEmpresa) return [];
+    const search = empresaSearchDebounced.trim().toLowerCase();
+    return empresas
+      .filter((empresa) => {
+        return empresa.razaoSocial.toLowerCase().includes(search)
+          || empresa.cnpj.replace(/\D/g, '').includes(search.replace(/\D/g, ''));
+      })
+      .slice(0, 8);
+  }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
 
   const serviceQuery = useQuery({
     queryKey: ['nfse-quick-service-autocomplete', serviceSearchDebounced],
