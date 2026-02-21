@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Search, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import type { EmitirNfseRequest } from '@/types/api';
+import type { EmitirNfseRequest, Empresa } from '@/types/api';
 
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const MIN_AUTOCOMPLETE_CHARS = 2;
@@ -28,13 +28,8 @@ const NfseEmitPage = () => {
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
   const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
-  const { data: empresas = [], isLoading: empresasLoading } = useQuery({
-    queryKey: ['empresas'],
-    queryFn: empresasApi.list,
-    staleTime: 60_000,
-  });
+  const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
 
-  const [empresaId, setEmpresaId] = useState('');
   const [prestadorCnpj, setPrestadorCnpj] = useState('');
   const [tomadorCpfCnpj, setTomadorCpfCnpj] = useState('');
   const [tomadorRazaoSocial, setTomadorRazaoSocial] = useState('');
@@ -49,7 +44,7 @@ const NfseEmitPage = () => {
   const [codigoNacional, setCodigoNacional] = useState('171901');
   const [codigoTributacao, setCodigoTributacao] = useState('100');
   const [referenciaExterna, setReferenciaExterna] = useState(buildReferencia());
-  const [empresaByCnpj, setEmpresaByCnpj] = useState<(typeof empresas extends Array<infer T> ? T : never) | null>(null);
+  const [empresaByCnpj, setEmpresaByCnpj] = useState<Empresa | null>(null);
   const codigoNacionalClean = useMemo(() => codigoNacional.replace(/\D/g, ''), [codigoNacional]);
   const tomadorCepDigits = useMemo(() => normalizeCep(tomadorCep), [tomadorCep]);
 
@@ -63,22 +58,18 @@ const NfseEmitPage = () => {
     return () => clearTimeout(timer);
   }, [serviceSearch]);
 
+  const canSearchEmpresa = empresaSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
+  const { data: filteredEmpresas = [], isLoading: empresasLoading } = useQuery({
+    queryKey: ['empresas', 'emit-autocomplete', empresaSearchDebounced],
+    queryFn: () => empresasApi.list({ q: empresaSearchDebounced, limit: 8 }),
+    enabled: canSearchEmpresa,
+    staleTime: 60_000,
+  });
+
   const empresaSelecionada = useMemo(() => {
     if (empresaByCnpj) return empresaByCnpj;
-    return empresas.find((e) => e.id === empresaId) || null;
-  }, [empresas, empresaByCnpj, empresaId]);
-
-  const canSearchEmpresa = empresaSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
-  const filteredEmpresas = useMemo(() => {
-    if (!canSearchEmpresa) return [];
-    const search = empresaSearchDebounced.trim().toLowerCase();
-    return empresas
-      .filter((empresa) =>
-        empresa.razaoSocial.toLowerCase().includes(search) ||
-        empresa.cnpj.replace(/\D/g, '').includes(search.replace(/\D/g, '')),
-      )
-      .slice(0, 8);
-  }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
+    return selectedEmpresa;
+  }, [empresaByCnpj, selectedEmpresa]);
 
   const canSearchService = serviceSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
   const serviceQuery = useQuery({
@@ -118,7 +109,7 @@ const NfseEmitPage = () => {
     mutationFn: (cnpj: string) => empresasApi.getByCnpj(cnpj),
     onSuccess: (empresa) => {
       setEmpresaByCnpj(empresa);
-      setEmpresaId(empresa.id);
+      setSelectedEmpresa(empresa);
       setPrestadorCnpj(empresa.cnpj);
       setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
       toast({ title: 'Prestador carregado', description: `${empresa.razaoSocial} (${empresa.cnpj})` });
@@ -208,8 +199,8 @@ const NfseEmitPage = () => {
                 value={empresaSearch}
                 onChange={(ev) => {
                   setEmpresaSearch(ev.target.value);
-                  setEmpresaId('');
                   setEmpresaByCnpj(null);
+                  setSelectedEmpresa(null);
                 }}
                 placeholder="Digite razão social ou CNPJ"
               />
@@ -224,7 +215,7 @@ const NfseEmitPage = () => {
                       type="button"
                       className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
                       onClick={() => {
-                        setEmpresaId(empresa.id);
+                        setSelectedEmpresa(empresa);
                         setEmpresaByCnpj(null);
                         setPrestadorCnpj(empresa.cnpj);
                         setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
