@@ -297,7 +297,7 @@ const EmpresaFormPage = () => {
   if (isEdit && isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-lg">
+    <div className="space-y-6 animate-fade-in w-full">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
           <ArrowLeft className="h-4 w-4" />

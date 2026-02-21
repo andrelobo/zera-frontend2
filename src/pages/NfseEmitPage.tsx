@@ -192,7 +192,7 @@ const NfseEmitPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="space-y-6 animate-fade-in w-full">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate('/nfse')}>
           <ArrowLeft className="h-4 w-4" />
