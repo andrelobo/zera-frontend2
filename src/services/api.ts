@@ -92,19 +92,56 @@ export const nfseApi = {
 
 // Empresas
 export const empresasApi = {
-  list: () =>
-    api.get<Empresa[]>('/empresas').then(r => (r.data || []).map((e: Empresa) => ({ ...e, id: e.id || e._id || '' }))),
+  list: (input?: { q?: string; limit?: number }) =>
+    api.get<Empresa[]>('/empresas', {
+      params: {
+        q: input?.q?.trim() || undefined,
+        limit: input?.limit,
+      },
+    }).then(r => (r.data || []).map((e: Empresa) => ({ ...e, id: e.id || e._id || '' }))),
   getById: (id: string) =>
     api.get<Empresa>(`/empresas/${id}`).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
   getByCnpj: (cnpj: string) =>
     api.get<Empresa>(`/empresas/cnpj/${cnpj}`).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
   create: (data: CreateEmpresaRequest) =>
-    api.post<Empresa>('/empresas', { cnpj: data.cnpj }).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
+    api.post<Empresa>('/empresas', {
+      cnpj: data.cnpj,
+      razaoSocial: data.razaoSocial,
+      nomeFantasia: data.nomeFantasia,
+      inscricaoMunicipal: data.inscricaoMunicipal,
+      situacaoCadastral: data.situacaoCadastral,
+      dataSituacaoCadastral: data.dataSituacaoCadastral,
+      dataInicioAtividade: data.dataInicioAtividade,
+      cnaeFiscal: data.cnaeFiscal,
+      cnaeFiscalDescricao: data.cnaeFiscalDescricao,
+      porte: data.porte,
+      naturezaJuridica: data.naturezaJuridica,
+      capitalSocial: data.capitalSocial,
+      opcaoPeloSimples: data.opcaoPeloSimples,
+      dataOpcaoPeloSimples: data.dataOpcaoPeloSimples,
+      dataExclusaoDoSimples: data.dataExclusaoDoSimples,
+      opcaoPeloMei: data.opcaoPeloMei,
+      email: data.email,
+      fone: data.telefone,
+      endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
+    }).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
   update: (id: string, data: UpdateEmpresaRequest) =>
     api.patch<Empresa>(`/empresas/${id}`, {
       razaoSocial: data.razaoSocial,
       nomeFantasia: data.nomeFantasia,
       inscricaoMunicipal: data.inscricaoMunicipal,
+      situacaoCadastral: data.situacaoCadastral,
+      dataSituacaoCadastral: data.dataSituacaoCadastral,
+      dataInicioAtividade: data.dataInicioAtividade,
+      cnaeFiscal: data.cnaeFiscal,
+      cnaeFiscalDescricao: data.cnaeFiscalDescricao,
+      porte: data.porte,
+      naturezaJuridica: data.naturezaJuridica,
+      capitalSocial: data.capitalSocial,
+      opcaoPeloSimples: data.opcaoPeloSimples,
+      dataOpcaoPeloSimples: data.dataOpcaoPeloSimples,
+      dataExclusaoDoSimples: data.dataExclusaoDoSimples,
+      opcaoPeloMei: data.opcaoPeloMei,
       email: data.email,
       fone: data.telefone,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,

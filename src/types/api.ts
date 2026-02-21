@@ -62,6 +62,18 @@ export interface Empresa {
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
+  situacaoCadastral?: string;
+  dataSituacaoCadastral?: string;
+  dataInicioAtividade?: string;
+  cnaeFiscal?: number | string;
+  cnaeFiscalDescricao?: string;
+  porte?: string;
+  naturezaJuridica?: string;
+  capitalSocial?: number;
+  opcaoPeloSimples?: boolean | null;
+  dataOpcaoPeloSimples?: string | null;
+  dataExclusaoDoSimples?: string | null;
+  opcaoPeloMei?: boolean | null;
   endereco?: {
     logradouro?: string;
     numero?: string;
@@ -88,6 +100,18 @@ export interface CreateEmpresaRequest {
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
+  situacaoCadastral?: string;
+  dataSituacaoCadastral?: string;
+  dataInicioAtividade?: string;
+  cnaeFiscal?: number | string;
+  cnaeFiscalDescricao?: string;
+  porte?: string;
+  naturezaJuridica?: string;
+  capitalSocial?: number;
+  opcaoPeloSimples?: boolean | null;
+  dataOpcaoPeloSimples?: string | null;
+  dataExclusaoDoSimples?: string | null;
+  opcaoPeloMei?: boolean | null;
   endereco?: string | {
     logradouro?: string;
     numero?: string;

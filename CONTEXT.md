@@ -1,15 +1,15 @@
 # CONTEXT.md
 
-Documento canonico do projeto `zera-frontend2`.
+Documento canonico do projeto `zera-frontend`.
 Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manutencao.
-Escopo deste arquivo: app frontend na pasta interna `zera-frontend2/` (onde fica o `package.json`).
+Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
 ## 1. Identificacao do Projeto
 - Nome tecnico: `vite_react_shadcn_ts`
 - Dominio funcional: painel web para emissao e acompanhamento de NFSe (PlugNotas/NFS-e Nacional), com gestao de empresas e usuarios
 - Stack principal: React 18 + TypeScript + Vite + React Router + TanStack Query + Axios + Tailwind + shadcn/ui
-- Diretorio raiz do app (neste repositorio): `zera-frontend2/` (pasta interna)
+- Diretorio raiz do app (neste repositorio): `zera-frontend/` (raiz atual)
 
 ## 2. Matriz de Evidencias (auditoria rapida)
 Timestamp base desta revisao editorial: `2026-02-17T12:06:06-04:00`.
@@ -34,6 +34,11 @@ Timestamp base desta revisao editorial: `2026-02-17T12:06:06-04:00`.
 - Evidencia E18 (codigo local): `src/services/cep.ts`, `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx` confirmam lookup de CEP para autocomplete de endereco (logradouro/bairro/cidade/UF), com mascara e normalizacao de CEP.
 - Evidencia E19 (execucao local): `yarn run test` executado com sucesso em `2026-02-17T12:06:06-04:00` (3 arquivos, 17 testes, todos passando).
 - Evidencia E20 (codigo local): `tailwind.config.ts` e `src/index.css` confirmam extensao de paleta `zera.*` (light/dark) e remapeamento de tokens shadcn (`--primary`, `--secondary`, `--accent`, `--background`, `--foreground`, `--border`, `--muted`, `--ring`) para o novo padrao visual.
+- Evidencia E21 (codigo local): `src/pages/EmpresaFormPage.tsx` confirma expansao do formulario de empresas com novos campos cadastrais/fiscais (situacao cadastral, CNAE, natureza juridica, porte, capital social, simples/MEI e datas) e endereco detalhado (`numero`, `complemento`, `bairro`), mantendo campos existentes.
+- Evidencia E22 (codigo local): `src/pages/EmpresaFormPage.tsx` confirma reorganizacao visual em secoes (`Dados da Empresa`, `Enquadramento Fiscal`, `Endereco`, `Contato`) com icones (`Building2`, `FileText`, `MapPin`, `Phone`).
+- Evidencia E23 (codigo local): `src/services/api.ts` e `src/types/api.ts` confirmam ampliacao de contratos de `Empresa`/`CreateEmpresaRequest`/`UpdateEmpresaRequest` para suportar novos campos do backend e preparacao inicial de busca de empresas com `q`/`limit` no metodo `empresasApi.list`.
+- Evidencia E24 (execucao local): `npm run test` executado com sucesso em `2026-02-21T11:34:27-04:00` (3 arquivos, 17 testes, todos passando).
+- Evidencia E25 (execucao local): `npm run lint` executado com sucesso em `2026-02-21T11:34:16-04:00` (0 erros; 10 warnings recorrentes de fast-refresh e `react-hooks/exhaustive-deps` em `DashboardPage`).
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -118,9 +123,10 @@ Legenda de confianca:
   - downloads local/remoto por endpoints dedicados (`Confirmado no front`)
 
 ### 8.3 Empresas
-- `POST /empresas` cria por CNPJ (payload minimo: `{ cnpj }`) (`Confirmado no front`; validacao final depende de backend/Swagger)
+- `POST /empresas` cria por CNPJ e aceita campos cadastrais/fiscais adicionais no front (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `situacaoCadastral`, `dataSituacaoCadastral`, `dataInicioAtividade`, `cnaeFiscal`, `cnaeFiscalDescricao`, `porte`, `naturezaJuridica`, `capitalSocial`, `opcaoPeloSimples`, `dataOpcaoPeloSimples`, `dataExclusaoDoSimples`, `opcaoPeloMei`, `email`, `fone`, `endereco`) (`Confirmado no front`; validacao final depende de backend/Swagger)
 - `GET /empresas/cnpj/:cnpj` usado para buscar/preencher prestador (`Confirmado no front`)
-- `PATCH /empresas/:id` aceita payload parcial (`razaoSocial`, `nomeFantasia`, `inscricaoMunicipal`, `email`, `fone`, `endereco`) (`Confirmado no front`; regra final depende de backend/Swagger)
+- `GET /empresas` usado para listagem e agora preparado no front para aceitar filtros de busca (`q`, `limit`) delegados ao backend (`Confirmado no front`; disponibilidade final depende de backend/Swagger)
+- `PATCH /empresas/:id` aceita payload parcial com campos basicos e novos campos cadastrais/fiscais (`Confirmado no front`; regra final depende de backend/Swagger)
 - `POST /empresas/certificado/import` aceita `multipart/form-data` (`cnpj`, `senhaCertificado`, `file`) para importacao de certificado A1 (`Confirmado no front`; metadados finais dependem de backend/Swagger)
 
 ### 8.4 Usuarios
@@ -207,6 +213,24 @@ Telas: `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx`
   - estado de busca ("Buscando endereco pelo CEP...")
   - erro operacional quando CEP invalido/nao encontrado
 
+### 10.8 Cadastro de Empresas (expandido)
+Tela: `src/pages/EmpresaFormPage.tsx`
+
+- Estrutura visual reorganizada em secoes:
+  - `Dados da Empresa`
+  - `Enquadramento Fiscal`
+  - `Endereco`
+  - `Contato`
+- Novos campos incorporados para aderencia ao backend atualizado:
+  - `situacaoCadastral`, `dataSituacaoCadastral`, `dataInicioAtividade`
+  - `cnaeFiscal`, `cnaeFiscalDescricao`, `porte`, `naturezaJuridica`, `capitalSocial`
+  - `opcaoPeloSimples`, `dataOpcaoPeloSimples`, `dataExclusaoDoSimples`, `opcaoPeloMei`
+  - `endereco.numero`, `endereco.complemento`, `endereco.bairro`
+- Compatibilidade de carga em edicao:
+  - leitura com fallback camelCase/snake_case para campos legados e novos
+- Observacao operacional:
+  - regras finais de autocomplete de CNPJ/empresa serao totalmente orientadas por backend na proxima iteracao (apos confirmacao dos novos endpoints)
+
 ### 10.6 Emissao Rapida de NFSe
 Tela: `src/pages/NfseQuickEmitPage.tsx`
 
@@ -254,14 +278,14 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
   - `vite.config.ts` (remocao de `lovable-tagger`)
   - `package.json` e `yarn.lock` (dependencia removida)
 - Traducoes de UI aplicadas em textos visiveis e acessibilidade (`aria-label`/`sr-only`) sem alterar contratos tecnicos
+- Cadastro de empresa reorganizado em cards por secao, com iconografia de apoio para leitura rapida dos blocos (empresa/fiscal/endereco/contato)
 
 ## 13. Testes e Qualidade
 - Vitest: `vitest.config.ts` (`jsdom`)
 - Setup: `src/test/setup.ts`
 - Cobertura atual: teste exemplo + testes unitarios da camada de servicos para novos fluxos (`src/services/api.new-flows.test.ts`)
-- Ultima execucao registrada: `yarn run test` em `2026-02-16T11:19:03-04:00` (2 arquivos, 5 testes, todos passando)
-- Revalidacao recente: `npm run test` em `2026-02-16T17:39:14-04:00` (2 arquivos, 8 testes, todos passando)
-- Revalidacao recente: `npm run lint` em `2026-02-16T17:39:14-04:00` (sem erros; warnings recorrentes de fast-refresh e `react-hooks/exhaustive-deps` em `DashboardPage`)
+- Ultima execucao registrada: `npm run test` em `2026-02-21T11:34:27-04:00` (3 arquivos, 17 testes, todos passando)
+- Revalidacao recente: `npm run lint` em `2026-02-21T11:34:16-04:00` (sem erros; warnings recorrentes de fast-refresh e `react-hooks/exhaustive-deps` em `DashboardPage`)
 - ESLint sem erros bloqueantes; warnings recorrentes de fast-refresh em componentes UI
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
 - Build de validacao: registrar sempre data/hora explicita da ultima execucao (evitar "hoje"/"ontem")
@@ -303,6 +327,7 @@ Checklist por commit:
 5. Atualizar rastreabilidade
 
 ## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-19T12:09:28-04:00
+- Ultima atualizacao: 2026-02-21T11:34:27-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: atualizacao documental pos-ajuste de tema e paleta de cores (light/dark), com extensao `zera.*` no Tailwind e remapeamento de tokens shadcn em `src/index.css`
+- Tipo de atualizacao: atualizacao documental pos-expansao da tela de cadastro de empresas (novos campos cadastrais/fiscais), reorganizacao de layout em secoes com icones e preparacao inicial para busca/autocomplete de empresas orientada por backend
+- Observacao de continuidade: usuario informou que fara validacao no backend e retornara neste chat com os novos endpoints para finalizar o ajuste de autocomplete orientado por backend no frontend.

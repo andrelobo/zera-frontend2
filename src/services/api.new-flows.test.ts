@@ -259,7 +259,9 @@ describe('new API flows', () => {
 
     const result = await empresasApi.list();
 
-    expect(mockGet).toHaveBeenCalledWith('/empresas');
+    expect(mockGet).toHaveBeenCalledWith('/empresas', {
+      params: { q: undefined, limit: undefined },
+    });
     expect(result).toEqual([
       { _id: 'mongo-1', id: 'mongo-1', razaoSocial: 'Empresa A', cnpj: '123' },
       { id: 'api-2', _id: 'mongo-2', razaoSocial: 'Empresa B', cnpj: '456' },
