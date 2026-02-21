@@ -9,6 +9,7 @@ import { roleToApi } from '@/lib/roles';
 
 const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
   const legacy = raw as Record<string, unknown>;
+  const providerData = (legacy.providerData as Record<string, unknown> | undefined) ?? {};
   const enderecoRaw = (legacy.endereco as Record<string, unknown> | undefined) ?? {};
   const pickString = (...values: unknown[]) => {
     for (const value of values) {
@@ -38,6 +39,49 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     razaoSocial: pickString(legacy.razaoSocial, legacy.nome_razao_social) || '',
     nomeFantasia: pickString(legacy.nomeFantasia, legacy.nome_fantasia),
     inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
+    situacaoCadastral: pickString(
+      legacy.situacaoCadastral,
+      legacy.situacao_cadastral,
+      providerData.situacao_cadastral,
+    ),
+    dataSituacaoCadastral: pickString(
+      legacy.dataSituacaoCadastral,
+      legacy.data_situacao_cadastral,
+    ),
+    dataInicioAtividade: pickString(
+      legacy.dataInicioAtividade,
+      legacy.data_inicio_atividade,
+      providerData.data_inicio_atividade,
+    ),
+    cnaeFiscal: pickString(legacy.cnaeFiscal, legacy.cnae_fiscal),
+    cnaeFiscalDescricao: pickString(legacy.cnaeFiscalDescricao, legacy.cnae_fiscal_descricao),
+    porte: pickString(legacy.porte, providerData.porte),
+    naturezaJuridica: pickString(
+      legacy.naturezaJuridica,
+      legacy.natureza_juridica,
+      providerData.natureza_juridica,
+    ),
+    capitalSocial: (() => {
+      const value = legacy.capitalSocial ?? legacy.capital_social ?? providerData.capital_social;
+      if (value === null || value === undefined || value === '') return undefined;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    })(),
+    opcaoPeloSimples: typeof legacy.opcaoPeloSimples === 'boolean'
+      ? legacy.opcaoPeloSimples
+      : typeof legacy.opcao_pelo_simples === 'boolean'
+        ? legacy.opcao_pelo_simples
+        : undefined,
+    opcaoPeloMei: typeof legacy.opcaoPeloMei === 'boolean'
+      ? legacy.opcaoPeloMei
+      : typeof legacy.opcao_pelo_mei === 'boolean'
+        ? legacy.opcao_pelo_mei
+        : undefined,
+    dataOpcaoPeloSimples: pickString(legacy.dataOpcaoPeloSimples, legacy.data_opcao_pelo_simples),
+    dataExclusaoDoSimples: pickString(
+      legacy.dataExclusaoDoSimples,
+      legacy.data_exclusao_do_simples,
+    ),
     email: pickString(legacy.email),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
     endereco: hasEndereco ? endereco : undefined,
@@ -128,6 +172,9 @@ export const nfseApi = {
 };
 
 // Empresas
+const previewEmpresaByCnpj = (cnpj: string) =>
+  api.post<Empresa>('/empresas/preview', { cnpj }).then(r => normalizeEmpresa(r.data));
+
 export const empresasApi = {
   list: (input?: { q?: string; limit?: number }) =>
     api.get<Empresa[]>('/empresas', {
@@ -140,6 +187,9 @@ export const empresasApi = {
     api.get<Empresa>(`/empresas/${id}`).then(r => normalizeEmpresa(r.data)),
   getByCnpj: (cnpj: string) =>
     api.get<Empresa>(`/empresas/cnpj/${cnpj}`).then(r => normalizeEmpresa(r.data)),
+  previewByCnpj: previewEmpresaByCnpj,
+  previewCnpj: previewEmpresaByCnpj,
+  previewcnpj: previewEmpresaByCnpj,
   create: (data: CreateEmpresaRequest) =>
     api.post<Empresa>('/empresas', {
       cnpj: data.cnpj,
