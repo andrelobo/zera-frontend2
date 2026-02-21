@@ -7,6 +7,43 @@ import type {
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
+const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
+  const legacy = raw as Record<string, unknown>;
+  const enderecoRaw = (legacy.endereco as Record<string, unknown> | undefined) ?? {};
+  const pickString = (...values: unknown[]) => {
+    for (const value of values) {
+      if (value === null || value === undefined || value === '') continue;
+      return String(value);
+    }
+    return undefined;
+  };
+  const endereco = {
+    ...(enderecoRaw as Empresa['endereco']),
+    logradouro: pickString(enderecoRaw.logradouro),
+    numero: pickString(enderecoRaw.numero),
+    complemento: pickString(enderecoRaw.complemento),
+    bairro: pickString(enderecoRaw.bairro),
+    cidade: pickString(enderecoRaw.cidade, enderecoRaw.municipio),
+    uf: pickString(enderecoRaw.uf, enderecoRaw.estado),
+    cep: pickString(enderecoRaw.cep),
+    descricaoCidade: pickString(enderecoRaw.descricaoCidade, enderecoRaw.municipio),
+    estado: pickString(enderecoRaw.estado, enderecoRaw.uf),
+  };
+  const hasEndereco = Object.values(endereco).some((value) => value !== undefined && value !== '');
+
+  return {
+    ...(raw as Empresa),
+    id: pickString(legacy.id, legacy._id) || '',
+    cnpj: pickString(legacy.cnpj, legacy.cpf_cnpj) || '',
+    razaoSocial: pickString(legacy.razaoSocial, legacy.nome_razao_social) || '',
+    nomeFantasia: pickString(legacy.nomeFantasia, legacy.nome_fantasia),
+    inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
+    email: pickString(legacy.email),
+    fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
+    endereco: hasEndereco ? endereco : undefined,
+  };
+};
+
 // Auth
 export const authApi = {
   login: (data: LoginRequest) =>
@@ -98,11 +135,11 @@ export const empresasApi = {
         q: input?.q?.trim() || undefined,
         limit: input?.limit,
       },
-    }).then(r => (r.data || []).map((e: Empresa) => ({ ...e, id: e.id || e._id || '' }))),
+    }).then(r => (r.data || []).map((e: Empresa) => normalizeEmpresa(e))),
   getById: (id: string) =>
-    api.get<Empresa>(`/empresas/${id}`).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
+    api.get<Empresa>(`/empresas/${id}`).then(r => normalizeEmpresa(r.data)),
   getByCnpj: (cnpj: string) =>
-    api.get<Empresa>(`/empresas/cnpj/${cnpj}`).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
+    api.get<Empresa>(`/empresas/cnpj/${cnpj}`).then(r => normalizeEmpresa(r.data)),
   create: (data: CreateEmpresaRequest) =>
     api.post<Empresa>('/empresas', {
       cnpj: data.cnpj,
@@ -124,7 +161,7 @@ export const empresasApi = {
       email: data.email,
       fone: data.telefone,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
-    }).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
+    }).then(r => normalizeEmpresa(r.data)),
   update: (id: string, data: UpdateEmpresaRequest) =>
     api.patch<Empresa>(`/empresas/${id}`, {
       razaoSocial: data.razaoSocial,
@@ -145,7 +182,7 @@ export const empresasApi = {
       email: data.email,
       fone: data.telefone,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
-    }).then(r => ({ ...r.data, id: r.data.id || r.data._id || '' })),
+    }).then(r => normalizeEmpresa(r.data)),
   delete: (id: string) =>
     api.delete(`/empresas/${id}`).then(r => r.data),
   importCertificadoDigital: (data: ImportCertificadoDigitalRequest) => {
