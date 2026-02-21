@@ -10,6 +10,9 @@ import { roleToApi } from '@/lib/roles';
 const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
   const legacy = raw as Record<string, unknown>;
   const providerData = (legacy.providerData as Record<string, unknown> | undefined) ?? {};
+  const atividadePrincipal = Array.isArray(providerData.atividade_principal)
+    ? (providerData.atividade_principal[0] as Record<string, unknown> | undefined)
+    : undefined;
   const enderecoRaw = (legacy.endereco as Record<string, unknown> | undefined) ?? {};
   const pickString = (...values: unknown[]) => {
     for (const value of values) {
@@ -37,8 +40,18 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     id: pickString(legacy.id, legacy._id) || '',
     cnpj: pickString(legacy.cnpj, legacy.cpf_cnpj) || '',
     razaoSocial: pickString(legacy.razaoSocial, legacy.nome_razao_social) || '',
-    nomeFantasia: pickString(legacy.nomeFantasia, legacy.nome_fantasia),
-    inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
+    nomeFantasia: pickString(
+      legacy.nomeFantasia,
+      legacy.nome_fantasia,
+      providerData.nome_fantasia,
+      providerData.fantasia,
+    ),
+    inscricaoMunicipal: pickString(
+      legacy.inscricaoMunicipal,
+      legacy.inscricao_municipal,
+      providerData.inscricao_municipal,
+      providerData.im,
+    ),
     situacaoCadastral: pickString(
       legacy.situacaoCadastral,
       legacy.situacao_cadastral,
@@ -47,15 +60,22 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     dataSituacaoCadastral: pickString(
       legacy.dataSituacaoCadastral,
       legacy.data_situacao_cadastral,
+      providerData.data_situacao_cadastral,
     ),
     dataInicioAtividade: pickString(
       legacy.dataInicioAtividade,
       legacy.data_inicio_atividade,
       providerData.data_inicio_atividade,
     ),
-    cnaeFiscal: pickString(legacy.cnaeFiscal, legacy.cnae_fiscal),
-    cnaeFiscalDescricao: pickString(legacy.cnaeFiscalDescricao, legacy.cnae_fiscal_descricao),
-    porte: pickString(legacy.porte, providerData.porte),
+    cnaeFiscal: pickString(legacy.cnaeFiscal, legacy.cnae_fiscal, providerData.cnae_fiscal),
+    cnaeFiscalDescricao: pickString(
+      legacy.cnaeFiscalDescricao,
+      legacy.cnae_fiscal_descricao,
+      providerData.cnae_fiscal_descricao,
+      atividadePrincipal?.descricao,
+      atividadePrincipal?.text,
+    ),
+    porte: pickString(legacy.porte, providerData.porte, providerData.porte_empresa),
     naturezaJuridica: pickString(
       legacy.naturezaJuridica,
       legacy.natureza_juridica,

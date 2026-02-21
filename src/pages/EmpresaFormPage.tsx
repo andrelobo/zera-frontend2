@@ -43,7 +43,10 @@ interface EmpresaFormData {
 
 const toDateInputValue = (value?: string | null) => {
   if (!value) return '';
-  const date = new Date(value);
+  const trimmed = value.trim();
+  const brDate = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+  const normalized = brDate ? `${brDate[3]}-${brDate[2]}-${brDate[1]}` : trimmed;
+  const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return '';
   return date.toISOString().slice(0, 10);
 };
