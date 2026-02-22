@@ -8,6 +8,8 @@ export interface PrestadorSectionData {
   nomeFantasia: string;
   cnpj: string;
   inscricaoMunicipal: string;
+  inscricaoEstadual: string;
+  suframa: string;
   opcaoPeloSimples: '' | 'true' | 'false';
   cep: string;
   endereco: string;
@@ -17,7 +19,7 @@ export interface PrestadorSectionData {
   cidade: string;
   uf: string;
   email: string;
-  telefone: string;
+  whatsapp: string;
 }
 
 interface PrestadorSectionProps {
@@ -97,7 +99,7 @@ const PrestadorSection = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
         <div>
           <Label className="field-label">Nome Fantasia</Label>
           <Input
@@ -121,6 +123,24 @@ const PrestadorSection = ({
             />
             <span className="text-sm text-foreground">{simplesLabel}</span>
           </div>
+        </div>
+        <div>
+          <Label className="field-label">Inscrição Estadual</Label>
+          <Input
+            className="field-input"
+            placeholder="Inscrição"
+            value={data.inscricaoEstadual}
+            onChange={(e) => onChange('inscricaoEstadual', e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="field-label">Inscrição Suframa</Label>
+          <Input
+            className="field-input"
+            placeholder="Inscrição"
+            value={data.suframa}
+            onChange={(e) => onChange('suframa', e.target.value)}
+          />
         </div>
       </div>
 
@@ -220,12 +240,12 @@ const PrestadorSection = ({
             />
           </div>
           <div>
-            <Label className="field-label">Telefone</Label>
+            <Label className="field-label">WhatsApp</Label>
             <Input
               className="field-input"
               placeholder="(00) 00000-0000"
-              value={data.telefone}
-              onChange={(e) => onChange('telefone', e.target.value)}
+              value={data.whatsapp}
+              onChange={(e) => onChange('whatsapp', e.target.value)}
             />
           </div>
         </div>

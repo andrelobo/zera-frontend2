@@ -62,6 +62,16 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       providerData.inscricao_municipal,
       providerData.im,
     ),
+    inscricaoEstadual: pickString(
+      legacy.inscricaoEstadual,
+      legacy.inscricao_estadual,
+      providerData.inscricao_estadual,
+      providerData.ie,
+    ),
+    suframa: pickString(
+      legacy.suframa,
+      providerData.suframa,
+    ),
     situacaoCadastral: pickString(
       legacy.situacaoCadastral,
       legacy.situacao_cadastral,
@@ -139,6 +149,7 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       providerData.apuracao_simples_nacional,
     ),
     email: pickString(legacy.email),
+    whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
     endereco: hasEndereco ? endereco : undefined,
   };
@@ -252,6 +263,8 @@ export const empresasApi = {
       razaoSocial: data.razaoSocial,
       nomeFantasia: data.nomeFantasia,
       inscricaoMunicipal: data.inscricaoMunicipal,
+      inscricaoEstadual: data.inscricaoEstadual,
+      suframa: data.suframa,
       situacaoCadastral: data.situacaoCadastral,
       dataSituacaoCadastral: data.dataSituacaoCadastral,
       dataInicioAtividade: data.dataInicioAtividade,
@@ -269,6 +282,7 @@ export const empresasApi = {
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
       email: data.email,
       fone: data.telefone,
+      whatsapp: data.whatsapp,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
     }).then(r => normalizeEmpresa(r.data)),
   update: (id: string, data: UpdateEmpresaRequest) =>
@@ -276,6 +290,8 @@ export const empresasApi = {
       razaoSocial: data.razaoSocial,
       nomeFantasia: data.nomeFantasia,
       inscricaoMunicipal: data.inscricaoMunicipal,
+      inscricaoEstadual: data.inscricaoEstadual,
+      suframa: data.suframa,
       situacaoCadastral: data.situacaoCadastral,
       dataSituacaoCadastral: data.dataSituacaoCadastral,
       dataInicioAtividade: data.dataInicioAtividade,
@@ -293,6 +309,7 @@ export const empresasApi = {
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
       email: data.email,
       fone: data.telefone,
+      whatsapp: data.whatsapp,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
     }).then(r => normalizeEmpresa(r.data)),
   delete: (id: string) =>

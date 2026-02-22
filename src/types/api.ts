@@ -62,6 +62,8 @@ export interface Empresa {
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  suframa?: string;
   situacaoCadastral?: string;
   dataSituacaoCadastral?: string;
   dataInicioAtividade?: string;
@@ -92,6 +94,7 @@ export interface Empresa {
   uf?: string;
   cep?: string;
   telefone?: string;
+  whatsapp?: string;
   fone?: string;
   email?: string;
   createdAt: string;
@@ -103,6 +106,8 @@ export interface CreateEmpresaRequest {
   nomeFantasia?: string;
   cnpj: string;
   inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  suframa?: string;
   situacaoCadastral?: string;
   dataSituacaoCadastral?: string;
   dataInicioAtividade?: string;
@@ -131,6 +136,7 @@ export interface CreateEmpresaRequest {
   uf?: string;
   cep?: string;
   telefone?: string;
+  whatsapp?: string;
   email?: string;
 }
 

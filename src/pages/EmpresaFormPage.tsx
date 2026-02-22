@@ -19,6 +19,8 @@ interface EmpresaFormData {
   cnpj: string;
   nomeFantasia: string;
   inscricaoMunicipal: string;
+  inscricaoEstadual: string;
+  suframa: string;
   situacaoCadastral: string;
   dataSituacaoCadastral: string;
   dataInicioAtividade: string;
@@ -42,6 +44,7 @@ interface EmpresaFormData {
   uf: string;
   cep: string;
   telefone: string;
+  whatsapp: string;
   email: string;
 }
 
@@ -88,6 +91,8 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     cnpj: empresa.cnpj || previous.cnpj,
     nomeFantasia: empresa.nomeFantasia || String(legacy.nome_fantasia || previous.nomeFantasia),
     inscricaoMunicipal: empresa.inscricaoMunicipal || String(legacy.inscricao_municipal || previous.inscricaoMunicipal),
+    inscricaoEstadual: empresa.inscricaoEstadual || String(legacy.inscricao_estadual || previous.inscricaoEstadual),
+    suframa: empresa.suframa || String(legacy.suframa || previous.suframa),
     situacaoCadastral: empresa.situacaoCadastral || String(legacy.situacao_cadastral || previous.situacaoCadastral),
     dataSituacaoCadastral: toDateInputValue(
       empresa.dataSituacaoCadastral
@@ -153,7 +158,8 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     cidade: empresa.cidade || empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || String(endereco.municipio || previous.cidade),
     uf: empresa.uf || empresa.endereco?.uf || empresa.endereco?.estado || previous.uf,
     cep: formatCep(empresa.cep || empresa.endereco?.cep || String(endereco.cep || previous.cep)),
-    telefone: empresa.telefone || empresa.fone || String(legacy.ddd_telefone_1 || previous.telefone),
+    telefone: empresa.telefone || empresa.fone || empresa.whatsapp || String(legacy.ddd_telefone_1 || previous.telefone),
+    whatsapp: empresa.whatsapp || empresa.telefone || empresa.fone || String(legacy.ddd_telefone_1 || previous.whatsapp),
     email: empresa.email || String(legacy.email || previous.email),
   };
 };
@@ -171,12 +177,12 @@ const EmpresaFormPage = () => {
   });
 
   const [form, setForm] = useState<EmpresaFormData>({
-    razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '',
+    razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
     cnaeFiscal: '', cnaeFiscalDescricao: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
     regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '',
-    endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', email: '',
+    endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
   });
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
   const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
@@ -218,6 +224,8 @@ const EmpresaFormPage = () => {
         razaoSocial: form.razaoSocial,
         nomeFantasia: form.nomeFantasia || undefined,
         inscricaoMunicipal: form.inscricaoMunicipal || undefined,
+        inscricaoEstadual: form.inscricaoEstadual || undefined,
+        suframa: form.suframa || undefined,
         situacaoCadastral: form.situacaoCadastral || undefined,
         dataSituacaoCadastral: form.dataSituacaoCadastral || undefined,
         dataInicioAtividade: form.dataInicioAtividade || undefined,
@@ -234,7 +242,8 @@ const EmpresaFormPage = () => {
         aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
         apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
         email: form.email || undefined,
-        telefone: form.telefone || undefined,
+        telefone: form.telefone || form.whatsapp || undefined,
+        whatsapp: form.whatsapp || form.telefone || undefined,
         endereco: {
           logradouro: form.endereco || undefined,
           numero: form.numero || undefined,
@@ -249,6 +258,8 @@ const EmpresaFormPage = () => {
       razaoSocial: payload.razaoSocial,
       nomeFantasia: payload.nomeFantasia,
       inscricaoMunicipal: payload.inscricaoMunicipal,
+      inscricaoEstadual: payload.inscricaoEstadual,
+      suframa: payload.suframa,
       situacaoCadastral: payload.situacaoCadastral,
       dataSituacaoCadastral: payload.dataSituacaoCadastral,
       dataInicioAtividade: payload.dataInicioAtividade,
@@ -266,6 +277,7 @@ const EmpresaFormPage = () => {
       apuracaoSimplesNacional: payload.apuracaoSimplesNacional,
       email: payload.email,
       telefone: payload.telefone,
+      whatsapp: payload.whatsapp,
       endereco: payload.endereco,
     }) : empresasApi.create(payload);
     },
@@ -351,6 +363,8 @@ const EmpresaFormPage = () => {
             nomeFantasia: form.nomeFantasia,
             cnpj: form.cnpj,
             inscricaoMunicipal: form.inscricaoMunicipal,
+            inscricaoEstadual: form.inscricaoEstadual,
+            suframa: form.suframa,
             opcaoPeloSimples: form.opcaoPeloSimples,
             cep: form.cep,
             endereco: form.endereco,
@@ -360,7 +374,7 @@ const EmpresaFormPage = () => {
             cidade: form.cidade,
             uf: form.uf,
             email: form.email,
-            telefone: form.telefone,
+            whatsapp: form.whatsapp,
           }}
           isEdit={isEdit}
           loadingCnpj={previewMutation.isPending}
