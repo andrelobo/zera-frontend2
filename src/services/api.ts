@@ -158,7 +158,15 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
 // Auth
 export const authApi = {
   login: (data: LoginRequest) =>
-    api.post<LoginResponse>('/auth/login', data).then(r => r.data),
+    api.post<LoginResponse>('/auth/login', data, {
+      timeout: 30_000,
+      skipGlobalErrorToast: true,
+    }).then(r => r.data),
+  warmup: () =>
+    api.get('/health', {
+      timeout: 20_000,
+      skipGlobalErrorToast: true,
+    }).then(r => r.data),
   me: () =>
     api.get<User>('/auth/me').then(r => r.data),
 };
