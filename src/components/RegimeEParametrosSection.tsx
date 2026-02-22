@@ -32,8 +32,13 @@ const RegimeEParametrosSection = ({
   return (
     <div className="section-card">
       <h2 className="section-title">
-        <FileText className="w-5 h-5 text-primary" />
-        Enquadramento Fiscal
+        <span className="section-title-icon section-title-icon-primary">
+          <FileText className="w-4 h-4" />
+        </span>
+        <span>
+          Enquadramento Fiscal
+          <span className="section-subtitle block">Regime e parâmetros tributários</span>
+        </span>
       </h2>
 
       <div className="space-y-2">
@@ -62,11 +67,13 @@ const RegimeEParametrosSection = ({
         </div>
       </div>
 
-      <h3 className="text-sm font-bold text-muted-foreground flex items-center gap-2 mt-5 mb-3">
-        <Settings className="w-4 h-4 text-primary" />
+      <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mt-5 mb-3">
+        <span className="section-title-icon section-title-icon-accent h-6 w-6 rounded-md">
+          <Settings className="w-3.5 h-3.5" />
+        </span>
         Parâmetro Fiscal
       </h3>
-      <div className="rounded-lg bg-muted/50 border border-border p-4">
+      <div className="rounded-lg bg-gradient-to-br from-muted/60 to-background border border-border p-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label className="field-label whitespace-nowrap">Alíquota Simples Nacional</Label>

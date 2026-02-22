@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Building2, ClipboardList, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
@@ -347,7 +347,12 @@ const EmpresaFormPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Empresa' : 'Nova Empresa'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <span className="section-title-icon section-title-icon-primary">
+            <Building2 className="h-4 w-4" />
+          </span>
+          {isEdit ? 'Editar Empresa' : 'Nova Empresa'}
+        </h1>
       </div>
 
       <Alert>
@@ -391,7 +396,15 @@ const EmpresaFormPage = () => {
         />
 
         <div className="section-card">
-          <h2 className="section-title">Dados Complementares</h2>
+          <h2 className="section-title">
+            <span className="section-title-icon section-title-icon-secondary">
+              <ClipboardList className="w-4 h-4" />
+            </span>
+            <span>
+              Dados Complementares
+              <span className="section-subtitle block">Informações cadastrais e econômicas</span>
+            </span>
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="field-label">Situação Cadastral</Label>

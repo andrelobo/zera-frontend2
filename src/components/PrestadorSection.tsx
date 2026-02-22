@@ -54,8 +54,13 @@ const PrestadorSection = ({
   return (
     <div className="section-card">
       <h2 className="section-title">
-        <Building2 className="w-5 h-5 text-primary" />
-        O Prestador
+        <span className="section-title-icon section-title-icon-primary">
+          <Building2 className="w-4 h-4" />
+        </span>
+        <span>
+          O Prestador
+          <span className="section-subtitle block">Cadastro fiscal da empresa emissora</span>
+        </span>
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_3fr] gap-4">
@@ -145,8 +150,10 @@ const PrestadorSection = ({
       </div>
 
       <div className="mt-5 pt-5 border-t border-border">
-        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-4">
-          <MapPin className="w-4 h-4" />
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+          <span className="section-title-icon section-title-icon-secondary h-6 w-6 rounded-md">
+            <MapPin className="w-3.5 h-3.5" />
+          </span>
           Endereço
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_0.8fr] gap-4">
@@ -224,8 +231,10 @@ const PrestadorSection = ({
       </div>
 
       <div className="mt-5 pt-5 border-t border-border">
-        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-4">
-          <Mail className="w-4 h-4" />
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+          <span className="section-title-icon section-title-icon-accent h-6 w-6 rounded-md">
+            <Mail className="w-3.5 h-3.5" />
+          </span>
           Contato
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
