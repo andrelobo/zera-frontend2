@@ -69,6 +69,13 @@ const PrestadorSection = ({
           <div className="flex gap-2">
             <Input
               className="field-input"
+              id="empresa-cnpj"
+              name="empresa_cnpj_manual"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              inputMode="numeric"
               placeholder="00.000.000/0000-00"
               value={data.cnpj}
               onChange={(e) => onChange('cnpj', e.target.value)}

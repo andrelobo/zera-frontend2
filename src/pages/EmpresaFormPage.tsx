@@ -70,6 +70,15 @@ const fromBooleanSelectValue = (value: string): boolean | null | undefined => {
   return undefined;
 };
 
+const formatCnpj = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 14);
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
   const endereco = (empresa.endereco || {}) as Record<string, unknown>;
@@ -311,6 +320,19 @@ const EmpresaFormPage = () => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
+  const handlePrestadorChange = (field: keyof EmpresaFormData, value: string) => {
+    if (field !== 'cnpj') {
+      update(field, value);
+      return;
+    }
+    const formatted = formatCnpj(value);
+    const digits = formatted.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, cnpj: formatted }));
+    if (digits !== lastPreviewCnpj) {
+      setLastPreviewAttemptCnpj('');
+    }
+  };
+
   const handleAutocompleteByCnpj = () => {
     const cnpj = form.cnpj.replace(/\D/g, '');
     if (cnpj.length !== 14) {
@@ -384,7 +406,7 @@ const EmpresaFormPage = () => {
           isEdit={isEdit}
           loadingCnpj={previewMutation.isPending}
           onAutocompleteByCnpj={handleAutocompleteByCnpj}
-          onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+          onChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
           onCepChange={(value) => update('cep', formatCep(value))}
           cepHint={cepDigits.length > 0 && cepDigits.length < 8 ? 'Informe os 8 dígitos do CEP.' : undefined}
           cepLoading={cepLookupQuery.isFetching}
