@@ -17,9 +17,12 @@ import BrandLogo from '@/components/BrandLogo';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/nfse', icon: FileText, label: 'NFSe' },
+  { to: '/nfse/nova', icon: FileText, label: 'Emissão DANFSE' },
   { to: '/nfse/rapida', icon: Zap, label: 'Emissão Rápida' },
   { to: '/empresas', icon: Building2, label: 'Empresas' },
+  { to: '/empresas/nova', icon: Building2, label: 'Cadastro Prestador' },
   { to: '/tomadores', icon: UserRound, label: 'Tomadores' },
+  { to: '/tomadores/novo', icon: UserRound, label: 'Cadastro Tomador' },
   { to: '/certificado-digital', icon: ShieldCheck, label: 'Certificado Digital' },
   { to: '/users', icon: Users, label: 'Usuários' },
 ];
