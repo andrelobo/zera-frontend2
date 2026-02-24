@@ -13,7 +13,6 @@ import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
-import BrandLogo from '@/components/BrandLogo';
 
 const MIN_AUTOCOMPLETE_CHARS = 2;
 const buildReferencia = () => `nfse-front-${Date.now()}`;
@@ -262,7 +261,6 @@ const NfseEmitPage = () => {
             <button onClick={() => navigate('/nfse')} className="p-2 rounded-lg hover:bg-muted transition-colors">
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
-            <BrandLogo size="sm" className="gap-2" />
             <div>
               <h1 className="text-lg font-bold text-foreground tracking-tight">DANFSE</h1>
               <p className="text-xs text-muted-foreground">Nota Fiscal de Serviços Eletrônica</p>
@@ -270,13 +268,13 @@ const NfseEmitPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
+            <button type="button" className="btn-outline flex items-center gap-2 text-sm py-2">
               <FileOutput className="w-4 h-4" />
               <span className="hidden sm:inline">Visualizar</span>
             </button>
-            <button type="submit" form="nfse-normal-form" disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
-              {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              <span className="hidden sm:inline">Emitir</span>
+            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
+              <FileOutput className="w-4 h-4" />
+              <span className="hidden sm:inline">Imprimir</span>
             </button>
           </div>
         </div>
@@ -547,6 +545,15 @@ const NfseEmitPage = () => {
           retIr={valores.retIr}
           retInss={valores.retInss}
         />
+
+        <div className="section-card">
+          <div className="flex justify-end">
+            <button type="submit" disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
+              {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span>Emitir</span>
+            </button>
+          </div>
+        </div>
       </form>
       </main>
     </div>
