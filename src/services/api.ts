@@ -4,6 +4,7 @@ import type {
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
   NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem,
+  Tomador, CreateTomadorRequest, UpdateTomadorRequest,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
@@ -250,6 +251,39 @@ export const nfseApi = {
 const previewEmpresaByCnpj = (cnpj: string) =>
   api.post<Empresa>('/empresas/preview', { cnpj }).then(r => normalizeEmpresa(r.data));
 
+const normalizeTomador = (raw: Tomador | Record<string, unknown>): Tomador => {
+  const legacy = raw as Record<string, unknown>;
+  const endereco = (legacy.endereco as Record<string, unknown> | undefined) ?? {};
+  const pickString = (...values: unknown[]) => {
+    for (const value of values) {
+      if (value === null || value === undefined || value === '') continue;
+      return String(value);
+    }
+    return undefined;
+  };
+
+  return {
+    ...(raw as Tomador),
+    id: pickString(legacy.id, legacy._id) || '',
+    empresaCnpj: pickString(legacy.empresaCnpj, legacy.empresa_cnpj) || '',
+    cpfCnpj: pickString(legacy.cpfCnpj, legacy.cpf_cnpj) || '',
+    razaoSocial: pickString(legacy.razaoSocial, legacy.razao_social) || '',
+    inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
+    email: pickString(legacy.email),
+    endereco: {
+      logradouro: pickString(endereco.logradouro),
+      numero: pickString(endereco.numero),
+      complemento: pickString(endereco.complemento),
+      bairro: pickString(endereco.bairro),
+      municipio: pickString(endereco.municipio, endereco.cidade),
+      uf: pickString(endereco.uf),
+      cep: pickString(endereco.cep),
+    },
+    createdAt: pickString(legacy.createdAt, legacy.created_at) || new Date().toISOString(),
+    updatedAt: pickString(legacy.updatedAt, legacy.updated_at) || new Date().toISOString(),
+  };
+};
+
 export const empresasApi = {
   list: (input?: { q?: string; limit?: number }) =>
     api.get<Empresa[]>('/empresas', {
@@ -331,6 +365,37 @@ export const empresasApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data);
   },
+};
+
+// Tomadores
+export const tomadoresApi = {
+  list: (input?: { empresaCnpj?: string; q?: string }) =>
+    api.get<Tomador[]>('/tomadores', {
+      params: {
+        empresaCnpj: input?.empresaCnpj?.replace(/\D/g, '') || undefined,
+        q: input?.q?.trim() || undefined,
+      },
+    }).then(r => (r.data || []).map((item) => normalizeTomador(item))),
+  autocomplete: (input: { empresaCnpj: string; q: string; limit?: number }) =>
+    api.get<Tomador[]>('/tomadores/autocomplete', {
+      params: {
+        empresaCnpj: input.empresaCnpj.replace(/\D/g, ''),
+        q: input.q.trim(),
+        limit: input.limit,
+      },
+    }).then(r => (r.data || []).map((item) => normalizeTomador(item))),
+  getById: (id: string) =>
+    api.get<Tomador>(`/tomadores/${id}`).then(r => normalizeTomador(r.data)),
+  create: (data: CreateTomadorRequest) =>
+    api.post<Tomador>('/tomadores', {
+      ...data,
+      empresaCnpj: data.empresaCnpj.replace(/\D/g, ''),
+      cpfCnpj: data.cpfCnpj.replace(/\D/g, ''),
+    }).then(r => normalizeTomador(r.data)),
+  update: (id: string, data: UpdateTomadorRequest) =>
+    api.patch<Tomador>(`/tomadores/${id}`, data).then(r => normalizeTomador(r.data)),
+  delete: (id: string) =>
+    api.delete(`/tomadores/${id}`).then(r => r.data),
 };
 
 // Users

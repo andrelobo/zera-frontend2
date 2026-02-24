@@ -15,6 +15,8 @@ import NfseEmitPage from "@/pages/NfseEmitPage";
 import NfseQuickEmitPage from "@/pages/NfseQuickEmitPage";
 import EmpresasPage from "@/pages/EmpresasPage";
 import EmpresaFormPage from "@/pages/EmpresaFormPage";
+import TomadoresPage from "@/pages/TomadoresPage";
+import TomadorFormPage from "@/pages/TomadorFormPage";
 import CertificadoDigitalPage from "@/pages/CertificadoDigitalPage";
 import UsersPage from "@/pages/UsersPage";
 import UserFormPage from "@/pages/UserFormPage";
@@ -59,6 +61,9 @@ const App = () => (
                 <Route path="/empresas" element={<EmpresasPage />} />
                 <Route path="/empresas/nova" element={<EmpresaFormPage />} />
                 <Route path="/empresas/:id" element={<EmpresaFormPage />} />
+                <Route path="/tomadores" element={<TomadoresPage />} />
+                <Route path="/tomadores/novo" element={<TomadorFormPage />} />
+                <Route path="/tomadores/:id" element={<TomadorFormPage />} />
                 <Route path="/certificado-digital" element={<CertificadoDigitalPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/users/novo" element={<UserFormPage />} />

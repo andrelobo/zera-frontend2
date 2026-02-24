@@ -142,6 +142,47 @@ export interface CreateEmpresaRequest {
 
 export type UpdateEmpresaRequest = Partial<CreateEmpresaRequest>;
 
+// Tomadores
+export interface Tomador {
+  id: string;
+  _id?: string;
+  empresaCnpj: string;
+  cpfCnpj: string;
+  razaoSocial: string;
+  inscricaoMunicipal?: string;
+  email?: string;
+  endereco?: {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    uf?: string;
+    cep?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTomadorRequest {
+  empresaCnpj: string;
+  cpfCnpj: string;
+  razaoSocial: string;
+  inscricaoMunicipal?: string;
+  email?: string;
+  endereco?: {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    uf?: string;
+    cep?: string;
+  };
+}
+
+export type UpdateTomadorRequest = Partial<Omit<CreateTomadorRequest, 'empresaCnpj' | 'cpfCnpj'>>;
+
 // NFSe
 export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELLED';
 export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK';

@@ -2,7 +2,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavLink } from '@/components/NavLink';
 import {
-  LayoutDashboard, FileText, Building2, Users, User, LogOut, ChevronDown, ShieldCheck, Zap,
+  LayoutDashboard, FileText, Building2, Users, User, LogOut, ChevronDown, ShieldCheck, Zap, UserRound,
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/nfse', icon: FileText, label: 'NFSe' },
   { to: '/nfse/rapida', icon: Zap, label: 'Emissão Rápida' },
   { to: '/empresas', icon: Building2, label: 'Empresas' },
+  { to: '/tomadores', icon: UserRound, label: 'Tomadores' },
   { to: '/certificado-digital', icon: ShieldCheck, label: 'Certificado Digital' },
   { to: '/users', icon: Users, label: 'Usuários' },
 ];
