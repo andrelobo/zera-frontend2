@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Building2, FileOutput, Loader2, MapPin, Percent, Printer, Search, Send, Users } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Building2, FileOutput, Loader2, Send, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,9 @@ import { toast } from '@/hooks/use-toast';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
+import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
+import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
+import BrandLogo from '@/components/BrandLogo';
 
 const MIN_AUTOCOMPLETE_CHARS = 2;
 const buildReferencia = () => `nfse-front-${Date.now()}`;
@@ -60,8 +63,6 @@ const NfseEmitPage = () => {
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
 
-  const [tomadorSearch, setTomadorSearch] = useState('');
-  const [tomadorSearchDebounced, setTomadorSearchDebounced] = useState('');
   const [selectedTomador, setSelectedTomador] = useState<Tomador | null>(null);
 
   const [tomadorCpfCnpj, setTomadorCpfCnpj] = useState('');
@@ -75,12 +76,12 @@ const NfseEmitPage = () => {
   const [tomadorMunicipio, setTomadorMunicipio] = useState('');
   const [tomadorUf, setTomadorUf] = useState('');
 
-  const [localPrestacaoPais] = useState('Brasil');
-  const [localPrestacaoUf, setLocalPrestacaoUf] = useState('AM');
-  const [localPrestacaoMunicipio, setLocalPrestacaoMunicipio] = useState('Manaus');
+  const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({
+    pais: 'Brasil',
+    uf: 'AM',
+    municipio: 'Manaus',
+  });
 
-  const [serviceSearch, setServiceSearch] = useState('');
-  const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
   const [descricao, setDescricao] = useState('');
   const [codigoNacional, setCodigoNacional] = useState('171901');
 
@@ -88,6 +89,11 @@ const NfseEmitPage = () => {
   const [desconto, setDesconto] = useState('');
   const [aliquota, setAliquota] = useState('');
   const [issRetido, setIssRetido] = useState(false);
+  const [retPis, setRetPis] = useState('');
+  const [retCofins, setRetCofins] = useState('');
+  const [retCsll, setRetCsll] = useState('');
+  const [retIr, setRetIr] = useState('');
+  const [retInss, setRetInss] = useState('');
 
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -95,16 +101,6 @@ const NfseEmitPage = () => {
     const timer = setTimeout(() => setEmpresaSearchDebounced(empresaSearch), 250);
     return () => clearTimeout(timer);
   }, [empresaSearch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setTomadorSearchDebounced(tomadorSearch), 250);
-    return () => clearTimeout(timer);
-  }, [tomadorSearch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setServiceSearchDebounced(serviceSearch), 250);
-    return () => clearTimeout(timer);
-  }, [serviceSearch]);
 
   const canSearchEmpresa = empresaSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
   const empresasQuery = useQuery({
@@ -114,32 +110,14 @@ const NfseEmitPage = () => {
     staleTime: 60_000,
   });
 
-  const canSearchTomador = tomadorSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS && Boolean(selectedEmpresa?.cnpj);
   const tomadoresQuery = useQuery({
-    queryKey: ['tomadores', 'emit-normal', selectedEmpresa?.cnpj, tomadorSearchDebounced],
+    queryKey: ['tomadores', 'emit-normal', selectedEmpresa?.cnpj],
     queryFn: () => tomadoresApi.autocomplete({
       empresaCnpj: selectedEmpresa!.cnpj,
-      q: tomadorSearchDebounced,
-      limit: 8,
+      q: '',
+      limit: 30,
     }),
-    enabled: canSearchTomador,
-    staleTime: 60_000,
-  });
-
-  const canSearchService = serviceSearchDebounced.trim().length >= MIN_AUTOCOMPLETE_CHARS;
-  const servicesQuery = useQuery({
-    queryKey: ['nfse-services', 'emit-normal', serviceSearchDebounced],
-    queryFn: async () => {
-      try {
-        return await nfseApi.servicosList(
-          { q: serviceSearchDebounced, limit: 8 },
-          { skipGlobalErrorToast: true },
-        );
-      } catch {
-        return nfseApi.servicosAutocomplete({ q: serviceSearchDebounced, limit: 8 });
-      }
-    },
-    enabled: canSearchService,
+    enabled: Boolean(selectedEmpresa?.cnpj),
     staleTime: 60_000,
   });
 
@@ -162,14 +140,23 @@ const NfseEmitPage = () => {
   }, [cepLookupQuery.data]);
 
   const valores = useMemo(() => {
-    const bruto = parseCurrency(valorServico);
-    const discount = parseCurrency(desconto);
-    const base = Math.max(0, bruto - discount);
+    const valorBruto = parseCurrency(valorServico);
+    const descontoValor = parseCurrency(desconto);
+    const baseCalculo = Math.max(0, valorBruto - descontoValor);
     const taxRate = parsePercent(aliquota) || 0;
-    const iss = base * (taxRate / 100);
-    const liquido = Math.max(0, base - (issRetido ? iss : 0));
-    return { bruto, discount, base, iss, liquido };
-  }, [aliquota, desconto, issRetido, valorServico]);
+    const issValor = baseCalculo * (taxRate / 100);
+    return {
+      valorBruto,
+      desconto: descontoValor,
+      baseCalculo,
+      issValor,
+      retPis: parseCurrency(retPis),
+      retCofins: parseCurrency(retCofins),
+      retCsll: parseCurrency(retCsll),
+      retIr: parseCurrency(retIr),
+      retInss: parseCurrency(retInss),
+    };
+  }, [aliquota, desconto, issRetido, retCofins, retCsll, retInss, retIr, retPis, valorServico]);
 
   const emitMutation = useMutation({
     mutationFn: (payload: EmitirNfseRequest) => nfseApi.emitir(payload),
@@ -181,7 +168,6 @@ const NfseEmitPage = () => {
 
   const applyTomador = (tomador: Tomador) => {
     setSelectedTomador(tomador);
-    setTomadorSearch(`${tomador.razaoSocial} (${formatDoc(tomador.cpfCnpj)})`);
     setTomadorCpfCnpj(formatDoc(tomador.cpfCnpj));
     setTomadorRazaoSocial(tomador.razaoSocial);
     setTomadorInscricaoMunicipal(tomador.inscricaoMunicipal || '');
@@ -201,7 +187,7 @@ const NfseEmitPage = () => {
     if (!tomadorRazaoSocial.trim()) found.push('Razão social do tomador é obrigatória.');
     if (!descricao.trim()) found.push('Descrição do serviço é obrigatória.');
     if (codigoNacional.replace(/\D/g, '').length !== 6) found.push('Código nacional do serviço deve ter 6 dígitos.');
-    if (valores.bruto <= 0) found.push('Valor do serviço deve ser maior que zero.');
+    if (valores.valorBruto <= 0) found.push('Valor do serviço deve ser maior que zero.');
     return found;
   };
 
@@ -245,18 +231,21 @@ const NfseEmitPage = () => {
           logradouro: tomadorLogradouro || undefined,
           numero: tomadorNumero || undefined,
           bairro: tomadorBairro || undefined,
-          municipio: tomadorMunicipio || localPrestacaoMunicipio || undefined,
-          uf: tomadorUf || localPrestacaoUf || undefined,
+          municipio: tomadorMunicipio || localPrestacao.municipio || undefined,
+          uf: tomadorUf || localPrestacao.uf || undefined,
           cep: normalizeCep(tomadorCep) || undefined,
         },
       },
       servico: {
         codigoNacional: codigoNacional.replace(/\D/g, ''),
         descricao,
-        valor: valores.bruto,
+        valor: valores.valorBruto,
         iss: {
           retido: issRetido,
           aliquota: parsePercent(aliquota),
+        },
+        tributacaoTotal: {
+          federal: parseCurrency(retPis) + parseCurrency(retCofins) + parseCurrency(retCsll) + parseCurrency(retIr),
         },
       },
       referenciaExterna,
@@ -266,42 +255,49 @@ const NfseEmitPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in w-full">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/nfse')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">DANFSE</h1>
-            <p className="text-sm text-muted-foreground">Emissão normal de NFSe (não é emissão rápida)</p>
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/nfse')} className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <BrandLogo size="sm" className="gap-2" />
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight">DANFSE</h1>
+              <p className="text-xs text-muted-foreground">Nota Fiscal de Serviços Eletrônica</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
+              <FileOutput className="w-4 h-4" />
+              <span className="hidden sm:inline">Visualizar</span>
+            </button>
+            <button type="submit" form="nfse-normal-form" disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
+              {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="hidden sm:inline">Emitir</span>
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Visualizar
-          </Button>
-          <Button type="submit" form="nfse-normal-form" disabled={emitMutation.isPending}>
-            {emitMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileOutput className="mr-2 h-4 w-4" />}
-            Emitir
-          </Button>
-        </div>
-      </div>
+      </header>
 
       {errors.length > 0 && (
-        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-destructive" />
-            <span className="text-sm font-medium text-destructive">Corrija os seguintes erros:</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-destructive" />
+              <span className="text-sm font-medium text-destructive">Corrija os seguintes erros:</span>
+            </div>
+            <ul className="list-disc list-inside text-sm text-destructive/90 space-y-1">
+              {errors.map((err) => <li key={err}>{err}</li>)}
+            </ul>
           </div>
-          <ul className="list-disc list-inside text-sm text-destructive/90 space-y-1">
-            {errors.map((err) => <li key={err}>{err}</li>)}
-          </ul>
         </div>
       )}
 
-      <form id="nfse-normal-form" onSubmit={handleSubmit} className="space-y-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-3">
+      <form id="nfse-normal-form" onSubmit={handleSubmit} className="space-y-3">
         <div className="section-card">
           <h2 className="section-title">
             <span className="section-title-icon section-title-icon-primary">
@@ -358,47 +354,30 @@ const NfseEmitPage = () => {
               <Users className="w-4 h-4" />
             </span>
             <span>
-              O Tomador
-              <span className="section-subtitle block">Autocomplete via backend por empresa</span>
+              Tomador(a)
+              <span className="section-subtitle block">Dados do tomador para emissão</span>
             </span>
           </h2>
 
-          <div className="space-y-2 mb-4">
-            <Label className="field-label">Buscar tomador</Label>
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="field-input pl-8"
-                value={tomadorSearch}
-                onChange={(e) => {
-                  setTomadorSearch(e.target.value);
-                  setSelectedTomador(null);
-                }}
-                placeholder={selectedEmpresa ? 'Digite nome ou CPF/CNPJ' : 'Selecione a empresa primeiro'}
-                disabled={!selectedEmpresa}
-              />
-            </div>
-            {canSearchTomador && tomadoresQuery.isLoading && (
-              <p className="text-xs text-muted-foreground">Buscando tomadores...</p>
-            )}
-            {canSearchTomador && (tomadoresQuery.data?.length || 0) > 0 && (
-              <div className="max-h-44 overflow-auto rounded-md border p-1">
+          {selectedEmpresa && (tomadoresQuery.data?.length || 0) > 0 && (
+            <div className="mb-4">
+              <Label className="field-label">Tomadores Cadastrados</Label>
+              <div className="max-h-44 overflow-auto rounded-md border p-1 mt-2">
                 {(tomadoresQuery.data || []).map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
+                    className={`w-full rounded px-2 py-1 text-left text-sm hover:bg-accent ${
+                      selectedTomador?.id === item.id ? 'bg-accent' : ''
+                    }`}
                     onClick={() => applyTomador(item)}
                   >
                     <span className="font-medium">{item.razaoSocial}</span> ({formatDoc(item.cpfCnpj)})
                   </button>
                 ))}
               </div>
-            )}
-            {selectedTomador && (
-              <p className="text-xs text-muted-foreground">Tomador selecionado do cadastro.</p>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -478,76 +457,23 @@ const NfseEmitPage = () => {
               <MapPin className="w-4 h-4" />
             </span>
             <span>
-              Local da Prestação
-              <span className="section-subtitle block">Informação complementar do DANFSE</span>
-            </span>
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <Label className="field-label">País</Label>
-              <Input className="field-input" value={localPrestacaoPais} readOnly />
-            </div>
-            <div>
-              <Label className="field-label">UF</Label>
-              <Input className="field-input" value={localPrestacaoUf} onChange={(e) => setLocalPrestacaoUf(e.target.value.toUpperCase())} maxLength={2} />
-            </div>
-            <div>
-              <Label className="field-label">Município</Label>
-              <Input className="field-input" value={localPrestacaoMunicipio} onChange={(e) => setLocalPrestacaoMunicipio(e.target.value)} />
-            </div>
-          </div>
-        </div>
-
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-primary">
-              <Send className="w-4 h-4" />
-            </span>
-            <span>
-              Prestação do Serviço
+              Serviço Prestado
               <span className="section-subtitle block">Autocomplete de serviços via backend</span>
             </span>
           </h2>
-
-          <div className="space-y-2 mb-4">
-            <Label className="field-label">Buscar serviço</Label>
-            <Input
-              className="field-input"
-              value={serviceSearch}
-              onChange={(e) => {
-                setServiceSearch(e.target.value);
-                const digits = e.target.value.replace(/\D/g, '');
-                if (digits.length >= 6) setCodigoNacional(digits.slice(0, 6));
-              }}
-              placeholder="Código ou descrição"
-            />
-            {canSearchService && servicesQuery.isLoading && (
-              <p className="text-xs text-muted-foreground">Buscando serviços...</p>
-            )}
-            {canSearchService && (servicesQuery.data?.items?.length || 0) > 0 && (
-              <div className="max-h-44 overflow-auto rounded-md border p-1">
-                {(servicesQuery.data?.items || []).map((item) => (
-                  <button
-                    key={`${item.codigoServico}-${item.sequencial ?? ''}`}
-                    type="button"
-                    className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
-                    onClick={() => {
-                      setCodigoNacional(item.codigoServico);
-                      setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
-                      if (!descricao.trim()) setDescricao(item.descricao);
-                    }}
-                  >
-                    <span className="font-medium">{item.codigoServico}</span> - {item.descricao}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="field-label">Código Nacional *</Label>
+              <Label className="field-label">Código Tributação Nacional*</Label>
               <Input className="field-input" value={codigoNacional} onChange={(e) => setCodigoNacional(e.target.value.replace(/\D/g, '').slice(0, 6))} required />
+            </div>
+            <div>
+              <Label className="field-label">Alíquota %</Label>
+              <Input
+                className="field-input"
+                value={aliquota}
+                onChange={(e) => setAliquota(e.target.value.replace(/[^\d,]/g, ''))}
+                placeholder="0,00"
+              />
             </div>
           </div>
 
@@ -555,24 +481,12 @@ const NfseEmitPage = () => {
             <Label className="field-label">Descrição do Serviço *</Label>
             <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} required />
           </div>
-        </div>
 
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-secondary">
-              <Percent className="w-4 h-4" />
-            </span>
-            <span>
-              Valores Totais
-              <span className="section-subtitle block">Cálculo operacional da nota</span>
-            </span>
-          </h2>
-
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             <div>
-              <Label className="field-label">Valor do Serviço (R$) *</Label>
+              <Label className="field-label">Valor do Serviço (R$)*</Label>
               <Input
-                className="field-input"
+                className="field-input text-right"
                 value={valorServico}
                 onChange={(e) => setValorServico(formatCurrencyInput(e.target.value))}
                 placeholder="0,00"
@@ -582,20 +496,15 @@ const NfseEmitPage = () => {
             <div>
               <Label className="field-label">Desconto (R$)</Label>
               <Input
-                className="field-input"
+                className="field-input text-right"
                 value={desconto}
                 onChange={(e) => setDesconto(formatCurrencyInput(e.target.value))}
                 placeholder="0,00"
               />
             </div>
             <div>
-              <Label className="field-label">Alíquota ISS (%)</Label>
-              <Input
-                className="field-input"
-                value={aliquota}
-                onChange={(e) => setAliquota(e.target.value.replace(/[^\d,]/g, ''))}
-                placeholder="0,00"
-              />
+              <Label className="field-label">PIS (R$)</Label>
+              <Input className="field-input text-right" value={retPis} onChange={(e) => setRetPis(formatCurrencyInput(e.target.value))} placeholder="0,00" />
             </div>
             <div className="flex items-end pb-2">
               <label className="inline-flex items-center gap-2 text-sm">
@@ -605,15 +514,41 @@ const NfseEmitPage = () => {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-4 mt-4 text-sm">
-            <div className="rounded-lg border bg-muted/40 px-3 py-2">Base: {valores.base.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div className="rounded-lg border bg-muted/40 px-3 py-2">ISS: {valores.iss.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div className="rounded-lg border bg-muted/40 px-3 py-2">Desconto: {valores.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div className="rounded-lg border bg-muted/40 px-3 py-2 font-semibold">Líquido: {valores.liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+            <div>
+              <Label className="field-label">COFINS (R$)</Label>
+              <Input className="field-input text-right" value={retCofins} onChange={(e) => setRetCofins(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+            </div>
+            <div>
+              <Label className="field-label">CSLL (R$)</Label>
+              <Input className="field-input text-right" value={retCsll} onChange={(e) => setRetCsll(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+            </div>
+            <div>
+              <Label className="field-label">IR (R$)</Label>
+              <Input className="field-input text-right" value={retIr} onChange={(e) => setRetIr(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+            </div>
+            <div>
+              <Label className="field-label">INSS (R$)</Label>
+              <Input className="field-input text-right" value={retInss} onChange={(e) => setRetInss(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+            </div>
           </div>
         </div>
 
+        <LocalPrestacaoSection data={localPrestacao} onChange={setLocalPrestacao} />
+
+        <ValoresTotaisSection
+          valorBruto={valores.valorBruto}
+          desconto={valores.desconto}
+          issValor={valores.issValor}
+          issRetido={issRetido}
+          retPis={valores.retPis}
+          retCofins={valores.retCofins}
+          retCsll={valores.retCsll}
+          retIr={valores.retIr}
+          retInss={valores.retInss}
+        />
       </form>
+      </main>
     </div>
   );
 };
