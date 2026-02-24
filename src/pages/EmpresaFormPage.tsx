@@ -4,10 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Building2, ClipboardList, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Building2, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
@@ -377,12 +374,6 @@ const EmpresaFormPage = () => {
         </h1>
       </div>
 
-      <Alert>
-        <AlertDescription>
-          Empresas já cadastradas continuam operando normalmente. O certificado digital é exigido apenas no momento da emissão de NFSe.
-        </AlertDescription>
-      </Alert>
-
       <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
         <PrestadorSection
           data={{
@@ -416,52 +407,6 @@ const EmpresaFormPage = () => {
               : 'Falha ao consultar CEP.'
             : undefined}
         />
-
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-secondary">
-              <ClipboardList className="w-4 h-4" />
-            </span>
-            <span>
-              Dados Complementares
-              <span className="section-subtitle block">Informações cadastrais e econômicas</span>
-            </span>
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="field-label">Situação Cadastral</Label>
-              <Input value={form.situacaoCadastral} onChange={e => update('situacaoCadastral', e.target.value)} placeholder="ATIVA" />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Data Situação Cadastral</Label>
-              <Input type="date" value={form.dataSituacaoCadastral} onChange={e => update('dataSituacaoCadastral', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Início de Atividade</Label>
-              <Input type="date" value={form.dataInicioAtividade} onChange={e => update('dataInicioAtividade', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">CNAE Fiscal</Label>
-              <Input value={form.cnaeFiscal} onChange={e => update('cnaeFiscal', e.target.value)} />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label className="field-label">Descrição CNAE</Label>
-              <Input value={form.cnaeFiscalDescricao} onChange={e => update('cnaeFiscalDescricao', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Porte</Label>
-              <Input value={form.porte} onChange={e => update('porte', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Natureza Jurídica</Label>
-              <Input value={form.naturezaJuridica} onChange={e => update('naturezaJuridica', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label className="field-label">Capital Social</Label>
-              <Input value={form.capitalSocial} onChange={e => update('capitalSocial', e.target.value)} placeholder="0,00" />
-            </div>
-          </div>
-        </div>
 
         <RegimeEParametrosSection
           regimeTributario={form.regimeTributario}

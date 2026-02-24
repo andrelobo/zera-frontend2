@@ -3,13 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
-import { tomadoresApi } from '@/services/api';
+import { empresasApi, tomadoresApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 const formatDoc = (value: string) => {
@@ -61,12 +59,25 @@ const TomadorFormPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<TomadorSectionData>(INITIAL_FORM);
+  const [fallbackEmpresaCnpj, setFallbackEmpresaCnpj] = useState('');
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['tomador', id],
     queryFn: () => tomadoresApi.getById(id!),
     enabled: isEdit,
   });
+
+  const { data: empresas = [] } = useQuery({
+    queryKey: ['empresas', 'tomador-form'],
+    queryFn: () => empresasApi.list({ limit: 1 }),
+    enabled: !isEdit,
+  });
+
+  useEffect(() => {
+    if (!isEdit && empresas[0]?.cnpj) {
+      setFallbackEmpresaCnpj(empresas[0].cnpj.replace(/\D/g, ''));
+    }
+  }, [empresas, isEdit]);
 
   useEffect(() => {
     if (!existing) return;
@@ -118,7 +129,7 @@ const TomadorFormPage = () => {
     mutationFn: () => {
       const { municipio, uf } = parseLocalidadeUf(form.localidadeUf);
       const payload = {
-        empresaCnpj: form.empresaCnpj.replace(/\D/g, ''),
+        empresaCnpj: (form.empresaCnpj || fallbackEmpresaCnpj).replace(/\D/g, ''),
         cpfCnpj: form.cpfCnpj.replace(/\D/g, ''),
         razaoSocial: form.razaoSocial.trim(),
         inscricaoMunicipal: form.inscricaoMunicipal || undefined,
@@ -166,10 +177,10 @@ const TomadorFormPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.empresaCnpj || !form.cpfCnpj || !form.razaoSocial) {
+    if (!form.cpfCnpj || !form.razaoSocial) {
       toast({
         title: 'Dados obrigatórios',
-        description: 'Preencha CNPJ da empresa, CPF/CNPJ e razão social do tomador.',
+        description: 'Preencha CPF/CNPJ e razão social do tomador.',
         variant: 'destructive',
       });
       return;
@@ -195,17 +206,6 @@ const TomadorFormPage = () => {
       </Alert>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="section-card">
-          <Label className="field-label">CNPJ da Empresa Vinculada *</Label>
-          <Input
-            className="field-input"
-            value={form.empresaCnpj}
-            onChange={(e) => update('empresaCnpj', e.target.value)}
-            placeholder="00.000.000/0000-00"
-            disabled={isEdit}
-          />
-        </div>
-
         <TomadorSection
           data={form}
           onChange={update}

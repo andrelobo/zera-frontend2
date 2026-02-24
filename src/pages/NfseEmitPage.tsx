@@ -54,7 +54,7 @@ const parsePercent = (value: string) => {
 const NfseEmitPage = () => {
   const navigate = useNavigate();
 
-  const [referenciaExterna, setReferenciaExterna] = useState(buildReferencia());
+  const [referenciaExterna] = useState(buildReferencia());
 
   const [empresaSearch, setEmpresaSearch] = useState('');
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
@@ -83,7 +83,6 @@ const NfseEmitPage = () => {
   const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
   const [descricao, setDescricao] = useState('');
   const [codigoNacional, setCodigoNacional] = useState('171901');
-  const [codigoTributacao, setCodigoTributacao] = useState('100');
 
   const [valorServico, setValorServico] = useState('');
   const [desconto, setDesconto] = useState('');
@@ -253,7 +252,6 @@ const NfseEmitPage = () => {
       },
       servico: {
         codigoNacional: codigoNacional.replace(/\D/g, ''),
-        codigoTributacao: codigoTributacao || undefined,
         descricao,
         valor: valores.bruto,
         iss: {
@@ -551,10 +549,6 @@ const NfseEmitPage = () => {
               <Label className="field-label">Código Nacional *</Label>
               <Input className="field-input" value={codigoNacional} onChange={(e) => setCodigoNacional(e.target.value.replace(/\D/g, '').slice(0, 6))} required />
             </div>
-            <div>
-              <Label className="field-label">Código de Tributação</Label>
-              <Input className="field-input" value={codigoTributacao} onChange={(e) => setCodigoTributacao(e.target.value)} />
-            </div>
           </div>
 
           <div className="mt-4">
@@ -619,21 +613,6 @@ const NfseEmitPage = () => {
           </div>
         </div>
 
-        <div className="section-card">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-muted-foreground">
-              Fluxo DANFSE: emissão normal (`/nfse/emitir`). Emissão rápida permanece separada.
-            </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setReferenciaExterna(buildReferencia())}>Nova referência</Button>
-              <Input className="field-input min-w-[280px]" value={referenciaExterna} onChange={(e) => setReferenciaExterna(e.target.value)} />
-              <Button type="submit" disabled={emitMutation.isPending}>
-                {emitMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                Emitir NFSe
-              </Button>
-            </div>
-          </div>
-        </div>
       </form>
     </div>
   );
