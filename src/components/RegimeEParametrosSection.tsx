@@ -1,4 +1,5 @@
 import { Landmark } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 type RegimeValue = '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
 
@@ -13,6 +14,7 @@ interface RegimeEParametrosSectionProps {
   dataOpcaoPeloSimples: string;
   dataExclusaoDoSimples: string;
   onChange: (field: string, value: string) => void;
+  children?: ReactNode;
 }
 
 const regimeToNovastelas = (regime: RegimeValue): NovastelasRegime => {
@@ -57,6 +59,7 @@ const RegimeEParametrosSection = ({
   aliquotaSimplesNacional,
   apuracaoSimplesNacional,
   onChange,
+  children,
 }: RegimeEParametrosSectionProps) => {
   const regime = regimeToNovastelas(regimeTributario);
   const informarAliquotaSN = aliquotaSimplesNacional.trim().length > 0;
@@ -138,6 +141,7 @@ const RegimeEParametrosSection = ({
           )}
         </div>
       )}
+      {children}
     </div>
   );
 };

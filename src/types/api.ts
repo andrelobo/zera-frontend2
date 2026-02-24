@@ -69,6 +69,8 @@ export interface Empresa {
   dataInicioAtividade?: string;
   cnaeFiscal?: number | string;
   cnaeFiscalDescricao?: string;
+  ctnCodigo?: string;
+  nbsCodigo?: string;
   porte?: string;
   naturezaJuridica?: string;
   capitalSocial?: number;
@@ -113,6 +115,8 @@ export interface CreateEmpresaRequest {
   dataInicioAtividade?: string;
   cnaeFiscal?: number | string;
   cnaeFiscalDescricao?: string;
+  ctnCodigo?: string;
+  nbsCodigo?: string;
   porte?: string;
   naturezaJuridica?: string;
   capitalSocial?: number;

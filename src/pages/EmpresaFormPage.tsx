@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
 import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
+import ParametroMunicipalSection from '@/components/ParametroMunicipalSection';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -23,6 +24,8 @@ interface EmpresaFormData {
   dataInicioAtividade: string;
   cnaeFiscal: string;
   cnaeFiscalDescricao: string;
+  ctnCodigo: string;
+  nbsCodigo: string;
   porte: string;
   naturezaJuridica: string;
   capitalSocial: string;
@@ -123,6 +126,18 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
         || atividadePrincipal?.descricao
         || previous.cnaeFiscalDescricao,
       ),
+    ctnCodigo: String(
+      legacy.ctnCodigo
+      || legacy.ctn_codigo
+      || providerData.ctn_codigo
+      || previous.ctnCodigo,
+    ),
+    nbsCodigo: String(
+      legacy.nbsCodigo
+      || legacy.nbs_codigo
+      || providerData.nbs_codigo
+      || previous.nbsCodigo,
+    ),
     porte: empresa.porte
       || String(providerData.descricao_porte || legacy.porte || providerData.porte || previous.porte),
     naturezaJuridica: empresa.naturezaJuridica || String(legacy.natureza_juridica || previous.naturezaJuridica),
@@ -185,7 +200,7 @@ const EmpresaFormPage = () => {
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
-    cnaeFiscal: '', cnaeFiscalDescricao: '', porte: '', naturezaJuridica: '', capitalSocial: '',
+    cnaeFiscal: '', cnaeFiscalDescricao: '', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
     regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
@@ -237,6 +252,8 @@ const EmpresaFormPage = () => {
         dataInicioAtividade: form.dataInicioAtividade || undefined,
         cnaeFiscal: form.cnaeFiscal || undefined,
         cnaeFiscalDescricao: form.cnaeFiscalDescricao || undefined,
+        ctnCodigo: form.ctnCodigo || undefined,
+        nbsCodigo: form.nbsCodigo || undefined,
         porte: form.porte || undefined,
         naturezaJuridica: form.naturezaJuridica || undefined,
         capitalSocial: Number.isFinite(capitalSocialNumber) ? capitalSocialNumber : undefined,
@@ -271,6 +288,8 @@ const EmpresaFormPage = () => {
       dataInicioAtividade: payload.dataInicioAtividade,
       cnaeFiscal: payload.cnaeFiscal,
       cnaeFiscalDescricao: payload.cnaeFiscalDescricao,
+      ctnCodigo: payload.ctnCodigo,
+      nbsCodigo: payload.nbsCodigo,
       porte: payload.porte,
       naturezaJuridica: payload.naturezaJuridica,
       capitalSocial: payload.capitalSocial,
@@ -417,7 +436,14 @@ const EmpresaFormPage = () => {
           dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
           dataExclusaoDoSimples={form.dataExclusaoDoSimples}
           onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
-        />
+        >
+          <ParametroMunicipalSection
+            cnae={form.cnaeFiscal}
+            ctn={form.ctnCodigo}
+            nbs={form.nbsCodigo}
+            onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+          />
+        </RegimeEParametrosSection>
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={mutation.isPending}>
