@@ -13,9 +13,11 @@ import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
+import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 
 const MIN_AUTOCOMPLETE_CHARS = 2;
 const buildReferencia = () => `nfse-front-${Date.now()}`;
+const extractServiceCode = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
 const formatDoc = (value: string) => {
   const digits = value.replace(/\D/g, '');
@@ -44,6 +46,37 @@ const formatCurrencyInput = (value: string) => {
   const normalized = (Number(digits) / 100).toFixed(2);
   const [intPart, decPart] = normalized.split('.');
   return `${Number(intPart).toLocaleString('pt-BR')},${decPart}`;
+};
+
+const formatAliquotaFromCatalog = (raw: unknown) => {
+  if (raw === null || raw === undefined) return '';
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return raw.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    const parsed = Number(trimmed.replace(/\./g, '').replace(',', '.'));
+    if (Number.isFinite(parsed)) {
+      return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return trimmed;
+  }
+  return '';
+};
+
+const getServicoAliquota = (item: Record<string, unknown>) => {
+  const candidates = [
+    item.aliquotaIss,
+    item.aliquota,
+    item.aliquotaSimplesNacional,
+    item.aliquota_simples_nacional,
+  ];
+  for (const candidate of candidates) {
+    const value = formatAliquotaFromCatalog(candidate);
+    if (value) return value;
+  }
+  return '';
 };
 
 const parsePercent = (value: string) => {
@@ -83,6 +116,7 @@ const NfseEmitPage = () => {
 
   const [descricao, setDescricao] = useState('');
   const [codigoNacional, setCodigoNacional] = useState('171901');
+  const [serviceSearch, setServiceSearch] = useState('');
 
   const [valorServico, setValorServico] = useState('');
   const [desconto, setDesconto] = useState('');
@@ -459,6 +493,26 @@ const NfseEmitPage = () => {
               <span className="section-subtitle block">Autocomplete de serviços via backend</span>
             </span>
           </h2>
+          <div className="mb-4">
+            <ServicoAutocomplete
+              queryScope="emit-normal"
+              helperClassName="text-xs"
+              value={serviceSearch}
+              selectedCode={codigoNacional.replace(/\D/g, '')}
+              onValueChange={(next) => {
+                setServiceSearch(next);
+                setCodigoNacional(extractServiceCode(next));
+              }}
+              onSelect={(item) => {
+                setCodigoNacional(item.codigoServico);
+                setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
+                setDescricao(item.descricao || '');
+                const aliquotaCatalog = getServicoAliquota(item as unknown as Record<string, unknown>);
+                if (aliquotaCatalog) setAliquota(aliquotaCatalog);
+              }}
+            />
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label className="field-label">Código Tributação Nacional*</Label>

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Loader2, Send, ShieldAlert } from 'lucide-react';
+import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 
 const CERT_REQUIRED_CODES = new Set(['CERTIFICADO_REQUIRED', 'QUICK_PRESTADOR_NO_CERT']);
 const QUICK_SERVICE_ERROR_CODES = new Set(['INVALID_CODIGO_SERVICO', 'QUICK_CODIGO_SERVICO_INVALIDO']);
@@ -69,7 +70,6 @@ const NfseQuickEmitPage = () => {
   const [valorDigits, setValorDigits] = useState<string>('');
   const [codigoServico, setCodigoServico] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
-  const [serviceSearchDebounced, setServiceSearchDebounced] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<ApiError | null>(null);
   const [success, setSuccess] = useState<EmitirNfseQuickResponse | null>(null);
@@ -86,12 +86,6 @@ const NfseQuickEmitPage = () => {
     return () => clearTimeout(timer);
   }, [empresaSearch]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setServiceSearchDebounced(serviceSearch), 250);
-    return () => clearTimeout(timer);
-  }, [serviceSearch]);
-
-  const canSearchService = serviceSearchDebounced.trim().length >= 2;
   const canSearchEmpresa = empresaSearchDebounced.trim().length >= 2;
   const { data: empresas = [], isLoading: empresasLoading } = useQuery({
     queryKey: ['empresas', 'quick-emit'],
@@ -108,22 +102,6 @@ const NfseQuickEmitPage = () => {
       })
       .slice(0, 8);
   }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
-
-  const serviceQuery = useQuery({
-    queryKey: ['nfse-quick-service-autocomplete', serviceSearchDebounced],
-    queryFn: async () => {
-      try {
-        return await nfseApi.servicosList(
-          { q: serviceSearchDebounced, limit: 8 },
-          { skipGlobalErrorToast: true },
-        );
-      } catch {
-        return nfseApi.servicosAutocomplete({ q: serviceSearchDebounced, limit: 8 });
-      }
-    },
-    enabled: canSearchService,
-    staleTime: 60_000,
-  });
 
   const mutation = useMutation({
     mutationFn: () => nfseApi.emitirQuick({
@@ -253,47 +231,20 @@ const NfseQuickEmitPage = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="serviceSearch">Serviço (autocomplete)</Label>
-              <Input
-                id="serviceSearch"
-                value={serviceSearch}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setServiceSearch(next);
-                  setCodigoServico(extractServiceCode(next));
-                }}
-                placeholder="Digite código ou descrição do serviço"
-              />
-              {serviceQuery.isLoading && canSearchService && (
-                <p className="text-sm text-muted-foreground">Buscando serviços...</p>
-              )}
-              {serviceQuery.isSuccess && (serviceQuery.data?.items?.length ?? 0) > 0 && (
-                <div className="max-h-44 overflow-auto rounded-md border p-1">
-                  {(serviceQuery.data?.items ?? []).map((item) => (
-                    <button
-                      key={`${item.codigoServico}-${item.sequencial ?? ''}`}
-                      type="button"
-                      className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
-                      onClick={() => {
-                        setCodigoServico(item.codigoServico);
-                        setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
-                      }}
-                    >
-                      <span className="font-medium">{item.codigoServico}</span> - {item.descricao}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {serviceQuery.isFetched && !serviceQuery.isFetching && canSearchService && (serviceQuery.data?.items?.length ?? 0) === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum serviço encontrado.</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                {codigoServicoClean.length === 6
-                  ? `Código selecionado: ${codigoServicoClean}`
-                  : 'Selecione um item da lista ou digite o código com 6 dígitos.'}
-              </p>
-            </div>
+            <ServicoAutocomplete
+              queryScope="quick-emit"
+              value={serviceSearch}
+              selectedCode={codigoServicoClean}
+              helperClassName="text-sm"
+              onValueChange={(next) => {
+                setServiceSearch(next);
+                setCodigoServico(extractServiceCode(next));
+              }}
+              onSelect={(item) => {
+                setCodigoServico(item.codigoServico);
+                setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
+              }}
+            />
 
             {formError && (
               <Alert variant="destructive">
