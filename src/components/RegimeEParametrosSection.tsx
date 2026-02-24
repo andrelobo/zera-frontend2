@@ -1,9 +1,11 @@
-import { FileText, Settings } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Landmark } from 'lucide-react';
+
+type RegimeValue = '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
+
+type NovastelasRegime = 'simples' | 'presumido' | 'real' | null;
 
 interface RegimeEParametrosSectionProps {
-  regimeTributario: '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
+  regimeTributario: RegimeValue;
   aliquotaSimplesNacional: string;
   apuracaoSimplesNacional: string;
   opcaoPeloSimples: '' | 'true' | 'false';
@@ -13,212 +15,129 @@ interface RegimeEParametrosSectionProps {
   onChange: (field: string, value: string) => void;
 }
 
-const regimes = [
-  { value: 'simples_nacional', label: 'Simples Nacional', desc: 'MEI, ME e EPP optantes pelo Simples' },
-  { value: 'lucro_presumido', label: 'Lucro Presumido', desc: 'Tributação com base na presunção de lucro' },
-  { value: 'lucro_real', label: 'Lucro Real', desc: 'Apuração com base no lucro efetivo' },
-] as const;
+const regimeToNovastelas = (regime: RegimeValue): NovastelasRegime => {
+  if (regime === 'simples_nacional') return 'simples';
+  if (regime === 'lucro_presumido') return 'presumido';
+  if (regime === 'lucro_real') return 'real';
+  return null;
+};
 
-const booleanChoices = [
-  { value: 'true', label: 'Sim' },
-  { value: 'false', label: 'Não' },
-] as const;
+const novastelasToRegime = (regime: NovastelasRegime): RegimeValue => {
+  if (regime === 'simples') return 'simples_nacional';
+  if (regime === 'presumido') return 'lucro_presumido';
+  if (regime === 'real') return 'lucro_real';
+  return '';
+};
+
+const Toggle = ({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+}) => (
+  <label className="flex items-center gap-3 cursor-pointer select-none">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`switch-track ${checked ? 'switch-track-on' : 'switch-track-off'}`}
+    >
+      <span className={`switch-thumb ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+    <span className="text-sm text-foreground">{label}</span>
+  </label>
+);
 
 const RegimeEParametrosSection = ({
   regimeTributario,
   aliquotaSimplesNacional,
   apuracaoSimplesNacional,
-  opcaoPeloSimples,
-  opcaoPeloMei,
-  dataOpcaoPeloSimples,
-  dataExclusaoDoSimples,
   onChange,
 }: RegimeEParametrosSectionProps) => {
-  const regimeApuracaoAtivo = apuracaoSimplesNacional.trim().length > 0;
-  const informarAliquotaAtivo = aliquotaSimplesNacional.trim().length > 0;
+  const regime = regimeToNovastelas(regimeTributario);
+  const informarAliquotaSN = aliquotaSimplesNacional.trim().length > 0;
+  const regimeApuracaoSNParametro = apuracaoSimplesNacional.trim().length > 0;
 
-  const renderBooleanCards = (
-    title: string,
-    field: 'opcaoPeloSimples' | 'opcaoPeloMei',
-    value: '' | 'true' | 'false',
-  ) => (
-    <div className="space-y-2">
-      <Label className="field-label">{title}</Label>
-      <div className="grid grid-cols-2 gap-2">
-        {booleanChoices.map((choice) => (
-          <button
-            key={`${field}-${choice.value}`}
-            type="button"
-            onClick={() => onChange(field, choice.value)}
-            className={`radio-card justify-center ${value === choice.value ? 'radio-card-selected' : ''}`}
-          >
-            <div
-              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                value === choice.value ? 'border-primary' : 'border-muted-foreground/40'
-              }`}
-            >
-              {value === choice.value && <div className="w-2 h-2 rounded-full bg-primary" />}
-            </div>
-            <p className="text-sm font-semibold">{choice.label}</p>
-          </button>
-        ))}
-      </div>
-      {value !== '' && (
-        <button
-          type="button"
-          className="text-xs text-muted-foreground underline"
-          onClick={() => onChange(field, '')}
-        >
-          Limpar seleção
-        </button>
-      )}
-    </div>
-  );
+  const regimes: { value: NovastelasRegime; label: string; desc: string }[] = [
+    { value: 'simples', label: 'Simples Nacional', desc: 'MEI, ME e EPP optantes pelo Simples' },
+    { value: 'presumido', label: 'Lucro Presumido', desc: 'Tributação com base na presunção de lucro' },
+    { value: 'real', label: 'Lucro Real', desc: 'Apuração com base no lucro efetivo' },
+  ];
 
   return (
     <div className="section-card">
       <h2 className="section-title">
-        <span className="section-title-icon section-title-icon-primary">
-          <FileText className="w-4 h-4" />
-        </span>
-        <span>
-          Enquadramento Fiscal
-          <span className="section-subtitle block">Regime e parâmetros tributários</span>
-        </span>
+        <Landmark className="w-5 h-5 text-primary" />
+        Regime Tributário
       </h2>
 
-      <div className="space-y-2">
-        <Label className="field-label">Regime Tributário</Label>
-        <div className="grid gap-3">
-          {regimes.map((r) => (
-            <button
-              key={r.value}
-              type="button"
-              onClick={() => onChange('regimeTributario', r.value)}
-              className={`radio-card text-left ${regimeTributario === r.value ? 'radio-card-selected' : ''}`}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+        {regimes.map((r) => (
+          <button
+            key={r.value}
+            type="button"
+            onClick={() => onChange('regimeTributario', novastelasToRegime(r.value))}
+            className={`radio-card text-left ${regime === r.value ? 'radio-card-selected' : ''}`}
+          >
+            <div
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                regime === r.value ? 'border-primary' : 'border-muted-foreground/40'
+              }`}
             >
-              <div
-                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  regimeTributario === r.value ? 'border-primary' : 'border-muted-foreground/40'
-                }`}
-              >
-                {regimeTributario === r.value && <div className="w-2 h-2 rounded-full bg-primary" />}
-              </div>
-              <div>
-                <p className="text-sm font-semibold">{r.label}</p>
-                <p className="text-xs text-muted-foreground">{r.desc}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mt-5 mb-3">
-        <span className="section-title-icon section-title-icon-accent h-6 w-6 rounded-md">
-          <Settings className="w-3.5 h-3.5" />
-        </span>
-        Parâmetro Federal
-      </h3>
-      <div className="grid gap-2 sm:grid-cols-2 mb-4">
-        <button
-          type="button"
-          onClick={() =>
-            onChange(
-              'apuracaoSimplesNacional',
-              regimeApuracaoAtivo ? '' : 'MENSAL',
-            )
-          }
-          className={`radio-card text-left ${regimeApuracaoAtivo ? 'radio-card-selected' : ''}`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-              regimeApuracaoAtivo ? 'border-primary' : 'border-muted-foreground/40'
-            }`}
-          >
-            {regimeApuracaoAtivo && <div className="w-2 h-2 rounded-full bg-primary" />}
-          </div>
-          <div>
-            <p className="text-sm font-semibold">Regime de apuração SN</p>
-            <p className="text-xs text-muted-foreground">Ativa parâmetro de apuração federal</p>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() =>
-            onChange(
-              'aliquotaSimplesNacional',
-              informarAliquotaAtivo ? '' : '0,00',
-            )
-          }
-          className={`radio-card text-left ${informarAliquotaAtivo ? 'radio-card-selected' : ''}`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-              informarAliquotaAtivo ? 'border-primary' : 'border-muted-foreground/40'
-            }`}
-          >
-            {informarAliquotaAtivo && <div className="w-2 h-2 rounded-full bg-primary" />}
-          </div>
-          <div>
-            <p className="text-sm font-semibold">Informar alíquota do SN</p>
-            <p className="text-xs text-muted-foreground">Ativa edição da alíquota do Simples</p>
-          </div>
-        </button>
-      </div>
-      <div className="rounded-lg bg-gradient-to-br from-muted/60 to-background border border-border p-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {informarAliquotaAtivo && (
+              {regime === r.value && <div className="w-2 h-2 rounded-full bg-primary" />}
+            </div>
             <div>
-              <Label className="field-label whitespace-nowrap">Alíquota Simples Nacional</Label>
-              <div className="relative">
-                <Input
-                  className="field-input pr-7"
-                  value={aliquotaSimplesNacional}
-                  onChange={(e) => onChange('aliquotaSimplesNacional', e.target.value)}
+              <div className="text-sm font-medium text-foreground">{r.label}</div>
+              <div className="text-xs text-muted-foreground">{r.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {regime && (
+        <h3 className="text-sm font-bold flex items-center gap-2 mb-3" style={{ color: 'hsl(144, 72%, 28%)' }}>
+          Parâmetro Federal
+        </h3>
+      )}
+
+      {regime === 'simples' && (
+        <div className="space-y-4 p-4 rounded-lg bg-muted/50 border border-border mb-5">
+          <Toggle
+            checked={regimeApuracaoSNParametro}
+            onChange={(v) => onChange('apuracaoSimplesNacional', v ? 'MENSAL' : '')}
+            label="Regime de apuração dos tributos federais e municipal pelo Simples Nacional"
+          />
+          <Toggle
+            checked={informarAliquotaSN}
+            onChange={(v) => onChange('aliquotaSimplesNacional', v ? '0,00' : '')}
+            label="Informar alíquota do Simples Nacional"
+          />
+          {informarAliquotaSN && (
+            <div>
+              <label className="field-label whitespace-nowrap">Simples Nacional</label>
+              <div className="relative w-[55px]">
+                <input
+                  className="field-input pr-7 border-primary"
+                  type="text"
                   placeholder="00,00"
-                  inputMode="decimal"
+                  maxLength={5}
+                  value={aliquotaSimplesNacional}
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
+                    if (v.length > 2) v = `${v.slice(0, -2)},${v.slice(-2)}`;
+                    onChange('aliquotaSimplesNacional', v);
+                  }}
                 />
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
               </div>
             </div>
           )}
-          {regimeApuracaoAtivo && (
-            <div>
-              <Label className="field-label">Apuração Simples Nacional</Label>
-              <Input
-                className="field-input"
-                value={apuracaoSimplesNacional}
-                onChange={(e) => onChange('apuracaoSimplesNacional', e.target.value)}
-                placeholder="Ex.: Mensal"
-              />
-            </div>
-          )}
         </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 mt-4">
-        {renderBooleanCards('Optante pelo Simples Nacional', 'opcaoPeloSimples', opcaoPeloSimples)}
-        {renderBooleanCards('Optante pelo MEI', 'opcaoPeloMei', opcaoPeloMei)}
-        <div>
-          <Label className="field-label">Data Opção Simples</Label>
-          <Input
-            className="field-input"
-            type="date"
-            value={dataOpcaoPeloSimples}
-            onChange={(e) => onChange('dataOpcaoPeloSimples', e.target.value)}
-          />
-        </div>
-        <div>
-          <Label className="field-label">Data Exclusão Simples</Label>
-          <Input
-            className="field-input"
-            type="date"
-            value={dataExclusaoDoSimples}
-            onChange={(e) => onChange('dataExclusaoDoSimples', e.target.value)}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

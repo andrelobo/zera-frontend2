@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
@@ -26,19 +28,31 @@ const formatDoc = (value: string) => {
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
 
+const parseLocalidadeUf = (value: string) => {
+  const [municipioRaw, ufRaw] = value.split('-').map((part) => part.trim());
+  return {
+    municipio: municipioRaw || '',
+    uf: (ufRaw || '').toUpperCase(),
+  };
+};
+
 const INITIAL_FORM: TomadorSectionData = {
   empresaCnpj: '',
   cpfCnpj: '',
   razaoSocial: '',
+  nomeFantasia: '',
   inscricaoMunicipal: '',
+  inscricaoEstadual: '',
+  suframa: '',
+  substitutoTributario: false,
   cep: '',
   logradouro: '',
   numero: '',
   complemento: '',
   bairro: '',
-  municipio: '',
-  uf: '',
+  localidadeUf: '',
   email: '',
+  whatsapp: '',
 };
 
 const TomadorFormPage = () => {
@@ -56,19 +70,26 @@ const TomadorFormPage = () => {
 
   useEffect(() => {
     if (!existing) return;
+    const municipio = existing.endereco?.municipio || '';
+    const uf = existing.endereco?.uf || '';
+
     setForm({
       empresaCnpj: formatDoc(existing.empresaCnpj),
       cpfCnpj: formatDoc(existing.cpfCnpj),
       razaoSocial: existing.razaoSocial,
+      nomeFantasia: '',
       inscricaoMunicipal: existing.inscricaoMunicipal || '',
+      inscricaoEstadual: '',
+      suframa: '',
+      substitutoTributario: false,
       cep: formatCep(existing.endereco?.cep || ''),
       logradouro: existing.endereco?.logradouro || '',
       numero: existing.endereco?.numero || '',
       complemento: existing.endereco?.complemento || '',
       bairro: existing.endereco?.bairro || '',
-      municipio: existing.endereco?.municipio || '',
-      uf: existing.endereco?.uf || '',
+      localidadeUf: municipio && uf ? `${municipio} - ${uf}` : municipio || '',
       email: existing.email || '',
+      whatsapp: '',
     });
   }, [existing]);
 
@@ -87,13 +108,15 @@ const TomadorFormPage = () => {
       cep: formatCep(cepLookupQuery.data.cep),
       logradouro: cepLookupQuery.data.logradouro || prev.logradouro,
       bairro: cepLookupQuery.data.bairro || prev.bairro,
-      municipio: cepLookupQuery.data.cidade || prev.municipio,
-      uf: cepLookupQuery.data.uf || prev.uf,
+      localidadeUf: cepLookupQuery.data.cidade && cepLookupQuery.data.uf
+        ? `${cepLookupQuery.data.cidade} - ${cepLookupQuery.data.uf}`
+        : prev.localidadeUf,
     }));
   }, [cepLookupQuery.data]);
 
   const mutation = useMutation({
     mutationFn: () => {
+      const { municipio, uf } = parseLocalidadeUf(form.localidadeUf);
       const payload = {
         empresaCnpj: form.empresaCnpj.replace(/\D/g, ''),
         cpfCnpj: form.cpfCnpj.replace(/\D/g, ''),
@@ -105,8 +128,8 @@ const TomadorFormPage = () => {
           numero: form.numero || undefined,
           complemento: form.complemento || undefined,
           bairro: form.bairro || undefined,
-          municipio: form.municipio || undefined,
-          uf: form.uf || undefined,
+          municipio: municipio || undefined,
+          uf: uf || undefined,
           cep: normalizeCep(form.cep) || undefined,
         },
       };
@@ -129,16 +152,16 @@ const TomadorFormPage = () => {
     },
   });
 
-  const update = (field: keyof TomadorSectionData, value: string) => {
+  const update = (field: keyof TomadorSectionData, value: string | boolean) => {
     if (field === 'empresaCnpj' || field === 'cpfCnpj') {
-      setForm((prev) => ({ ...prev, [field]: formatDoc(value) }));
+      setForm((prev) => ({ ...prev, [field]: formatDoc(String(value)) }));
       return;
     }
     if (field === 'cep') {
-      setForm((prev) => ({ ...prev, cep: formatCep(value) }));
+      setForm((prev) => ({ ...prev, cep: formatCep(String(value)) }));
       return;
     }
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value as never }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -146,7 +169,7 @@ const TomadorFormPage = () => {
     if (!form.empresaCnpj || !form.cpfCnpj || !form.razaoSocial) {
       toast({
         title: 'Dados obrigatórios',
-        description: 'Preencha empresa, CPF/CNPJ e razão social do tomador.',
+        description: 'Preencha CNPJ da empresa, CPF/CNPJ e razão social do tomador.',
         variant: 'destructive',
       });
       return;
@@ -172,10 +195,21 @@ const TomadorFormPage = () => {
       </Alert>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="section-card">
+          <Label className="field-label">CNPJ da Empresa Vinculada *</Label>
+          <Input
+            className="field-input"
+            value={form.empresaCnpj}
+            onChange={(e) => update('empresaCnpj', e.target.value)}
+            placeholder="00.000.000/0000-00"
+            disabled={isEdit}
+          />
+        </div>
+
         <TomadorSection
           data={form}
           onChange={update}
-          disabledEmpresaCnpj={isEdit}
+          cepLoading={cepLookupQuery.isFetching}
         />
 
         <div className="flex justify-end">

@@ -1,7 +1,4 @@
-import { Building2, Loader2, Mail, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Building2, Loader2, FileText, MapPin } from 'lucide-react';
 
 export interface PrestadorSectionData {
   razaoSocial: string;
@@ -45,54 +42,43 @@ const PrestadorSection = ({
   cepLoading,
   cepError,
 }: PrestadorSectionProps) => {
-  const simplesLabel = data.opcaoPeloSimples === 'true'
-    ? 'Optante'
-    : data.opcaoPeloSimples === 'false'
-      ? 'Não optante'
-      : '';
+  const handleSimplesChange = (value: 'true' | 'false') => {
+    onChange('opcaoPeloSimples', value);
+  };
 
   return (
     <div className="section-card">
       <h2 className="section-title">
-        <span className="section-title-icon section-title-icon-primary">
-          <Building2 className="w-4 h-4" />
-        </span>
-        <span>
-          O Prestador
-          <span className="section-subtitle block">Cadastro fiscal da empresa emissora</span>
-        </span>
+        <Building2 className="w-5 h-5 text-primary" />
+        O Prestador
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_3fr] gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr] gap-4">
         <div>
-          <Label className="field-label">CNPJ *</Label>
+          <label className="field-label flex items-center gap-1">
+            <FileText className="w-3.5 h-3.5" />
+            CNPJ*
+          </label>
           <div className="flex gap-2">
-            <Input
+            <input
               className="field-input"
-              id="empresa-cnpj"
-              name="empresa_cnpj_manual"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              inputMode="numeric"
               placeholder="00.000.000/0000-00"
               value={data.cnpj}
               onChange={(e) => onChange('cnpj', e.target.value)}
               maxLength={18}
               disabled={isEdit}
             />
-            {!isEdit && (
-              <Button type="button" variant="outline" onClick={onAutocompleteByCnpj} disabled={loadingCnpj}>
-                {loadingCnpj ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Auto'}
-              </Button>
+            {loadingCnpj && (
+              <div className="flex items-center px-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
             )}
           </div>
         </div>
 
         <div>
-          <Label className="field-label">Inscrição Municipal</Label>
-          <Input
+          <label className="field-label">Inscrição Municipal</label>
+          <input
             className="field-input"
             placeholder="Inscrição"
             value={data.inscricaoMunicipal}
@@ -101,72 +87,74 @@ const PrestadorSection = ({
         </div>
 
         <div>
-          <Label className="field-label">Nome Empresarial</Label>
-          <Input
+          <label className="field-label">Inscrição Estadual</label>
+          <input
             className="field-input"
-            placeholder="Razão social da empresa"
-            value={data.razaoSocial}
-            onChange={(e) => onChange('razaoSocial', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-        <div>
-          <Label className="field-label">Nome Fantasia</Label>
-          <Input
-            className="field-input"
-            placeholder="Nome fantasia"
-            value={data.nomeFantasia}
-            onChange={(e) => onChange('nomeFantasia', e.target.value)}
-          />
-        </div>
-        <div>
-          <Label className="field-label">Optante Simples Nacional</Label>
-          <div className="field-input flex items-center gap-2 cursor-default h-10">
-            <span
-              className={`w-3 h-3 rounded-full inline-block ${
-                data.opcaoPeloSimples === 'true'
-                  ? 'bg-green-500'
-                  : data.opcaoPeloSimples === 'false'
-                    ? 'bg-red-500'
-                    : 'bg-muted-foreground/40'
-              }`}
-            />
-            <span className="text-sm text-foreground">{simplesLabel}</span>
-          </div>
-        </div>
-        <div>
-          <Label className="field-label">Inscrição Estadual</Label>
-          <Input
-            className="field-input"
-            placeholder="Inscrição"
+            placeholder="Inscrição Estadual"
             value={data.inscricaoEstadual}
             onChange={(e) => onChange('inscricaoEstadual', e.target.value)}
           />
         </div>
+
         <div>
-          <Label className="field-label">Inscrição Suframa</Label>
-          <Input
+          <label className="field-label">Inscrição Suframa</label>
+          <input
             className="field-input"
-            placeholder="Inscrição"
+            placeholder="Suframa"
             value={data.suframa}
             onChange={(e) => onChange('suframa', e.target.value)}
           />
         </div>
       </div>
 
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
+        <div>
+          <label className="field-label">Nome Empresarial</label>
+          <input
+            className="field-input"
+            placeholder="Razão Social"
+            value={data.razaoSocial}
+            onChange={(e) => onChange('razaoSocial', e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-3 pb-1">
+          <label className="field-label whitespace-nowrap mb-0">Optante Simples Nacional</label>
+          <div className="flex items-center gap-0">
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${
+                data.opcaoPeloSimples === 'true'
+                  ? 'bg-[hsl(144,72%,28%)] text-white border-[hsl(144,72%,28%)]'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+              }`}
+              onClick={() => handleSimplesChange('true')}
+            >
+              Sim
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${
+                data.opcaoPeloSimples === 'false'
+                  ? 'bg-destructive text-destructive-foreground border-destructive'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+              }`}
+              onClick={() => handleSimplesChange('false')}
+            >
+              Não
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-5 pt-5 border-t border-border">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-          <span className="section-title-icon section-title-icon-secondary h-6 w-6 rounded-md">
-            <MapPin className="w-3.5 h-3.5" />
-          </span>
+        <label className="field-label flex items-center gap-1 mb-4">
+          <MapPin className="w-3.5 h-3.5" />
           Endereço
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_3fr_0.8fr] gap-4">
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-[0.4fr_2.1fr_0.35fr_1.1fr] gap-4">
           <div>
-            <Label className="field-label">CEP</Label>
-            <Input
+            <label className="field-label">CEP</label>
+            <input
               className="field-input"
               placeholder="00000-000"
               value={data.cep}
@@ -178,8 +166,8 @@ const PrestadorSection = ({
             {cepError && <p className="text-xs text-destructive mt-1">{cepError}</p>}
           </div>
           <div>
-            <Label className="field-label">Logradouro</Label>
-            <Input
+            <label className="field-label">Logradouro</label>
+            <input
               className="field-input"
               placeholder="Rua, Av., etc."
               value={data.endereco}
@@ -187,67 +175,41 @@ const PrestadorSection = ({
             />
           </div>
           <div>
-            <Label className="field-label">Número</Label>
-            <Input
+            <label className="field-label">Número</label>
+            <input
               className="field-input"
               placeholder="Nº"
               value={data.numero}
               onChange={(e) => onChange('numero', e.target.value)}
             />
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_0.6fr] gap-4 mt-4">
           <div>
-            <Label className="field-label">Complemento</Label>
-            <Input
-              className="field-input"
-              placeholder="Sala, andar, etc."
-              value={data.complemento}
-              onChange={(e) => onChange('complemento', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label className="field-label">Bairro</Label>
-            <Input
+            <label className="field-label">Bairro/Distrito</label>
+            <input
               className="field-input"
               placeholder="Bairro"
               value={data.bairro}
               onChange={(e) => onChange('bairro', e.target.value)}
             />
           </div>
-          <div>
-            <Label className="field-label">Cidade</Label>
-            <Input
-              className="field-input"
-              placeholder="Cidade"
-              value={data.cidade}
-              onChange={(e) => onChange('cidade', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label className="field-label">UF</Label>
-            <Input
-              className="field-input"
-              placeholder="UF"
-              value={data.uf}
-              onChange={(e) => onChange('uf', e.target.value)}
-              maxLength={2}
-            />
-          </div>
         </div>
-      </div>
-
-      <div className="mt-5 pt-5 border-t border-border">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-          <span className="section-title-icon section-title-icon-accent h-6 w-6 rounded-md">
-            <Mail className="w-3.5 h-3.5" />
-          </span>
-          Contato
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div>
-            <Label className="field-label">E-mail</Label>
-            <Input
+            <label className="field-label">Localidade / UF</label>
+            <input
+              className="field-input"
+              placeholder="Cidade - UF"
+              value={data.cidade && data.uf ? `${data.cidade} - ${data.uf}` : ''}
+              onChange={(e) => {
+                const [cidade, uf] = e.target.value.split('-').map((v) => v.trim());
+                onChange('cidade', cidade || '');
+                onChange('uf', (uf || '').toUpperCase());
+              }}
+            />
+          </div>
+          <div>
+            <label className="field-label">E-mail</label>
+            <input
               className="field-input"
               type="email"
               placeholder="contato@empresa.com.br"
@@ -256,8 +218,8 @@ const PrestadorSection = ({
             />
           </div>
           <div>
-            <Label className="field-label">WhatsApp</Label>
-            <Input
+            <label className="field-label">WhatsApp</label>
+            <input
               className="field-input"
               placeholder="(00) 00000-0000"
               value={data.whatsapp}
