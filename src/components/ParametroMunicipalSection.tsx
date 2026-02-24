@@ -17,8 +17,8 @@ const ParametroMunicipalSection = ({
         Parâmetro Municipal
       </h3>
 
-      <div className="space-y-4">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
           <label className="field-label">1. Código Cnae *</label>
           <input
             className="field-input"
@@ -28,7 +28,7 @@ const ParametroMunicipalSection = ({
           />
         </div>
 
-        <div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
           <label className="field-label">2. Código Tributação Nacional *</label>
           <input
             className="field-input"
@@ -38,7 +38,7 @@ const ParametroMunicipalSection = ({
           />
         </div>
 
-        <div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
           <label className="field-label">3. Nomenclatura Brasileira Serviços</label>
           <input
             className="field-input"
