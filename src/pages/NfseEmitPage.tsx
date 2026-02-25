@@ -18,6 +18,7 @@ import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 const MIN_AUTOCOMPLETE_CHARS = 2;
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const extractServiceCode = (value: string) => value.replace(/\D/g, '').slice(0, 6);
+const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
 const formatDoc = (value: string) => {
   const digits = value.replace(/\D/g, '');
@@ -284,6 +285,7 @@ const NfseEmitPage = () => {
       },
       servico: {
         codigoNacional: codigoNacional.replace(/\D/g, ''),
+        codigoTributacao: CODIGO_TRIBUTACAO_PADRAO || undefined,
         descricao,
         valor: valores.valorBruto,
         iss: {
