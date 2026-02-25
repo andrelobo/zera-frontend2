@@ -216,8 +216,20 @@ const NfseEmitPage = () => {
   const validar = () => {
     const found: string[] = [];
     if (!selectedEmpresa) found.push('Selecione a empresa emissora.');
+    if (!selectedEmpresa?.endereco?.logradouro) found.push('Logradouro do prestador é obrigatório.');
+    if (!selectedEmpresa?.endereco?.numero) found.push('Número do prestador é obrigatório.');
+    if (!selectedEmpresa?.endereco?.bairro) found.push('Bairro do prestador é obrigatório.');
+    if (!(selectedEmpresa?.endereco?.cidade || selectedEmpresa?.endereco?.descricaoCidade)) found.push('Município do prestador é obrigatório.');
+    if (!(selectedEmpresa?.endereco?.uf || selectedEmpresa?.endereco?.estado)) found.push('UF do prestador é obrigatória.');
+    if (!selectedEmpresa?.endereco?.cep) found.push('CEP do prestador é obrigatório.');
     if (tomadorCpfCnpj.replace(/\D/g, '').length < 11) found.push('CPF/CNPJ do tomador é obrigatório.');
     if (!tomadorRazaoSocial.trim()) found.push('Razão social do tomador é obrigatória.');
+    if (!tomadorLogradouro.trim()) found.push('Logradouro do tomador é obrigatório.');
+    if (!tomadorNumero.trim()) found.push('Número do tomador é obrigatório.');
+    if (!tomadorBairro.trim()) found.push('Bairro do tomador é obrigatório.');
+    if (!(tomadorMunicipio.trim() || localPrestacao.municipio.trim())) found.push('Município do tomador é obrigatório.');
+    if (!(tomadorUf.trim() || localPrestacao.uf.trim())) found.push('UF do tomador é obrigatória.');
+    if (!normalizeCep(tomadorCep)) found.push('CEP do tomador é obrigatório.');
     if (!descricao.trim()) found.push('Descrição do serviço é obrigatória.');
     if (codigoNacional.replace(/\D/g, '').length !== 6) found.push('Código nacional do serviço deve ter 6 dígitos.');
     if (valores.valorBruto <= 0) found.push('Valor do serviço deve ser maior que zero.');
@@ -260,6 +272,7 @@ const NfseEmitPage = () => {
         cpfCnpj: tomadorCpfCnpj.replace(/\D/g, ''),
         razaoSocial: tomadorRazaoSocial,
         inscricaoMunicipal: tomadorInscricaoMunicipal || undefined,
+        email: tomadorEmail || undefined,
         endereco: {
           logradouro: tomadorLogradouro || undefined,
           numero: tomadorNumero || undefined,
@@ -278,7 +291,12 @@ const NfseEmitPage = () => {
           aliquota: parsePercent(aliquota),
         },
         tributacaoTotal: {
-          federal: parseCurrency(retPis) + parseCurrency(retCofins) + parseCurrency(retCsll) + parseCurrency(retIr),
+          federal: {
+            valor: parseCurrency(retPis) + parseCurrency(retCofins) + parseCurrency(retCsll) + parseCurrency(retIr),
+          },
+          municipal: {
+            valor: parseCurrency(retInss),
+          },
         },
       },
       referenciaExterna,
