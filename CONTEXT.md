@@ -39,6 +39,7 @@ Timestamp base desta revisao editorial: `2026-02-17T12:06:06-04:00`.
 - Evidencia E23 (codigo local): `src/services/api.ts` e `src/types/api.ts` confirmam ampliacao de contratos de `Empresa`/`CreateEmpresaRequest`/`UpdateEmpresaRequest` para suportar novos campos do backend e preparacao inicial de busca de empresas com `q`/`limit` no metodo `empresasApi.list`.
 - Evidencia E24 (execucao local): `npm run test` executado com sucesso em `2026-02-21T11:34:27-04:00` (3 arquivos, 17 testes, todos passando).
 - Evidencia E25 (execucao local): `npm run lint` executado com sucesso em `2026-02-21T11:34:16-04:00` (0 erros; 10 warnings recorrentes de fast-refresh e `react-hooks/exhaustive-deps` em `DashboardPage`).
+- Evidencia E26 (codigo local): normalizacao documental de secoes/numeração e alinhamento de regra de certificado com backend em `2026-02-25`.
 
 ## 3. Como Rodar
 - Instalar dependencias: `npm i` (ou `yarn`)
@@ -198,10 +199,12 @@ Tela: `src/pages/CertificadoDigitalPage.tsx`
   - loading durante envio
   - sucesso com `fileName`, `fileSize`, `uploadedAt`
   - erro padronizado (`code`, `message`, `correlationId`)
-- Regra operacional: empresa ja cadastrada nao e bloqueada por ausencia de certificado; exigencia ocorre no momento da emissao.
+- Regra operacional alinhada ao backend:
+  - no cadastro por CNPJ, empresa nova/incompleta pode exigir certificado previo (`CERTIFICADO_REQUIRED`);
+  - na emissao (especialmente quick), ausencia de certificado bloqueia o fluxo (`QUICK_PRESTADOR_NO_CERT`).
 - Restricao de seguranca: sem exibicao de conteudo sensivel do certificado
 
-### 10.7 Endereco por CEP
+### 10.6 Endereco por CEP
 Telas: `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx`
 
 - CEP com mascara visual `00000-000` e normalizacao para 8 digitos no envio de payload
@@ -213,7 +216,7 @@ Telas: `src/pages/EmpresaFormPage.tsx` e `src/pages/NfseEmitPage.tsx`
   - estado de busca ("Buscando endereco pelo CEP...")
   - erro operacional quando CEP invalido/nao encontrado
 
-### 10.8 Cadastro de Empresas (expandido)
+### 10.7 Cadastro de Empresas (expandido)
 Tela: `src/pages/EmpresaFormPage.tsx`
 
 - Estrutura visual reorganizada em secoes:
@@ -231,7 +234,7 @@ Tela: `src/pages/EmpresaFormPage.tsx`
 - Observacao operacional:
   - regras finais de autocomplete de CNPJ/empresa serao totalmente orientadas por backend na proxima iteracao (apos confirmacao dos novos endpoints)
 
-### 10.6 Emissao Rapida de NFSe
+### 10.8 Emissao Rapida de NFSe
 Tela: `src/pages/NfseQuickEmitPage.tsx`
 
 - Formulario: `cnpj` + `cpfTomador` + `valor` + `codigoServico`
@@ -258,13 +261,54 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
   - `Data Situação Cadastral`
   - `Início de Atividade`
   - `CNAE Fiscal`
-  - `Descrição CNAE`
-  - `Porte`
-  - seleção de `Regime Tributário` (bolinha)
-  - `Alíquota Simples Nacional`
-  - `Apuração Simples Nacional`
 
-### 11.3 Dependência direta do backend
+## 12. Atualizacao Operacional (2026-02-22)
+
+### 12.1 Cadastro de Empresas - novos campos no frontend
+Fonte: `codigo local` (`src/pages/EmpresaFormPage.tsx`, `src/components/PrestadorSection.tsx`, `src/services/api.ts`, `src/types/api.ts`)
+
+- Campos adicionados e integrados no formulario de prestador:
+  - `inscricaoEstadual`
+  - `suframa`
+  - `whatsapp`
+- Persistencia:
+  - `create/update` enviando os novos campos no payload para backend.
+- Compatibilidade:
+  - fallback de telefone/whatsapp mantido para conviver com contratos legados (`fone`/`telefone`).
+- Regra mantida por orientacao funcional:
+  - `Inscrição Municipal (IM)` **nao foi removida**; permanece para preenchimento manual.
+
+### 12.2 UX de login para cold start (Render Free)
+Fonte: `codigo local` (`src/pages/LoginPage.tsx`, `src/services/api.ts`)
+
+- Warmup ao abrir `/login`:
+  - chamada de pre-aquecimento via `GET /health` (`authApi.warmup`).
+- Resiliencia no submit:
+  - login com timeout maior (`30s`) e retry progressivo para falhas de rede/5xx.
+- UX durante espera:
+  - status de conexao por etapas (ex.: conectando/inicializando/autenticando);
+  - dicas rotativas para orientar usuario contabil durante espera de cold start.
+- Mensageria:
+  - erros de login tratados de forma especifica (401, indisponibilidade, timeout), sem depender apenas de toast global.
+
+### 12.3 Refino visual da tela de cadastro completa
+Fonte: `codigo local` (`src/index.css`, `src/components/PrestadorSection.tsx`, `src/components/RegimeEParametrosSection.tsx`, `src/pages/EmpresaFormPage.tsx`)
+
+- Hierarquia visual aprimorada:
+  - badges de icones em gradiente (evita icones na mesma cor do texto);
+  - subtitulos de secao;
+  - card com faixa superior colorida usando paleta da marca.
+- Escopo:
+  - alteracao visual apenas (sem mudanca de regra de negocio do formulario).
+
+### 12.4 Validacoes locais desta iteracao
+Fonte: `execucao local`
+
+- Build frontend executado com sucesso:
+  - comando: `yarn build`
+  - resultado: sucesso (Vite build concluido; warning de chunk grande mantido, sem bloqueio).
+
+### 12.5 Dependência direta do backend
 - Para esses campos, o frontend depende de `POST /empresas/preview`.
 - A estratégia atual do frontend é:
   1. consumir campos normalizados do payload raiz;
@@ -280,7 +324,7 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
   - `idempotentReplay = true`: "Reaproveitada por idempotencia."
 - Regra de bloqueio: se backend retornar `CERTIFICADO_REQUIRED` ou `QUICK_PRESTADOR_NO_CERT`, emissao rapida fica bloqueada e direciona para importacao de certificado
 
-## 11. Estado, Cache e UX de Dados
+## 13. Estado, Cache e UX de Dados
 - React Query global:
   - `retry: 1`
   - `staleTime: 30_000`
@@ -292,7 +336,7 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
   - snapshot local de stats: `zera_dashboard_snapshot_v1`
   - composicao progressiva: render imediato de snapshot + enriquecimento em background
 
-## 12. UI e Design System
+## 14. UI e Design System
 - Base: shadcn/ui + Radix
 - Tokens e tema: `src/index.css`
 - Tailwind: `tailwind.config.ts`
@@ -313,7 +357,7 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - Traducoes de UI aplicadas em textos visiveis e acessibilidade (`aria-label`/`sr-only`) sem alterar contratos tecnicos
 - Cadastro de empresa reorganizado em cards por secao, com iconografia de apoio para leitura rapida dos blocos (empresa/fiscal/endereco/contato)
 
-## 13. Testes e Qualidade
+## 15. Testes e Qualidade
 - Vitest: `vitest.config.ts` (`jsdom`)
 - Setup: `src/test/setup.ts`
 - Cobertura atual: teste exemplo + testes unitarios da camada de servicos para novos fluxos (`src/services/api.new-flows.test.ts`)
@@ -323,26 +367,27 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - `.gitignore` reforcado para env/build/cache/IDE e sem versionar secrets locais
 - Build de validacao: registrar sempre data/hora explicita da ultima execucao (evitar "hoje"/"ontem")
 
-## 14. Riscos Tecnicos Atuais
+## 16. Riscos Tecnicos Atuais
 - Gargalo principal percebido: endpoint `/nfse` do backend pode levar ~8s (API local + MongoDB Atlas)
 - Mesmo com otimizacoes de cache/snapshot no front, primeiro carregamento depende desse tempo de backend
 - Front ainda depende de multiplas consultas de `provider-response` para enriquecer dados financeiros/visuais
 - Cobertura de testes automatizados baixa
 
-## 15. Convencoes para Novas Mudancas
+## 17. Convencoes para Novas Mudancas
 - Toda integracao HTTP em `src/services/api.ts`
 - Novos contratos tipados em `src/types/api.ts`
 - Rotas autenticadas sob `ProtectedRoute`
 - Novas telas devem ter loading/erro/vazio
 - Mudancas de contrato devem ser verificadas no Swagger real antes de codar
 
-## 16. Certificado Digital (PFX)
+## 18. Certificado Digital (PFX)
 - Fato importante de negocio: emissao depende de certificado digital A1 (PFX/P12) por empresa
 - Backend exposto para o front: `POST /empresas/certificado/import` (multipart com `cnpj`, `senhaCertificado`, `file`)
 - Front implementa importacao sem exibir conteudo sensivel do certificado
+- Regra de negocio vigente (backend): empresa nova/incompleta pode exigir certificado no cadastro (`CERTIFICADO_REQUIRED`) e a emissao bloqueia sem certificado vinculado (`QUICK_PRESTADOR_NO_CERT`)
 - Persistem dependencias externas de provider para ciclo completo de emissao/renovacao, conforme regras do backend em execucao
 
-## 17. Protocolo Canonico de Atualizacao (obrigatorio em todo commit)
+## 19. Protocolo Canonico de Atualizacao (obrigatorio em todo commit)
 Sempre atualizar este arquivo quando o commit alterar:
 - estrutura relevante
 - rotas
@@ -359,8 +404,15 @@ Checklist por commit:
 4. Atualizar `Assuncoes do Backend` quando aplicavel
 5. Atualizar rastreabilidade
 
-## 18. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-21T11:34:27-04:00
+Checklist de contrato vivo (pre-merge):
+1. Conferir no Swagger real os contratos de `POST /auth/login`, `GET /auth/me`, `GET /nfse`, `GET /nfse/:id`, `GET /nfse/:id/provider-response`.
+2. Validar o quick flow ponta a ponta: `POST /nfse/quick` com e sem `codigoServico`, incluindo erros `QUICK_PRESTADOR_NO_CERT` e `QUICK_CODIGO_SERVICO_INVALIDO`.
+3. Validar fluxo de empresas: `POST /empresas/preview`, `POST /empresas` e `PATCH /empresas/:id`, com foco em normalizacao de campos fiscais/cadastrais.
+4. Validar artifacts no detalhe: `GET /nfse/:id/artifacts`, `GET /nfse/:id/xml`, `GET /nfse/:id/pdf`, `GET /nfse/:id/remote/xml`, `GET /nfse/:id/remote/pdf`.
+5. Registrar timestamp da verificacao e impactos neste arquivo antes do merge.
+
+## 20. Rastreabilidade de Atualizacao
+- Ultima atualizacao: 2026-02-25T10:20:00-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: atualizacao documental pos-expansao da tela de cadastro de empresas (novos campos cadastrais/fiscais), reorganizacao de layout em secoes com icones e preparacao inicial para busca/autocomplete de empresas orientada por backend
-- Observacao de continuidade: usuario informou que fara validacao no backend e retornara neste chat com os novos endpoints para finalizar o ajuste de autocomplete orientado por backend no frontend.
+- Tipo de atualizacao: inclusao do checklist de contrato vivo (pre-merge), consolidacao da normalizacao estrutural do CONTEXT.md e alinhamento da regra de certificado com o estado atual do backend
+- Observacao de continuidade: executar checklist de contrato vivo no Swagger/backend em execucao antes de cada merge que altere integracoes HTTP.
