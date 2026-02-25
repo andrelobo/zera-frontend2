@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton,
+  SidebarMenuSubItem, SidebarProvider, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -19,10 +20,6 @@ const navItems = [
   { to: '/nfse', icon: FileText, label: 'NFSe' },
   { to: '/nfse/nova', icon: FileText, label: 'Emissão DANFSE' },
   { to: '/nfse/rapida', icon: Zap, label: 'Emissão Rápida' },
-  { to: '/empresas', icon: Building2, label: 'Empresas' },
-  { to: '/empresas/nova', icon: Building2, label: 'Cadastro Prestador' },
-  { to: '/tomadores', icon: UserRound, label: 'Tomadores' },
-  { to: '/tomadores/novo', icon: UserRound, label: 'Cadastro Tomador' },
   { to: '/certificado-digital', icon: ShieldCheck, label: 'Certificado Digital' },
   { to: '/users', icon: Users, label: 'Usuários' },
 ];
@@ -63,6 +60,52 @@ function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton className="flex items-center gap-3 rounded-md px-3 py-2 text-sm">
+                  <Building2 className="h-4 w-4" />
+                  <span>Prestadores</span>
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <NavLink to="/empresas" onClick={handleNavigate}>
+                        <span>Listagem</span>
+                      </NavLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <NavLink to="/empresas/nova" onClick={handleNavigate}>
+                        <span>Cadastro</span>
+                      </NavLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton className="flex items-center gap-3 rounded-md px-3 py-2 text-sm">
+                  <UserRound className="h-4 w-4" />
+                  <span>Tomadores</span>
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <NavLink to="/tomadores" onClick={handleNavigate}>
+                        <span>Listagem</span>
+                      </NavLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <NavLink to="/tomadores/novo" onClick={handleNavigate}>
+                        <span>Cadastro</span>
+                      </NavLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
