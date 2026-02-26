@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User } from '@/types/api';
 import { authApi } from '@/services/api';
+import { isTokenExpired } from '@/lib/auth-token';
 
 interface AuthContextType {
   user: User | null;
@@ -21,8 +22,14 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const storedToken = localStorage.getItem('zera_token');
+  const initialToken = storedToken && !isTokenExpired(storedToken) ? storedToken : null;
+  if (storedToken && !initialToken) {
+    localStorage.removeItem('zera_token');
+  }
+
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('zera_token'));
+  const [token, setToken] = useState<string | null>(initialToken);
   const [isLoading, setIsLoading] = useState(!!token);
 
   const refreshUser = useCallback(async () => {
@@ -41,6 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (token) {
+      if (isTokenExpired(token)) {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('zera_token');
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       refreshUser().finally(() => setIsLoading(false));
     }

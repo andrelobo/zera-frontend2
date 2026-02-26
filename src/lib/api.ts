@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
+import { isTokenExpired } from '@/lib/auth-token';
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -22,6 +23,13 @@ export const api = axios.create({
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('zera_token');
   if (token) {
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('zera_token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      return config;
+    }
     config.headers.Authorization = `Bearer ${token}`;
   }
   const correlationId = crypto.randomUUID();

@@ -10,6 +10,7 @@ import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
 import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
 import ParametroMunicipalSection from '@/components/ParametroMunicipalSection';
+import { getLC116Item } from '@/lib/cnae-lc116';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -78,6 +79,15 @@ const formatCnpj = (value: string) => {
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
+
+const formatCnae = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 7);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 5)}/${digits.slice(5, 7)}`;
+};
+
+const normalizeCnaeDigits = (value: string) => value.replace(/\D/g, '').slice(0, 7);
 
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
@@ -207,12 +217,49 @@ const EmpresaFormPage = () => {
   });
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
   const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
+  const [autoFilled, setAutoFilled] = useState({ ctn: false, nbs: false });
 
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
     }
   }, [existing]);
+
+  useEffect(() => {
+    const cnaeDigits = normalizeCnaeDigits(form.cnaeFiscal);
+    if (cnaeDigits.length !== 7) return;
+    const mapped = getLC116Item(cnaeDigits);
+    if (!mapped) return;
+    const shouldFillCtn = !form.ctnCodigo && !!mapped.ctn;
+    const shouldFillNbs = !form.nbsCodigo && !!mapped.nbs;
+    const shouldFillCnaeDescricao = !form.cnaeFiscalDescricao && !!mapped.cnaeDescricao;
+
+    if (!shouldFillCtn && !shouldFillNbs && !shouldFillCnaeDescricao) return;
+
+    setForm((prev) => {
+      if (normalizeCnaeDigits(prev.cnaeFiscal) !== cnaeDigits) return prev;
+
+      const nextCtn = shouldFillCtn ? (mapped.ctn || '') : prev.ctnCodigo;
+      const nextNbs = shouldFillNbs ? (mapped.nbs || '') : prev.nbsCodigo;
+      const nextCnaeDescricao = shouldFillCnaeDescricao
+        ? (mapped.cnaeDescricao || prev.cnaeFiscalDescricao)
+        : prev.cnaeFiscalDescricao;
+
+      return {
+        ...prev,
+        ctnCodigo: nextCtn,
+        nbsCodigo: nextNbs,
+        cnaeFiscalDescricao: nextCnaeDescricao,
+      };
+    });
+
+    if (shouldFillCtn || shouldFillNbs) {
+      setAutoFilled((curr) => ({
+        ctn: shouldFillCtn || curr.ctn,
+        nbs: shouldFillNbs || curr.nbs,
+      }));
+    }
+  }, [form.cnaeFiscal, form.ctnCodigo, form.nbsCodigo, form.cnaeFiscalDescricao]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
 
@@ -349,6 +396,46 @@ const EmpresaFormPage = () => {
     }
   };
 
+  const handleParametroMunicipalChange = (
+    field: 'cnaeFiscal' | 'ctnCodigo' | 'nbsCodigo',
+    value: string,
+  ) => {
+    if (field !== 'cnaeFiscal') {
+      update(field, value);
+      if (field === 'ctnCodigo') {
+        setAutoFilled((prev) => ({ ...prev, ctn: false }));
+      }
+      if (field === 'nbsCodigo') {
+        setAutoFilled((prev) => ({ ...prev, nbs: false }));
+      }
+      return;
+    }
+
+    const formattedCnae = formatCnae(value);
+    const cnaeDigits = normalizeCnaeDigits(formattedCnae);
+    const mapped = cnaeDigits.length === 7 ? getLC116Item(cnaeDigits) : null;
+    const shouldFillCtn = !form.ctnCodigo && !!mapped?.ctn;
+    const shouldFillNbs = !form.nbsCodigo && !!mapped?.nbs;
+    const shouldFillCnaeDescricao = !form.cnaeFiscalDescricao && !!mapped?.cnaeDescricao;
+
+    setForm((prev) => ({
+      ...prev,
+      cnaeFiscal: formattedCnae,
+      ctnCodigo: shouldFillCtn ? (mapped?.ctn || prev.ctnCodigo) : prev.ctnCodigo,
+      nbsCodigo: shouldFillNbs ? (mapped?.nbs || prev.nbsCodigo) : prev.nbsCodigo,
+      cnaeFiscalDescricao: shouldFillCnaeDescricao
+        ? (mapped?.cnaeDescricao || prev.cnaeFiscalDescricao)
+        : prev.cnaeFiscalDescricao,
+    }));
+
+    if (shouldFillCtn || shouldFillNbs) {
+      setAutoFilled((prev) => ({
+        ctn: shouldFillCtn || prev.ctn,
+        nbs: shouldFillNbs || prev.nbs,
+      }));
+    }
+  };
+
   const handleAutocompleteByCnpj = () => {
     const cnpj = form.cnpj.replace(/\D/g, '');
     if (cnpj.length !== 14) {
@@ -441,7 +528,12 @@ const EmpresaFormPage = () => {
             cnae={form.cnaeFiscal}
             ctn={form.ctnCodigo}
             nbs={form.nbsCodigo}
-            onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+            onChange={handleParametroMunicipalChange}
+            ctnAutoFilled={autoFilled.ctn}
+            nbsAutoFilled={autoFilled.nbs}
+            assistHint={normalizeCnaeDigits(form.cnaeFiscal).length === 7
+              ? 'Mapeamento automático baseado no Código CNAE informado.'
+              : undefined}
           />
         </RegimeEParametrosSection>
 

@@ -87,6 +87,14 @@ const parsePercent = (value: string) => {
   return normalized;
 };
 
+const getDocDigits = (value: string) => value.replace(/\D/g, '');
+const getTomadorDocType = (value: string): 'cpf' | 'cnpj' | 'unknown' => {
+  const digits = getDocDigits(value);
+  if (digits.length === 11) return 'cpf';
+  if (digits.length === 14) return 'cnpj';
+  return 'unknown';
+};
+
 const NfseEmitPage = () => {
   const navigate = useNavigate();
 
@@ -130,6 +138,16 @@ const NfseEmitPage = () => {
   const [retInss, setRetInss] = useState('');
 
   const [errors, setErrors] = useState<string[]>([]);
+  const tomadorDocDigits = useMemo(() => getDocDigits(tomadorCpfCnpj), [tomadorCpfCnpj]);
+  const tomadorDocType = useMemo(() => getTomadorDocType(tomadorCpfCnpj), [tomadorCpfCnpj]);
+  const tomadorIsCpf = tomadorDocType === 'cpf';
+  const tomadorIsCnpj = tomadorDocType === 'cnpj';
+
+  useEffect(() => {
+    if (!tomadorIsCnpj && tomadorInscricaoMunicipal) {
+      setTomadorInscricaoMunicipal('');
+    }
+  }, [tomadorIsCnpj, tomadorInscricaoMunicipal]);
 
   useEffect(() => {
     const timer = setTimeout(() => setEmpresaSearchDebounced(empresaSearch), 250);
@@ -223,8 +241,12 @@ const NfseEmitPage = () => {
     if (!(selectedEmpresa?.endereco?.cidade || selectedEmpresa?.endereco?.descricaoCidade)) found.push('Município do prestador é obrigatório.');
     if (!(selectedEmpresa?.endereco?.uf || selectedEmpresa?.endereco?.estado)) found.push('UF do prestador é obrigatória.');
     if (!selectedEmpresa?.endereco?.cep) found.push('CEP do prestador é obrigatório.');
-    if (tomadorCpfCnpj.replace(/\D/g, '').length < 11) found.push('CPF/CNPJ do tomador é obrigatório.');
-    if (!tomadorRazaoSocial.trim()) found.push('Razão social do tomador é obrigatória.');
+    if (tomadorDocDigits.length !== 11 && tomadorDocDigits.length !== 14) {
+      found.push('CPF/CNPJ do tomador deve ter 11 (CPF) ou 14 (CNPJ) dígitos.');
+    }
+    if (!tomadorRazaoSocial.trim()) {
+      found.push(tomadorIsCpf ? 'Nome do tomador é obrigatório.' : 'Razão social do tomador é obrigatória.');
+    }
     if (!tomadorLogradouro.trim()) found.push('Logradouro do tomador é obrigatório.');
     if (!tomadorNumero.trim()) found.push('Número do tomador é obrigatório.');
     if (!tomadorBairro.trim()) found.push('Bairro do tomador é obrigatório.');
@@ -272,7 +294,7 @@ const NfseEmitPage = () => {
       tomador: {
         cpfCnpj: tomadorCpfCnpj.replace(/\D/g, ''),
         razaoSocial: tomadorRazaoSocial,
-        inscricaoMunicipal: tomadorInscricaoMunicipal || undefined,
+        inscricaoMunicipal: tomadorIsCnpj ? (tomadorInscricaoMunicipal || undefined) : undefined,
         email: tomadorEmail || undefined,
         endereco: {
           logradouro: tomadorLogradouro || undefined,
@@ -438,12 +460,13 @@ const NfseEmitPage = () => {
                 className="field-input"
                 value={tomadorCpfCnpj}
                 onChange={(e) => setTomadorCpfCnpj(formatDoc(e.target.value))}
-                placeholder="000.000.000-00"
+                placeholder={tomadorDocDigits.length > 11 ? '00.000.000/0000-00' : '000.000.000-00'}
+                maxLength={18}
                 required
               />
             </div>
             <div>
-              <Label className="field-label">Razão Social *</Label>
+              <Label className="field-label">{tomadorIsCpf ? 'Nome Completo *' : 'Razão Social *'}</Label>
               <Input
                 className="field-input"
                 value={tomadorRazaoSocial}
@@ -451,14 +474,16 @@ const NfseEmitPage = () => {
                 required
               />
             </div>
-            <div>
-              <Label className="field-label">Inscrição Municipal</Label>
-              <Input
-                className="field-input"
-                value={tomadorInscricaoMunicipal}
-                onChange={(e) => setTomadorInscricaoMunicipal(e.target.value)}
-              />
-            </div>
+            {tomadorIsCnpj && (
+              <div>
+                <Label className="field-label">Inscrição Municipal</Label>
+                <Input
+                  className="field-input"
+                  value={tomadorInscricaoMunicipal}
+                  onChange={(e) => setTomadorInscricaoMunicipal(e.target.value)}
+                />
+              </div>
+            )}
             <div>
               <Label className="field-label">E-mail</Label>
               <Input

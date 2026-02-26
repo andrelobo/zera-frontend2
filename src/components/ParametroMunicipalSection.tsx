@@ -3,6 +3,9 @@ interface ParametroMunicipalSectionProps {
   ctn: string;
   nbs: string;
   onChange: (field: 'cnaeFiscal' | 'ctnCodigo' | 'nbsCodigo', value: string) => void;
+  ctnAutoFilled?: boolean;
+  nbsAutoFilled?: boolean;
+  assistHint?: string;
 }
 
 const ParametroMunicipalSection = ({
@@ -10,6 +13,9 @@ const ParametroMunicipalSection = ({
   ctn,
   nbs,
   onChange,
+  ctnAutoFilled,
+  nbsAutoFilled,
+  assistHint,
 }: ParametroMunicipalSectionProps) => {
   return (
     <div className="mt-5 pt-5 border-t border-border">
@@ -36,6 +42,11 @@ const ParametroMunicipalSection = ({
             value={ctn}
             onChange={(e) => onChange('ctnCodigo', e.target.value)}
           />
+          {ctnAutoFilled && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Preenchido automaticamente pelo CNAE. Você pode editar.
+            </p>
+          )}
         </div>
 
         <div className="rounded-lg border border-border bg-muted/20 p-3">
@@ -46,8 +57,19 @@ const ParametroMunicipalSection = ({
             value={nbs}
             onChange={(e) => onChange('nbsCodigo', e.target.value)}
           />
+          {nbsAutoFilled && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Preenchido automaticamente pelo CNAE. Você pode editar.
+            </p>
+          )}
         </div>
       </div>
+
+      {assistHint && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {assistHint}
+        </p>
+      )}
     </div>
   );
 };
