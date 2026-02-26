@@ -160,6 +160,8 @@ Tela: `src/pages/NfseEmitPage.tsx`
   - busca por CNPJ (`/empresas/cnpj/:cnpj`)
 - Payload enviado segue `EmitirNfseDto` (Swagger):
   - `prestador`, `tomador`, `servico`, `referenciaExterna`
+- Regra operacional atual do DANFSE:
+  - envia `servico.codigoTributacao` por padrao (`100`), com override via `VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO`
 - Front preenche campos inferidos do prestador (empresa) e envia tomador/servico do formulario
 - UX atual de preenchimento:
   - empresa emissora via autocomplete (razao social/CNPJ) com debounce de 250ms
@@ -412,7 +414,7 @@ Checklist de contrato vivo (pre-merge):
 5. Registrar timestamp da verificacao e impactos neste arquivo antes do merge.
 
 ## 20. Rastreabilidade de Atualizacao
-- Ultima atualizacao: 2026-02-25T10:20:00-04:00
+- Ultima atualizacao: 2026-02-26T09:10:00-04:00
 - Responsavel: Codex (GPT-5)
-- Tipo de atualizacao: inclusao do checklist de contrato vivo (pre-merge), consolidacao da normalizacao estrutural do CONTEXT.md e alinhamento da regra de certificado com o estado atual do backend
-- Observacao de continuidade: executar checklist de contrato vivo no Swagger/backend em execucao antes de cada merge que altere integracoes HTTP.
+- Tipo de atualizacao: registro de regressao de emissao DANFSE (E0312) com ajuste de contrato no frontend para envio de `codigoTributacao` padrao e alinhamento com payload historico aceito
+- Observacao de continuidade: validar no `providerRequest.payload[0].servico[0]` a presenca de `codigo` + `codigoTributacao` em todo teste de emissao apos mudancas no formulario DANFSE.
