@@ -9,9 +9,10 @@ import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
 import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
-import ParametroMunicipalSection from '@/components/ParametroMunicipalSection';
 import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
 import SimplesNacionalSection from '@/components/SimplesNacionalSection';
+import CNAESection, { type CNAEAtividade } from '@/components/CNAESection';
+import TabelaAnexoIII from '@/components/TabelaAnexoIII';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
 import type { Empresa } from '@/types/api';
@@ -64,6 +65,29 @@ const PRESTADOR_SUB_TABS: Array<{
   { key: 'regime', label: 'Regime Tributário', icon: Landmark },
   { key: 'parametros', label: 'Parâmetros Fiscais', icon: Settings },
 ];
+
+const ToggleSwitch = ({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  label: string;
+}) => (
+  <label className="flex items-center gap-3 cursor-pointer select-none">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`switch-track ${checked ? 'switch-track-on' : 'switch-track-off'}`}
+    >
+      <span className={`switch-thumb ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+    <span className="text-sm text-foreground">{label}</span>
+  </label>
+);
 
 const toDateInputValue = (value?: string | null) => {
   if (!value) return '';
@@ -237,6 +261,7 @@ const EmpresaFormPage = () => {
   const [prestadorSubTab, setPrestadorSubTab] = useState<PrestadorSubTab>(initialSubTab);
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
   const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
+  const [cnaesRegime, setCnaesRegime] = useState<CNAEAtividade[]>([]);
   const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
 
   useEffect(() => {
@@ -244,6 +269,19 @@ const EmpresaFormPage = () => {
       setForm((prev) => mapEmpresaToForm(existing, prev));
     }
   }, [existing]);
+
+  useEffect(() => {
+    if (cnaesRegime.length > 0) return;
+    const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
+    if (!codigo) return;
+    setCnaesRegime([
+      {
+        codigo,
+        descricao: form.cnaeFiscalDescricao || 'CNAE principal',
+        isPrincipal: true,
+      },
+    ]);
+  }, [cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
 
   useEffect(() => {
     if (cnaesParam.length > 0) return;
@@ -461,6 +499,18 @@ const EmpresaFormPage = () => {
     }));
   };
 
+  const handleCnaesRegimeChange = (items: CNAEAtividade[]) => {
+    setCnaesRegime(items);
+    const principal = items.find((item) => item.isPrincipal) || items[0];
+    if (!principal) return;
+
+    setForm((prev) => ({
+      ...prev,
+      cnaeFiscal: String(principal.codigo),
+      cnaeFiscalDescricao: principal.descricao || prev.cnaeFiscalDescricao,
+    }));
+  };
+
   return (
     <div className="space-y-6 animate-fade-in w-full">
       <div className="flex items-center gap-3">
@@ -540,51 +590,123 @@ const EmpresaFormPage = () => {
         )}
 
         {prestadorSubTab === 'regime' && (
-          <RegimeEParametrosSection
-            regimeTributario={form.regimeTributario}
-            aliquotaSimplesNacional={form.aliquotaSimplesNacional}
-            apuracaoSimplesNacional={form.apuracaoSimplesNacional}
-            opcaoPeloSimples={form.opcaoPeloSimples}
-            opcaoPeloMei={form.opcaoPeloMei}
-            dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
-            dataExclusaoDoSimples={form.dataExclusaoDoSimples}
-            onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
-          />
+          <div className="space-y-4">
+            <RegimeEParametrosSection
+              regimeTributario={form.regimeTributario}
+              aliquotaSimplesNacional={form.aliquotaSimplesNacional}
+              apuracaoSimplesNacional={form.apuracaoSimplesNacional}
+              opcaoPeloSimples={form.opcaoPeloSimples}
+              opcaoPeloMei={form.opcaoPeloMei}
+              dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
+              dataExclusaoDoSimples={form.dataExclusaoDoSimples}
+              onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+            />
+
+            <CNAESection
+              cnpj={form.cnpj}
+              cnaeEscolhido={form.cnaeFiscal || null}
+              onCnaeEscolhidoChange={(codigo, descricao) => {
+                setForm((prev) => ({
+                  ...prev,
+                  cnaeFiscal: codigo,
+                  cnaeFiscalDescricao: descricao || prev.cnaeFiscalDescricao,
+                }));
+              }}
+              rbt12={rbt12Number}
+              cnaesLista={cnaesRegime}
+              onCnaesListaChange={handleCnaesRegimeChange}
+            />
+
+            {form.regimeTributario === 'simples_nacional' && (
+              <>
+                <SimplesNacionalSection
+                  cnaePrincipal={String(form.cnaeFiscal || '')}
+                  cnaeDescricao={form.cnaeFiscalDescricao}
+                  cnaeAnexo="III"
+                  rbt12={rbt12Number}
+                  onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                  calculo={simplesCalculo}
+                  alertas={simplesCalculo.alertas}
+                  permiteFatorR={false}
+                />
+                <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
+              </>
+            )}
+          </div>
         )}
 
         {prestadorSubTab === 'parametros' && (
-          <div className="section-card">
-            <h2 className="section-title">
-              <Settings className="w-5 h-5 text-primary" />
-              Parâmetros Fiscais
-            </h2>
-            <div className="space-y-4">
+          <div className="space-y-2">
+            {form.regimeTributario === 'simples_nacional' && (
+              <div className="section-card p-3">
+                <h2 className="section-title text-sm mb-2">
+                  <Settings className="w-4 h-4 text-primary" />
+                  Parâmetros Federais
+                </h2>
+                <div className="space-y-2 p-2.5 rounded-lg bg-muted/50 border border-border">
+                  <ToggleSwitch
+                    checked={form.apuracaoSimplesNacional.trim().length > 0}
+                    onChange={(value) => update('apuracaoSimplesNacional', value ? 'MENSAL' : '')}
+                    label="Regime de apuração dos tributos federais e municipal pelo Simples Nacional"
+                  />
+                  <ToggleSwitch
+                    checked={form.aliquotaSimplesNacional.trim().length > 0}
+                    onChange={(value) => update('aliquotaSimplesNacional', value ? '0,00' : '')}
+                    label="Informar alíquota do Simples Nacional"
+                  />
+                  {form.aliquotaSimplesNacional.trim().length > 0 && (
+                    <div>
+                      <label className="field-label whitespace-nowrap">Simples Nacional</label>
+                      <div className="relative w-[55px]">
+                        <input
+                          className="field-input pr-7 border-primary"
+                          type="text"
+                          placeholder="00,00"
+                          maxLength={5}
+                          value={form.aliquotaSimplesNacional}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
+                            if (value.length > 2) value = `${value.slice(0, -2)},${value.slice(-2)}`;
+                            update('aliquotaSimplesNacional', value);
+                          }}
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!form.regimeTributario && (
+              <div className="section-card flex items-center justify-center py-8 text-muted-foreground text-sm">
+                Selecione um regime tributário na aba "Regime Tributário" para configurar os parâmetros.
+              </div>
+            )}
+
+            {form.regimeTributario && form.regimeTributario !== 'simples_nacional' && (
+              <div className="section-card">
+                <h2 className="section-title">
+                  <Settings className="w-5 h-5 text-primary" />
+                  Parâmetros Federais
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Configurações federais para {form.regimeTributario === 'lucro_presumido' ? 'Lucro Presumido' : 'Lucro Real'} serão disponibilizadas em breve.
+                </p>
+              </div>
+            )}
+
+            <div className="section-card p-3">
+              <h2 className="section-title text-sm mb-2">
+                <Settings className="w-4 h-4 text-primary" />
+                Parâmetros Municipais
+              </h2>
               <CTNSection
                 ctnSelecionado={form.ctnCodigo || null}
                 onCtnChange={(codigo) => update('ctnCodigo', codigo)}
                 savedCnaes={cnaesParam}
                 onCnaesChange={handleCnaesChange}
-              />
-
-              <ParametroMunicipalSection
-                standalone
-                cnae={form.cnaeFiscal}
-                cnaeDescricao={form.cnaeFiscalDescricao}
-                ctn={form.ctnCodigo}
-                nbs={form.nbsCodigo}
-                rbt12={form.rbt12}
-                onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
-              />
-
-              <SimplesNacionalSection
-                cnaePrincipal={String(form.cnaeFiscal || '')}
-                cnaeDescricao={form.cnaeFiscalDescricao}
-                cnaeAnexo="III"
-                rbt12={rbt12Number}
-                onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
-                calculo={simplesCalculo}
-                alertas={simplesCalculo.alertas}
-                permiteFatorR={false}
+                regimeCnaes={cnaesRegime}
               />
             </div>
           </div>
