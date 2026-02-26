@@ -7,6 +7,12 @@ export interface PrestadorSectionData {
   inscricaoMunicipal: string;
   inscricaoEstadual: string;
   suframa: string;
+  situacaoCadastral: string;
+  dataSituacaoCadastral: string;
+  dataInicioAtividade: string;
+  porte: string;
+  naturezaJuridica: string;
+  capitalSocial: string;
   opcaoPeloSimples: '' | 'true' | 'false';
   cep: string;
   endereco: string;
@@ -16,6 +22,7 @@ export interface PrestadorSectionData {
   cidade: string;
   uf: string;
   email: string;
+  telefone: string;
   whatsapp: string;
 }
 
@@ -146,6 +153,66 @@ const PrestadorSection = ({
         </div>
       </div>
 
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="field-label">Situação Cadastral</label>
+          <input
+            className="field-input"
+            placeholder="Ex: ATIVA"
+            value={data.situacaoCadastral}
+            onChange={(e) => onChange('situacaoCadastral', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="field-label">Data Situação Cadastral</label>
+          <input
+            className="field-input"
+            type="date"
+            value={data.dataSituacaoCadastral}
+            onChange={(e) => onChange('dataSituacaoCadastral', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="field-label">Data Início Atividade</label>
+          <input
+            className="field-input"
+            type="date"
+            value={data.dataInicioAtividade}
+            onChange={(e) => onChange('dataInicioAtividade', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="field-label">Porte</label>
+          <input
+            className="field-input"
+            placeholder="Ex: ME"
+            value={data.porte}
+            onChange={(e) => onChange('porte', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="field-label">Natureza Jurídica</label>
+          <input
+            className="field-input"
+            placeholder="Ex: Sociedade Empresária Limitada"
+            value={data.naturezaJuridica}
+            onChange={(e) => onChange('naturezaJuridica', e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="field-label">Capital Social</label>
+          <input
+            className="field-input"
+            placeholder="Ex: 100000,00"
+            value={data.capitalSocial}
+            onChange={(e) => onChange('capitalSocial', e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="mt-5 pt-5 border-t border-border">
         <label className="field-label flex items-center gap-1 mb-4">
           <MapPin className="w-3.5 h-3.5" />
@@ -224,6 +291,15 @@ const PrestadorSection = ({
               placeholder="(00) 00000-0000"
               value={data.whatsapp}
               onChange={(e) => onChange('whatsapp', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="field-label">Telefone</label>
+            <input
+              className="field-input"
+              placeholder="(00) 0000-0000"
+              value={data.telefone}
+              onChange={(e) => onChange('telefone', e.target.value)}
             />
           </div>
         </div>

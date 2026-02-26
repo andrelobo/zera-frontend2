@@ -58,6 +58,10 @@ const RegimeEParametrosSection = ({
   regimeTributario,
   aliquotaSimplesNacional,
   apuracaoSimplesNacional,
+  opcaoPeloSimples,
+  opcaoPeloMei,
+  dataOpcaoPeloSimples,
+  dataExclusaoDoSimples,
   onChange,
   children,
 }: RegimeEParametrosSectionProps) => {
@@ -109,6 +113,54 @@ const RegimeEParametrosSection = ({
 
       {regime === 'simples' && (
         <div className="space-y-4 p-4 rounded-lg bg-muted/50 border border-border mb-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="field-label">Optante pelo Simples</label>
+              <select
+                className="field-input"
+                value={opcaoPeloSimples}
+                onChange={(e) => onChange('opcaoPeloSimples', e.target.value)}
+              >
+                <option value="">Não informado</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+            <div>
+              <label className="field-label">Optante pelo MEI</label>
+              <select
+                className="field-input"
+                value={opcaoPeloMei}
+                onChange={(e) => onChange('opcaoPeloMei', e.target.value)}
+              >
+                <option value="">Não informado</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="field-label">Data opção pelo Simples</label>
+              <input
+                className="field-input"
+                type="date"
+                value={dataOpcaoPeloSimples}
+                onChange={(e) => onChange('dataOpcaoPeloSimples', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label">Data exclusão do Simples</label>
+              <input
+                className="field-input"
+                type="date"
+                value={dataExclusaoDoSimples}
+                onChange={(e) => onChange('dataExclusaoDoSimples', e.target.value)}
+              />
+            </div>
+          </div>
+
           <Toggle
             checked={regimeApuracaoSNParametro}
             onChange={(v) => onChange('apuracaoSimplesNacional', v ? 'MENSAL' : '')}

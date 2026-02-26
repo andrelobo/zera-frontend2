@@ -1,8 +1,11 @@
 interface ParametroMunicipalSectionProps {
   cnae: string;
+  cnaeDescricao?: string;
   ctn: string;
   nbs: string;
-  onChange: (field: 'cnaeFiscal' | 'ctnCodigo' | 'nbsCodigo', value: string) => void;
+  rbt12?: string;
+  onChange: (field: 'cnaeFiscal' | 'cnaeFiscalDescricao' | 'ctnCodigo' | 'nbsCodigo' | 'rbt12', value: string) => void;
+  standalone?: boolean;
   ctnAutoFilled?: boolean;
   nbsAutoFilled?: boolean;
   assistHint?: string;
@@ -10,15 +13,18 @@ interface ParametroMunicipalSectionProps {
 
 const ParametroMunicipalSection = ({
   cnae,
+  cnaeDescricao = '',
   ctn,
   nbs,
+  rbt12 = '',
   onChange,
+  standalone = false,
   ctnAutoFilled,
   nbsAutoFilled,
   assistHint,
 }: ParametroMunicipalSectionProps) => {
   return (
-    <div className="mt-5 pt-5 border-t border-border">
+    <div className={standalone ? '' : 'mt-5 pt-5 border-t border-border'}>
       <h3 className="text-sm font-bold flex items-center gap-2 mb-3" style={{ color: 'hsl(144, 72%, 28%)' }}>
         Parâmetro Municipal
       </h3>
@@ -65,10 +71,29 @@ const ParametroMunicipalSection = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <label className="field-label">Descrição CNAE</label>
+          <input
+            className="field-input"
+            placeholder="Descrição do CNAE"
+            value={cnaeDescricao}
+            onChange={(e) => onChange('cnaeFiscalDescricao', e.target.value)}
+          />
+        </div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <label className="field-label">RBT12 (Simples Nacional)</label>
+          <input
+            className="field-input"
+            placeholder="Ex: 150000,00"
+            value={rbt12}
+            onChange={(e) => onChange('rbt12', e.target.value)}
+          />
+        </div>
+      </div>
+
       {assistHint && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          {assistHint}
-        </p>
+        <p className="mt-3 text-xs text-muted-foreground">{assistHint}</p>
       )}
     </div>
   );

@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Building2, ClipboardList, Landmark, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import PrestadorSection from '@/components/PrestadorSection';
 import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
 import ParametroMunicipalSection from '@/components/ParametroMunicipalSection';
-import { getLC116Item } from '@/lib/cnae-lc116';
+import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
+import SimplesNacionalSection from '@/components/SimplesNacionalSection';
+import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
+import { getLC116Item } from '@/utils/cnae-lc116';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -37,6 +40,7 @@ interface EmpresaFormData {
   regimeTributario: '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
   aliquotaSimplesNacional: string;
   apuracaoSimplesNacional: string;
+  rbt12: string;
   endereco: string;
   numero: string;
   complemento: string;
@@ -48,6 +52,18 @@ interface EmpresaFormData {
   whatsapp: string;
   email: string;
 }
+
+type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
+
+const PRESTADOR_SUB_TABS: Array<{
+  key: PrestadorSubTab;
+  label: string;
+  icon: typeof ClipboardList;
+}> = [
+  { key: 'cadastro', label: 'Dados Cadastrais', icon: ClipboardList },
+  { key: 'regime', label: 'Regime Tributário', icon: Landmark },
+  { key: 'parametros', label: 'Parâmetros Fiscais', icon: Settings },
+];
 
 const toDateInputValue = (value?: string | null) => {
   if (!value) return '';
@@ -79,15 +95,6 @@ const formatCnpj = (value: string) => {
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
-
-const formatCnae = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 7);
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 5) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-  return `${digits.slice(0, 4)}-${digits.slice(4, 5)}/${digits.slice(5, 7)}`;
-};
-
-const normalizeCnaeDigits = (value: string) => value.replace(/\D/g, '').slice(0, 7);
 
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
@@ -182,6 +189,11 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
           || (legacy.apuracao_simples_nacional as string | undefined)
           || previous.apuracaoSimplesNacional,
       ),
+    rbt12: String(
+      legacy.rbt12
+      || providerData.rbt12
+      || previous.rbt12,
+    ),
     endereco: String(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
     numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
     complemento: String(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
@@ -198,6 +210,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
@@ -212,12 +225,19 @@ const EmpresaFormPage = () => {
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
     cnaeFiscal: '', cnaeFiscalDescricao: '', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
-    regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '',
+    regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
   });
+  const initialSubTab = (() => {
+    const secao = searchParams.get('secao');
+    if (secao === 'regime') return 'regime';
+    if (secao === 'parametros') return 'parametros';
+    return 'cadastro';
+  })();
+  const [prestadorSubTab, setPrestadorSubTab] = useState<PrestadorSubTab>(initialSubTab);
   const [lastPreviewCnpj, setLastPreviewCnpj] = useState('');
   const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
-  const [autoFilled, setAutoFilled] = useState({ ctn: false, nbs: false });
+  const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
 
   useEffect(() => {
     if (existing) {
@@ -226,40 +246,36 @@ const EmpresaFormPage = () => {
   }, [existing]);
 
   useEffect(() => {
-    const cnaeDigits = normalizeCnaeDigits(form.cnaeFiscal);
-    if (cnaeDigits.length !== 7) return;
-    const mapped = getLC116Item(cnaeDigits);
-    if (!mapped) return;
-    const shouldFillCtn = !form.ctnCodigo && !!mapped.ctn;
-    const shouldFillNbs = !form.nbsCodigo && !!mapped.nbs;
-    const shouldFillCnaeDescricao = !form.cnaeFiscalDescricao && !!mapped.cnaeDescricao;
+    if (cnaesParam.length > 0) return;
+    const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
+    if (!codigo) return;
+    const lc = getLC116Item(codigo);
+    setCnaesParam([
+      {
+        codigo,
+        cnaeDescricao: form.cnaeFiscalDescricao || lc?.cnaeDescricao || 'CNAE principal',
+        lc116Descricao: lc?.descricao || '',
+        lc116Item: lc?.item || '',
+        vinculos: [
+          {
+            id: 'initial',
+            ctn: form.ctnCodigo || undefined,
+            nbs: form.nbsCodigo || undefined,
+          },
+        ],
+        isPrincipal: true,
+      },
+    ]);
+  }, [cnaesParam.length, form.cnaeFiscal, form.cnaeFiscalDescricao, form.ctnCodigo, form.nbsCodigo]);
 
-    if (!shouldFillCtn && !shouldFillNbs && !shouldFillCnaeDescricao) return;
-
-    setForm((prev) => {
-      if (normalizeCnaeDigits(prev.cnaeFiscal) !== cnaeDigits) return prev;
-
-      const nextCtn = shouldFillCtn ? (mapped.ctn || '') : prev.ctnCodigo;
-      const nextNbs = shouldFillNbs ? (mapped.nbs || '') : prev.nbsCodigo;
-      const nextCnaeDescricao = shouldFillCnaeDescricao
-        ? (mapped.cnaeDescricao || prev.cnaeFiscalDescricao)
-        : prev.cnaeFiscalDescricao;
-
-      return {
-        ...prev,
-        ctnCodigo: nextCtn,
-        nbsCodigo: nextNbs,
-        cnaeFiscalDescricao: nextCnaeDescricao,
-      };
-    });
-
-    if (shouldFillCtn || shouldFillNbs) {
-      setAutoFilled((curr) => ({
-        ctn: shouldFillCtn || curr.ctn,
-        nbs: shouldFillNbs || curr.nbs,
-      }));
+  useEffect(() => {
+    const secao = searchParams.get('secao');
+    if (secao === 'regime' || secao === 'parametros' || secao === 'cadastro') {
+      setPrestadorSubTab(secao);
+      return;
     }
-  }, [form.cnaeFiscal, form.ctnCodigo, form.nbsCodigo, form.cnaeFiscalDescricao]);
+    setPrestadorSubTab('cadastro');
+  }, [searchParams]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
 
@@ -396,46 +412,6 @@ const EmpresaFormPage = () => {
     }
   };
 
-  const handleParametroMunicipalChange = (
-    field: 'cnaeFiscal' | 'ctnCodigo' | 'nbsCodigo',
-    value: string,
-  ) => {
-    if (field !== 'cnaeFiscal') {
-      update(field, value);
-      if (field === 'ctnCodigo') {
-        setAutoFilled((prev) => ({ ...prev, ctn: false }));
-      }
-      if (field === 'nbsCodigo') {
-        setAutoFilled((prev) => ({ ...prev, nbs: false }));
-      }
-      return;
-    }
-
-    const formattedCnae = formatCnae(value);
-    const cnaeDigits = normalizeCnaeDigits(formattedCnae);
-    const mapped = cnaeDigits.length === 7 ? getLC116Item(cnaeDigits) : null;
-    const shouldFillCtn = !form.ctnCodigo && !!mapped?.ctn;
-    const shouldFillNbs = !form.nbsCodigo && !!mapped?.nbs;
-    const shouldFillCnaeDescricao = !form.cnaeFiscalDescricao && !!mapped?.cnaeDescricao;
-
-    setForm((prev) => ({
-      ...prev,
-      cnaeFiscal: formattedCnae,
-      ctnCodigo: shouldFillCtn ? (mapped?.ctn || prev.ctnCodigo) : prev.ctnCodigo,
-      nbsCodigo: shouldFillNbs ? (mapped?.nbs || prev.nbsCodigo) : prev.nbsCodigo,
-      cnaeFiscalDescricao: shouldFillCnaeDescricao
-        ? (mapped?.cnaeDescricao || prev.cnaeFiscalDescricao)
-        : prev.cnaeFiscalDescricao,
-    }));
-
-    if (shouldFillCtn || shouldFillNbs) {
-      setAutoFilled((prev) => ({
-        ctn: shouldFillCtn || prev.ctn,
-        nbs: shouldFillNbs || prev.nbs,
-      }));
-    }
-  };
-
   const handleAutocompleteByCnpj = () => {
     const cnpj = form.cnpj.replace(/\D/g, '');
     if (cnpj.length !== 14) {
@@ -466,6 +442,25 @@ const EmpresaFormPage = () => {
 
   if (isEdit && isLoading) return <LoadingState />;
 
+  const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
+  const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
+
+  const handleCnaesChange = (items: CnaeAdicionado[]) => {
+    setCnaesParam(items);
+    const principal = items.find((item) => item.isPrincipal) || items[0];
+    if (!principal) {
+      return;
+    }
+    const primeiroVinculo = principal.vinculos[0];
+    setForm((prev) => ({
+      ...prev,
+      cnaeFiscal: principal.codigo,
+      cnaeFiscalDescricao: principal.cnaeDescricao || prev.cnaeFiscalDescricao,
+      ctnCodigo: primeiroVinculo?.ctn || '',
+      nbsCodigo: primeiroVinculo?.nbs || '',
+    }));
+  };
+
   return (
     <div className="space-y-6 animate-fade-in w-full">
       <div className="flex items-center gap-3">
@@ -481,61 +476,119 @@ const EmpresaFormPage = () => {
       </div>
 
       <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-        <PrestadorSection
-          data={{
-            razaoSocial: form.razaoSocial,
-            nomeFantasia: form.nomeFantasia,
-            cnpj: form.cnpj,
-            inscricaoMunicipal: form.inscricaoMunicipal,
-            inscricaoEstadual: form.inscricaoEstadual,
-            suframa: form.suframa,
-            opcaoPeloSimples: form.opcaoPeloSimples,
-            cep: form.cep,
-            endereco: form.endereco,
-            numero: form.numero,
-            complemento: form.complemento,
-            bairro: form.bairro,
-            cidade: form.cidade,
-            uf: form.uf,
-            email: form.email,
-            whatsapp: form.whatsapp,
-          }}
-          isEdit={isEdit}
-          loadingCnpj={previewMutation.isPending}
-          onAutocompleteByCnpj={handleAutocompleteByCnpj}
-          onChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
-          onCepChange={(value) => update('cep', formatCep(value))}
-          cepHint={cepDigits.length > 0 && cepDigits.length < 8 ? 'Informe os 8 dígitos do CEP.' : undefined}
-          cepLoading={cepLookupQuery.isFetching}
-          cepError={cepLookupQuery.isError
-            ? cepLookupQuery.error instanceof Error
-              ? cepLookupQuery.error.message
-              : 'Falha ao consultar CEP.'
-            : undefined}
-        />
+        <div className="section-card">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {PRESTADOR_SUB_TABS.map((subTab) => (
+              <button
+                key={subTab.key}
+                type="button"
+                onClick={() => {
+                  setPrestadorSubTab(subTab.key);
+                  setSearchParams({ secao: subTab.key });
+                }}
+                className={`radio-card text-left ${
+                  prestadorSubTab === subTab.key ? 'radio-card-selected' : ''
+                }`}
+              >
+                <subTab.icon className="w-4 h-4 shrink-0 text-primary" />
+                <span className="text-sm font-medium text-foreground">{subTab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <RegimeEParametrosSection
-          regimeTributario={form.regimeTributario}
-          aliquotaSimplesNacional={form.aliquotaSimplesNacional}
-          apuracaoSimplesNacional={form.apuracaoSimplesNacional}
-          opcaoPeloSimples={form.opcaoPeloSimples}
-          opcaoPeloMei={form.opcaoPeloMei}
-          dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
-          dataExclusaoDoSimples={form.dataExclusaoDoSimples}
-          onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
-        >
-          <ParametroMunicipalSection
-            cnae={form.cnaeFiscal}
-            ctn={form.ctnCodigo}
-            nbs={form.nbsCodigo}
-            onChange={handleParametroMunicipalChange}
-            ctnAutoFilled={autoFilled.ctn}
-            nbsAutoFilled={autoFilled.nbs}
-            assistHint={normalizeCnaeDigits(form.cnaeFiscal).length === 7
-              ? 'Mapeamento automático baseado no Código CNAE informado.'
+        {prestadorSubTab === 'cadastro' && (
+          <PrestadorSection
+            data={{
+              razaoSocial: form.razaoSocial,
+              nomeFantasia: form.nomeFantasia,
+              cnpj: form.cnpj,
+              inscricaoMunicipal: form.inscricaoMunicipal,
+              inscricaoEstadual: form.inscricaoEstadual,
+              suframa: form.suframa,
+              situacaoCadastral: form.situacaoCadastral,
+              dataSituacaoCadastral: form.dataSituacaoCadastral,
+              dataInicioAtividade: form.dataInicioAtividade,
+              porte: form.porte,
+              naturezaJuridica: form.naturezaJuridica,
+              capitalSocial: form.capitalSocial,
+              opcaoPeloSimples: form.opcaoPeloSimples,
+              cep: form.cep,
+              endereco: form.endereco,
+              numero: form.numero,
+              complemento: form.complemento,
+              bairro: form.bairro,
+              cidade: form.cidade,
+              uf: form.uf,
+              email: form.email,
+              telefone: form.telefone,
+              whatsapp: form.whatsapp,
+            }}
+            isEdit={isEdit}
+            loadingCnpj={previewMutation.isPending}
+            onAutocompleteByCnpj={handleAutocompleteByCnpj}
+            onChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
+            onCepChange={(value) => update('cep', formatCep(value))}
+            cepHint={cepDigits.length > 0 && cepDigits.length < 8 ? 'Informe os 8 dígitos do CEP.' : undefined}
+            cepLoading={cepLookupQuery.isFetching}
+            cepError={cepLookupQuery.isError
+              ? cepLookupQuery.error instanceof Error
+                ? cepLookupQuery.error.message
+                : 'Falha ao consultar CEP.'
               : undefined}
           />
-        </RegimeEParametrosSection>
+        )}
+
+        {prestadorSubTab === 'regime' && (
+          <RegimeEParametrosSection
+            regimeTributario={form.regimeTributario}
+            aliquotaSimplesNacional={form.aliquotaSimplesNacional}
+            apuracaoSimplesNacional={form.apuracaoSimplesNacional}
+            opcaoPeloSimples={form.opcaoPeloSimples}
+            opcaoPeloMei={form.opcaoPeloMei}
+            dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
+            dataExclusaoDoSimples={form.dataExclusaoDoSimples}
+            onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+          />
+        )}
+
+        {prestadorSubTab === 'parametros' && (
+          <div className="section-card">
+            <h2 className="section-title">
+              <Settings className="w-5 h-5 text-primary" />
+              Parâmetros Fiscais
+            </h2>
+            <div className="space-y-4">
+              <CTNSection
+                ctnSelecionado={form.ctnCodigo || null}
+                onCtnChange={(codigo) => update('ctnCodigo', codigo)}
+                savedCnaes={cnaesParam}
+                onCnaesChange={handleCnaesChange}
+              />
+
+              <ParametroMunicipalSection
+                standalone
+                cnae={form.cnaeFiscal}
+                cnaeDescricao={form.cnaeFiscalDescricao}
+                ctn={form.ctnCodigo}
+                nbs={form.nbsCodigo}
+                rbt12={form.rbt12}
+                onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+              />
+
+              <SimplesNacionalSection
+                cnaePrincipal={String(form.cnaeFiscal || '')}
+                cnaeDescricao={form.cnaeFiscalDescricao}
+                cnaeAnexo="III"
+                rbt12={rbt12Number}
+                onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                calculo={simplesCalculo}
+                alertas={simplesCalculo.alertas}
+                permiteFatorR={false}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={mutation.isPending}>
