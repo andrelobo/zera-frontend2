@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
+import api from '@/lib/api';
 
 describe('cep service', () => {
   afterEach(() => {
@@ -17,16 +18,15 @@ describe('cep service', () => {
   });
 
   it('maps ViaCEP payload to normalized address', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    vi.spyOn(api, 'get').mockResolvedValue({
+      data: {
         cep: '69010-040',
         logradouro: 'Rua Exemplo',
         bairro: 'Centro',
-        localidade: 'Manaus',
+        cidade: 'Manaus',
         uf: 'am',
-      }),
-    } as Response);
+      },
+    } as never);
 
     const result = await lookupCep('69010040');
 
@@ -40,11 +40,10 @@ describe('cep service', () => {
     });
   });
 
-  it('throws when ViaCEP returns erro=true', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({ erro: true }),
-    } as Response);
+  it('throws when backend returns error', async () => {
+    vi.spyOn(api, 'get').mockRejectedValue({
+      response: { data: { message: 'CEP não encontrado.' } },
+    });
 
     await expect(lookupCep('99999999')).rejects.toThrow('CEP não encontrado.');
   });

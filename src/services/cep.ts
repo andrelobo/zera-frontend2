@@ -1,3 +1,5 @@
+import api from '@/lib/api';
+
 export interface CepAddress {
   cep: string;
   logradouro: string;
@@ -6,18 +8,6 @@ export interface CepAddress {
   uf: string;
   complemento?: string;
 }
-
-interface ViaCepResponse {
-  cep?: string;
-  logradouro?: string;
-  complemento?: string;
-  bairro?: string;
-  localidade?: string;
-  uf?: string;
-  erro?: boolean;
-}
-
-const VIACEP_BASE_URL = 'https://viacep.com.br/ws';
 
 export const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
 
@@ -33,25 +23,24 @@ export const lookupCep = async (rawCep: string): Promise<CepAddress> => {
     throw new Error('CEP inválido. Informe 8 dígitos.');
   }
 
-  const response = await fetch(`${VIACEP_BASE_URL}/${cep}/json/`, {
-    headers: { Accept: 'application/json' },
-  });
+  try {
+    const response = await api.get<CepAddress>(`/empresas/lookup/cep/${cep}`);
+    const data = response.data;
 
-  if (!response.ok) {
-    throw new Error('Falha ao consultar CEP.');
+    return {
+      cep: normalizeCep(data?.cep || cep),
+      logradouro: data?.logradouro || '',
+      bairro: data?.bairro || '',
+      cidade: data?.cidade || '',
+      uf: String(data?.uf || '').toUpperCase(),
+      complemento: data?.complemento || '',
+    };
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string } }; message?: string };
+    const message =
+      err.response?.data?.message ||
+      err.message ||
+      'Falha ao consultar CEP.';
+    throw new Error(String(message));
   }
-
-  const data = (await response.json()) as ViaCepResponse;
-  if (data.erro) {
-    throw new Error('CEP não encontrado.');
-  }
-
-  return {
-    cep: normalizeCep(data.cep || cep),
-    logradouro: data.logradouro || '',
-    bairro: data.bairro || '',
-    cidade: data.localidade || '',
-    uf: (data.uf || '').toUpperCase(),
-    complemento: data.complemento || '',
-  };
 };
