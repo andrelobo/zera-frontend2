@@ -34,6 +34,8 @@ const parseLocalidadeUf = (value: string) => {
   };
 };
 
+const onlyDigits = (value: string) => value.replace(/\D/g, '');
+
 const INITIAL_FORM: TomadorSectionData = {
   empresaCnpj: '',
   cpfCnpj: '',
@@ -60,6 +62,7 @@ const TomadorFormPage = () => {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<TomadorSectionData>(INITIAL_FORM);
   const [fallbackEmpresaCnpj, setFallbackEmpresaCnpj] = useState('');
+  const [lastAutofillDoc, setLastAutofillDoc] = useState('');
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['tomador', id],
@@ -103,6 +106,56 @@ const TomadorFormPage = () => {
       whatsapp: '',
     });
   }, [existing]);
+
+  const cpfCnpjDigits = useMemo(() => onlyDigits(form.cpfCnpj), [form.cpfCnpj]);
+  const empresaCnpjBase = useMemo(
+    () => onlyDigits(form.empresaCnpj || fallbackEmpresaCnpj),
+    [form.empresaCnpj, fallbackEmpresaCnpj],
+  );
+
+  const docAutocompleteQuery = useQuery({
+    queryKey: ['tomadores', 'doc-autocomplete', empresaCnpjBase, cpfCnpjDigits],
+    queryFn: () => tomadoresApi.autocomplete({
+      empresaCnpj: empresaCnpjBase,
+      q: cpfCnpjDigits,
+      limit: 10,
+    }),
+    enabled: !isEdit && empresaCnpjBase.length === 14 && cpfCnpjDigits.length >= 11,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (isEdit) return;
+    if (!docAutocompleteQuery.data?.length) return;
+    if (cpfCnpjDigits.length < 11) return;
+    if (lastAutofillDoc === cpfCnpjDigits) return;
+
+    const found = docAutocompleteQuery.data.find((item) => onlyDigits(item.cpfCnpj) === cpfCnpjDigits);
+    if (!found) return;
+
+    setForm((prev) => {
+      const municipio = found.endereco?.municipio || '';
+      const uf = found.endereco?.uf || '';
+      return {
+        ...prev,
+        cpfCnpj: formatDoc(found.cpfCnpj),
+        razaoSocial: found.razaoSocial || prev.razaoSocial,
+        inscricaoMunicipal: found.inscricaoMunicipal || prev.inscricaoMunicipal,
+        email: found.email || prev.email,
+        cep: formatCep(found.endereco?.cep || prev.cep),
+        logradouro: found.endereco?.logradouro || prev.logradouro,
+        numero: found.endereco?.numero || prev.numero,
+        complemento: found.endereco?.complemento || prev.complemento,
+        bairro: found.endereco?.bairro || prev.bairro,
+        localidadeUf: (municipio && uf) ? `${municipio} - ${uf}` : prev.localidadeUf,
+      };
+    });
+    setLastAutofillDoc(cpfCnpjDigits);
+    toast({
+      title: 'Tomador encontrado',
+      description: 'Dados preenchidos automaticamente a partir do CPF/CNPJ informado.',
+    });
+  }, [cpfCnpjDigits, docAutocompleteQuery.data, isEdit, lastAutofillDoc]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
   const cepLookupQuery = useQuery({
@@ -166,6 +219,9 @@ const TomadorFormPage = () => {
   const update = (field: keyof TomadorSectionData, value: string | boolean) => {
     if (field === 'empresaCnpj' || field === 'cpfCnpj') {
       setForm((prev) => ({ ...prev, [field]: formatDoc(String(value)) }));
+      if (field === 'cpfCnpj') {
+        setLastAutofillDoc('');
+      }
       return;
     }
     if (field === 'cep') {
