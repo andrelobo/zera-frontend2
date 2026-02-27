@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Briefcase, Plus, Search, Trash2 } from 'lucide-react';
-import { CNAE_LIST, formatCNAECode } from '@/utils/cnae-lc116';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Briefcase, Loader2, Trash2, Plus, ChevronDown, Search } from 'lucide-react';
+import { CNAE_LIST, formatCNAECode as formatCNAECodeFromList } from '@/utils/cnae-lc116';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -8,10 +8,13 @@ interface CNAEAtividade {
   codigo: number | string;
   descricao: string;
   isPrincipal: boolean;
+  isManual?: boolean;
+  anexo?: string | null;
+  anexoLoading?: boolean;
 }
 
 interface Props {
-  cnpj: string;
+  cnpj?: string;
   cnaeEscolhido: string | null;
   onCnaeEscolhidoChange: (codigo: string, descricao: string) => void;
   rbt12?: number;
@@ -21,128 +24,177 @@ interface Props {
 
 export type { CNAEAtividade };
 
-const CNAESection = ({
-  cnaeEscolhido,
-  onCnaeEscolhidoChange,
-  cnaesLista = [],
-  onCnaesListaChange,
-}: Props) => {
-  const [query, setQuery] = useState('');
+function formatCNAECode(codigo: number | string): string {
+  const str = String(codigo).replace(/\D/g, '').padStart(7, '0');
+  if (str.length >= 7) return `${str.slice(0, 4)}-${str.slice(4, 5)}/${str.slice(5, 7)}`;
+  return str;
+}
 
-  const results = useMemo(() => {
-    const value = query.trim();
-    if (!value) return [];
-    const normalized = value.toLowerCase();
+const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cnaesLista, onCnaesListaChange }) => {
+  const [manualActivities, setManualActivitiesRaw] = useState<CNAEAtividade[]>(cnaesLista || []);
+  const [manualCnae, setManualCnae] = useState('');
+  const [manualCnaeDescricaoIBGE, setManualCnaeDescricaoIBGE] = useState('');
+  const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
+  const cnaeDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cnaesLista && cnaesLista.length > 0 && manualActivities.length === 0) {
+      setManualActivitiesRaw(cnaesLista);
+    }
+  }, [cnaesLista, manualActivities.length]);
+
+  const setManualActivities = useCallback((updater: CNAEAtividade[] | ((prev: CNAEAtividade[]) => CNAEAtividade[])) => {
+    setManualActivitiesRaw((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      onCnaesListaChange?.(next);
+      return next;
+    });
+  }, [onCnaesListaChange]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (cnaeDropdownRef.current && !cnaeDropdownRef.current.contains(e.target as Node)) setShowCnaeDropdown(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const cnaeManualResults = useMemo(() => {
+    const q = manualCnae.trim();
+    if (!q) return [];
+    const normalized = q.toLowerCase();
+    const digits = q.replace(/\D/g, '');
+    const matches: typeof CNAE_LIST = [];
+    for (const entry of CNAE_LIST) {
+      if (matches.length >= 30) break;
+      if (digits && entry.codigo.startsWith(digits)) matches.push(entry);
+      else if (entry.descricao.toLowerCase().includes(normalized)) matches.push(entry);
+    }
+    return matches;
+  }, [manualCnae]);
+
+  const handleRemove = (e: React.MouseEvent, codigo: string) => {
+    e.stopPropagation();
+    setManualActivities((prev) => prev.filter((a) => String(a.codigo) !== codigo));
+    if (cnaeEscolhido === codigo) {
+      const remaining = manualActivities.filter((a) => String(a.codigo) !== codigo);
+      if (remaining.length > 0) onCnaeEscolhidoChange(String(remaining[0].codigo), remaining[0].descricao);
+    }
+  };
+
+  const handleSelect = (atividade: CNAEAtividade) => {
+    onCnaeEscolhidoChange(String(atividade.codigo), atividade.descricao);
+  };
+
+  const handleManualCnaeChange = (value: string) => {
+    setManualCnae(value);
+    setShowCnaeDropdown(value.trim().length > 0);
     const digits = value.replace(/\D/g, '');
-    const existing = new Set(cnaesLista.map((item) => String(item.codigo).replace(/\D/g, '')));
-
-    return CNAE_LIST.filter((entry) => {
-      if (existing.has(entry.codigo)) return false;
-      if (digits) return entry.codigo.startsWith(digits);
-      return entry.descricao.toLowerCase().includes(normalized);
-    }).slice(0, 20);
-  }, [query, cnaesLista]);
-
-  const addCnae = (codigo: string, descricao: string) => {
-    const next = [...cnaesLista, { codigo, descricao, isPrincipal: cnaesLista.length === 0 }];
-    onCnaesListaChange?.(next);
-    if (!cnaeEscolhido) {
-      onCnaeEscolhidoChange(codigo, descricao);
-    }
-    setQuery('');
+    const cnaeEntry = CNAE_LIST.find((e) => e.codigo === digits);
+    setManualCnaeDescricaoIBGE(cnaeEntry?.descricao || '');
   };
 
-  const removeCnae = (codigo: string) => {
-    const next = cnaesLista.filter((item) => String(item.codigo) !== codigo);
-    onCnaesListaChange?.(next);
-    if (cnaeEscolhido === codigo && next.length > 0) {
-      onCnaeEscolhidoChange(String(next[0].codigo), next[0].descricao);
-    }
-  };
+  const handleAddManual = () => {
+    const cleaned = manualCnae.replace(/\D/g, '');
+    if (cleaned.length < 7) return;
+    if (manualActivities.some((a) => String(a.codigo).replace(/\D/g, '') === cleaned)) return;
 
-  const selectPrincipal = (codigo: string, descricao: string) => {
-    const next = cnaesLista.map((item) => ({
-      ...item,
-      isPrincipal: String(item.codigo) === codigo,
-    }));
-    onCnaesListaChange?.(next);
-    onCnaeEscolhidoChange(codigo, descricao);
+    const nova: CNAEAtividade = {
+      codigo: cleaned,
+      descricao: manualCnaeDescricaoIBGE || 'Inclusão manual',
+      isPrincipal: false,
+      isManual: true,
+      anexo: null,
+      anexoLoading: false,
+    };
+
+    setManualActivities((prev) => [...prev, nova]);
+    setManualCnae('');
+    setManualCnaeDescricaoIBGE('');
+    if (!cnaeEscolhido) onCnaeEscolhidoChange(cleaned, nova.descricao);
   };
 
   return (
     <div className="section-card p-3">
       <h2 className="section-title text-sm mb-2">
         <Briefcase className="w-4 h-4 text-primary" />
-        Código CNAE
+        Código Cnae
       </h2>
 
       <div className="space-y-2">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Digite código ou descrição CNAE"
-              className="pl-8"
-            />
+        <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start p-2 ${manualCnae ? 'radio-card-selected' : ''}`}>
+          <div className="text-xs font-bold leading-tight flex items-center gap-1 mb-1 text-primary"><Search className="w-3.5 h-3.5" />Pesquise</div>
+          <div className="w-full space-y-1">
+            <div className="relative">
+              <Input
+                placeholder="Ex: 6201-5/00 ou 6201500"
+                value={manualCnae}
+                onChange={(e) => handleManualCnaeChange(e.target.value)}
+                onFocus={() => { if (manualCnae.trim()) setShowCnaeDropdown(true); }}
+                className="h-8 text-sm pr-8"
+              />
+              <button type="button" onClick={() => setShowCnaeDropdown((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              {showCnaeDropdown && cnaeManualResults.length > 0 && (
+                <div className="absolute z-30 top-full mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
+                  {cnaeManualResults.map((entry) => (
+                    <button key={entry.codigo} type="button" onClick={() => { handleManualCnaeChange(entry.codigo); setShowCnaeDropdown(false); }} className="w-full text-left px-3 py-1.5 border-b border-border/50 last:border-b-0 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-semibold text-primary shrink-0">{formatCNAECodeFromList(entry.codigo)}</span>
+                        <span className="text-xs text-foreground/70 truncate flex-1">{entry.descricao}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {manualCnaeDescricaoIBGE && <p className="text-xs text-foreground/70 leading-snug">{manualCnaeDescricaoIBGE}</p>}
           </div>
         </div>
 
-        {results.length > 0 && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            {results.map((entry) => (
-              <button
-                key={entry.codigo}
-                type="button"
-                onClick={() => addCnae(entry.codigo, entry.descricao)}
-                className="w-full flex items-center justify-between gap-2 p-2 text-left border-b border-border last:border-b-0 hover:bg-muted/50"
-              >
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-primary font-mono">
-                    {formatCNAECode(entry.codigo)}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">{entry.descricao}</p>
-                </div>
-                <Button type="button" size="sm" variant="ghost" className="shrink-0">
-                  <Plus className="w-3.5 h-3.5" />
-                </Button>
-              </button>
-            ))}
+        {manualCnae.replace(/\D/g, '') && (
+          <div className="flex justify-end">
+            <Button type="button" size="sm" onClick={handleAddManual} disabled={!manualCnae.replace(/\D/g, '')} className="text-xs gap-1.5">
+              <Plus className="w-3.5 h-3.5" /> Adicionar
+            </Button>
           </div>
         )}
       </div>
 
-      {cnaesLista.length > 0 && (
-        <div className="mt-3 rounded-lg border border-border overflow-hidden">
-          {cnaesLista.map((item) => {
-            const codigo = String(item.codigo);
-            const selected = cnaeEscolhido === codigo;
-            return (
-              <div
-                key={codigo}
-                className={`flex items-center gap-2 p-2 border-b border-border last:border-b-0 ${selected ? 'bg-primary/5' : ''}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => selectPrincipal(codigo, item.descricao)}
-                  className="flex-1 min-w-0 text-left"
-                >
-                  <p className="text-xs">
-                    <span className="font-mono font-semibold text-primary">{formatCNAECode(codigo)}</span>
-                    <span className="text-muted-foreground"> - {item.descricao}</span>
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeCnae(codigo)}
-                  className="p-1 rounded hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            );
-          })}
+      {manualActivities.length > 0 && (
+        <div className="mt-3">
+          <p className="text-[10px] tracking-wider text-destructive font-medium mb-1.5">Lista Cnae</p>
+          <div className="border border-border rounded-lg divide-y divide-border">
+            {manualActivities.map((atividade) => {
+              const codigo = String(atividade.codigo);
+              const isSelected = cnaeEscolhido === codigo;
+              return (
+                <div key={codigo} className={`group flex items-center gap-2 px-2.5 py-1.5 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                  <button type="button" onClick={() => handleSelect(atividade)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-primary' : 'border-muted-foreground/40'}`}>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                    </div>
+                    <p className="text-xs text-foreground leading-snug truncate">
+                      {atividade.isManual && <span className="text-muted-foreground font-medium">Manual </span>}
+                      <span className="font-semibold text-primary font-mono">{formatCNAECode(atividade.codigo)}</span>
+                      <span className="text-muted-foreground"> - </span>
+                      <span>{atividade.descricao}</span>
+                      {atividade.anexoLoading && <span className="text-muted-foreground"> - <Loader2 className="w-3 h-3 animate-spin inline" /></span>}
+                      {!atividade.anexoLoading && atividade.anexo !== undefined && (
+                        <span className={atividade.anexo?.toUpperCase().includes('III') ? 'text-green-600' : 'text-destructive'}>
+                          {' - '}{atividade.anexo ? `Anexo ${atividade.anexo}` : 'Não encontrado'}
+                        </span>
+                      )}
+                    </p>
+                  </button>
+                  <button type="button" onClick={(e) => handleRemove(e, codigo)} title="Remover" className="shrink-0 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
