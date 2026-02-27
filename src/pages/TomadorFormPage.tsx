@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
@@ -35,6 +34,17 @@ const parseLocalidadeUf = (value: string) => {
 };
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 10) {
+    return digits
+      .replace(/^(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d)(\d{4})$/, '$1-$2');
+  }
+  return digits
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d)(\d{4})$/, '$1-$2');
+};
 
 const INITIAL_FORM: TomadorSectionData = {
   empresaCnpj: '',
@@ -228,6 +238,10 @@ const TomadorFormPage = () => {
       setForm((prev) => ({ ...prev, cep: formatCep(String(value)) }));
       return;
     }
+    if (field === 'whatsapp') {
+      setForm((prev) => ({ ...prev, whatsapp: formatPhone(String(value)) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [field]: value as never }));
   };
 
@@ -255,17 +269,12 @@ const TomadorFormPage = () => {
         <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Tomador' : 'Novo Tomador'}</h1>
       </div>
 
-      <Alert>
-        <AlertDescription>
-          Cadastro e listagem são telas separadas. Esta página é exclusiva para criação/edição.
-        </AlertDescription>
-      </Alert>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <TomadorSection
           data={form}
           onChange={update}
           cepLoading={cepLookupQuery.isFetching}
+          cnpjLoading={docAutocompleteQuery.isFetching}
         />
 
         <div className="flex justify-end">

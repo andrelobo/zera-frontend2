@@ -1,16 +1,4 @@
-import { Building2, FileText, Loader2, Mail, MapPin } from 'lucide-react';
-
-const formatPhone = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 10) {
-    return digits
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d)(\d{4})$/, '$1-$2');
-  }
-  return digits
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d)(\d{4})$/, '$1-$2');
-};
+import { Building2, FileText, Loader2, MapPin } from 'lucide-react';
 
 export interface TomadorSectionData {
   empresaCnpj: string;
@@ -35,9 +23,10 @@ interface TomadorSectionProps {
   data: TomadorSectionData;
   onChange: (field: keyof TomadorSectionData, value: string | boolean) => void;
   cepLoading?: boolean;
+  cnpjLoading?: boolean;
 }
 
-const TomadorSection = ({ data, onChange, cepLoading }: TomadorSectionProps) => {
+const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSectionProps) => {
   return (
     <div className="section-card">
       <h2 className="section-title">
@@ -48,13 +37,20 @@ const TomadorSection = ({ data, onChange, cepLoading }: TomadorSectionProps) => 
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-4">
         <div>
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
-          <input
-            className="field-input"
-            placeholder="00.000.000/0000-00"
-            value={data.cpfCnpj}
-            onChange={(e) => onChange('cpfCnpj', e.target.value)}
-            maxLength={18}
-          />
+          <div className="flex gap-2">
+            <input
+              className="field-input"
+              placeholder="00.000.000/0000-00"
+              value={data.cpfCnpj}
+              onChange={(e) => onChange('cpfCnpj', e.target.value)}
+              maxLength={18}
+            />
+            {cnpjLoading && (
+              <div className="flex items-center px-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -176,10 +172,7 @@ const TomadorSection = ({ data, onChange, cepLoading }: TomadorSectionProps) => 
             />
           </div>
           <div>
-            <label className="field-label flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5" />
-              E-mail
-            </label>
+            <label className="field-label">E-mail</label>
             <input
               className="field-input"
               type="email"
@@ -194,7 +187,7 @@ const TomadorSection = ({ data, onChange, cepLoading }: TomadorSectionProps) => 
               className="field-input"
               placeholder="(00) 00000-0000"
               value={data.whatsapp}
-              onChange={(e) => onChange('whatsapp', formatPhone(e.target.value))}
+              onChange={(e) => onChange('whatsapp', e.target.value)}
               maxLength={15}
             />
           </div>
