@@ -3,8 +3,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, Save, Settings } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -532,26 +532,40 @@ const EmpresaFormPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in w-full">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold tracking-tight">O Prestador</h1>
-      </div>
+    <div className="min-h-screen flex w-full">
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-card border-b border-border sticky top-0 z-10 px-4 sm:px-6 py-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 shrink-0">
+            <SidebarTrigger />
+            <h2 className="text-base font-semibold text-foreground">O Prestador</h2>
+          </div>
 
-      {showResumoTicker && (
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <ResumoTributario
-            rbt12={rbt12Number}
-            cnaeAnexo="III"
-            calculo={simplesCalculo}
-            visible
-          />
-        </div>
-      )}
+          {showResumoTicker && (
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <ResumoTributario
+                rbt12={rbt12Number}
+                cnaeAnexo="III"
+                calculo={simplesCalculo}
+                visible
+              />
+            </div>
+          )}
 
-      <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending}
+              className="flex items-center gap-2 text-sm py-2 btn-primary"
+            >
+              {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span className="hidden sm:inline">SALVAR</span>
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-2">
+      <form className="space-y-4">
         {prestadorSubTab === 'cadastro' && (
           <div className="space-y-2">
             <EmpresaCard
@@ -600,7 +614,7 @@ const EmpresaFormPage = () => {
         )}
 
         {prestadorSubTab === 'regime' && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             <RegimeEParametrosSection
               regime={regimeTela}
               onRegimeChange={(regime) => update('regimeTributario', fromTelaRegime(regime))}
@@ -733,13 +747,9 @@ const EmpresaFormPage = () => {
           </div>
         )}
 
-        <div className="flex justify-end pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {isEdit ? 'Salvar' : 'Cadastrar'}
-          </Button>
-        </div>
       </form>
+        </main>
+      </div>
     </div>
   );
 };

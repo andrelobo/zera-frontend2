@@ -2,7 +2,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2,
   ChevronDown,
-  ClipboardList,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -38,8 +37,8 @@ import ThemeToggle from '@/components/ThemeToggle';
 type ActiveModule = 'dashboard' | 'prestador' | 'tomador' | 'emissao' | 'usuarios';
 type PrestadorSubItem = 'cadastro' | 'regime' | 'parametros';
 
-const prestadorSubItems: Array<{ key: PrestadorSubItem; label: string; icon: typeof ClipboardList; to: string }> = [
-  { key: 'cadastro', label: 'Dados Cadastrais', icon: ClipboardList, to: '/empresas/nova?secao=cadastro' },
+const prestadorSubItems: Array<{ key: PrestadorSubItem; label: string; icon: typeof Building2; to: string }> = [
+  { key: 'cadastro', label: 'Dados Cadastrais', icon: Building2, to: '/empresas/nova?secao=cadastro' },
   { key: 'regime', label: 'Regime Tributário', icon: Landmark, to: '/empresas/nova?secao=regime' },
   { key: 'parametros', label: 'Parâmetros Fiscais', icon: Settings, to: '/empresas/nova?secao=parametros' },
 ];
@@ -214,40 +213,44 @@ function AppSidebar() {
 const AppLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEmpresaRoute = location.pathname.startsWith('/empresas');
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex h-14 items-center border-b px-4 lg:px-6">
-            <SidebarTrigger />
-            <div className="ml-auto flex items-center gap-2">
-              <ThemeToggle />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm hover:bg-accent transition-colors">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">
-                      <User className="h-3.5 w-3.5" />
-                    </div>
-                    <span className="hidden sm:block max-w-36 truncate">
-                      {user?.name || user?.email || 'Usuário'}
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate('/account')}>
-                    <User className="mr-2 h-4 w-4" /> Minha Conta
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" /> Sair
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </header>
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
+          {!isEmpresaRoute && (
+            <header className="flex h-14 items-center border-b px-4 lg:px-6">
+              <SidebarTrigger />
+              <div className="ml-auto flex items-center gap-2">
+                <ThemeToggle />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm hover:bg-accent transition-colors">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted">
+                        <User className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="hidden sm:block max-w-36 truncate">
+                        {user?.name || user?.email || 'Usuário'}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate('/account')}>
+                      <User className="mr-2 h-4 w-4" /> Minha Conta
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="mr-2 h-4 w-4" /> Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </header>
+          )}
+          <main className={`flex-1 overflow-y-auto scrollbar-thin ${isEmpresaRoute ? '' : 'p-4 lg:p-6'}`}>
             <Outlet />
           </main>
         </div>

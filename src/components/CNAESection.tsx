@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Briefcase, Loader2, Trash2, Plus, ChevronDown, Search } from 'lucide-react';
+import { Briefcase, Loader2, Trash2, Plus, ChevronDown, Search, ShieldCheck, ShieldX } from 'lucide-react';
 import { CNAE_LIST, formatCNAECode as formatCNAECodeFromList } from '@/utils/cnae-lc116';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
   const [manualCnae, setManualCnae] = useState('');
   const [manualCnaeDescricaoIBGE, setManualCnaeDescricaoIBGE] = useState('');
   const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
+  const [anexoCache, setAnexoCache] = useState<Record<string, string | null>>({});
   const cnaeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,6 +74,19 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
     return matches;
   }, [manualCnae]);
 
+  useEffect(() => {
+    if (cnaeManualResults.length === 0) return;
+    const toFetch = cnaeManualResults.filter((e) => !(e.codigo in anexoCache)).map((e) => e.codigo);
+    if (toFetch.length === 0) return;
+
+    // Sem integração externa aqui: mantém layout idêntico e marca cache com valor nulo.
+    const newCache: Record<string, string | null> = {};
+    for (const code of toFetch) {
+      newCache[code] = null;
+    }
+    setAnexoCache((prev) => ({ ...prev, ...newCache }));
+  }, [cnaeManualResults, anexoCache]);
+
   const handleRemove = (e: React.MouseEvent, codigo: string) => {
     e.stopPropagation();
     setManualActivities((prev) => prev.filter((a) => String(a.codigo) !== codigo));
@@ -99,15 +113,15 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
     if (cleaned.length < 7) return;
     if (manualActivities.some((a) => String(a.codigo).replace(/\D/g, '') === cleaned)) return;
 
+    const anexo = cleaned in anexoCache ? anexoCache[cleaned] : null;
     const nova: CNAEAtividade = {
       codigo: cleaned,
       descricao: manualCnaeDescricaoIBGE || 'Inclusão manual',
       isPrincipal: false,
       isManual: true,
-      anexo: null,
+      anexo,
       anexoLoading: false,
     };
-
     setManualActivities((prev) => [...prev, nova]);
     setManualCnae('');
     setManualCnaeDescricaoIBGE('');
@@ -143,6 +157,16 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-semibold text-primary shrink-0">{formatCNAECodeFromList(entry.codigo)}</span>
                         <span className="text-xs text-foreground/70 truncate flex-1">{entry.descricao}</span>
+                        {entry.codigo in anexoCache && (() => {
+                          const anexo = anexoCache[entry.codigo];
+                          const isIII = anexo?.toUpperCase().includes('III');
+                          return (
+                            <span className={`flex items-center gap-0.5 text-[10px] px-1 py-0.5 rounded font-medium shrink-0 ${isIII ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-destructive bg-destructive/10'}`}>
+                              {isIII ? <ShieldCheck className="w-2.5 h-2.5" /> : <ShieldX className="w-2.5 h-2.5" />}
+                              {anexo || '?'}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </button>
                   ))}
