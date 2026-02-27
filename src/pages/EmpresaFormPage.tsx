@@ -254,9 +254,9 @@ const EmpresaFormPage = () => {
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
-    cnaeFiscal: '', cnaeFiscalDescricao: '', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
+    cnaeFiscal: '6920601', cnaeFiscalDescricao: 'Atividades de contabilidade', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
-    regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '',
+    regimeTributario: 'simples_nacional', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '120.000,00',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
   });
   const initialSubTab = (() => {
@@ -498,10 +498,11 @@ const EmpresaFormPage = () => {
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
   const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
   const regimeTela = toTelaRegime(form.regimeTributario);
-  const showResumoTicker = (
-    regimeTela === 'simples'
-    || form.opcaoPeloSimples === 'true'
-  ) && simplesCalculo.valido;
+  const resumoFallbackRbt12 = 120000;
+  const resumoRbt12 = rbt12Number > 0 ? rbt12Number : resumoFallbackRbt12;
+  const resumoCalculo = simplesCalculo.valido
+    ? simplesCalculo
+    : calcularSimplesAnexoIII(resumoRbt12, 'III');
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -540,16 +541,14 @@ const EmpresaFormPage = () => {
             <h2 className="text-base font-semibold text-foreground">O Prestador</h2>
           </div>
 
-          {showResumoTicker && (
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <ResumoTributario
-                rbt12={rbt12Number}
-                cnaeAnexo="III"
-                calculo={simplesCalculo}
-                visible
-              />
-            </div>
-          )}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <ResumoTributario
+              rbt12={resumoRbt12}
+              cnaeAnexo="III"
+              calculo={resumoCalculo}
+              visible
+            />
+          </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <button
