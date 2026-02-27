@@ -1,17 +1,6 @@
 import React from 'react';
 import { Mail } from 'lucide-react';
-
-const formatPhone = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 10) {
-    return digits
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d)(\d{4})$/, '$1-$2');
-  }
-  return digits
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d)(\d{4})$/, '$1-$2');
-};
+import { formatPhone } from '@/utils/validators';
 
 interface Props {
   email: string;
