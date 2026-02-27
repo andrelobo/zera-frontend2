@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, ClipboardList, Landmark, Loader2, Save, Settings } from 'lucide-react';
+import { ArrowLeft, Building2, Landmark, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -61,9 +61,9 @@ type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
 const PRESTADOR_SUB_TABS: Array<{
   key: PrestadorSubTab;
   label: string;
-  icon: typeof ClipboardList;
+  icon: typeof Building2;
 }> = [
-  { key: 'cadastro', label: 'Dados Cadastrais', icon: ClipboardList },
+  { key: 'cadastro', label: 'Dados Cadastrais', icon: Building2 },
   { key: 'regime', label: 'Regime Tributário', icon: Landmark },
   { key: 'parametros', label: 'Parâmetros Fiscais', icon: Settings },
 ];
