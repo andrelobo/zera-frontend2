@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Loader2, Save, Settings } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -533,12 +533,7 @@ const EmpresaFormPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <span className="section-title-icon section-title-icon-primary">
-            <Building2 className="h-4 w-4" />
-          </span>
-          {isEdit ? 'Editar Empresa' : 'Nova Empresa'}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Empresa' : 'Nova Empresa'}</h1>
       </div>
 
       {regimeTela === 'simples' && simplesCalculo.valido && (
