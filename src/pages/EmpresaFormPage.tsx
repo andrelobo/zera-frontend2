@@ -533,7 +533,7 @@ const EmpresaFormPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Empresa' : 'Nova Empresa'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">O Prestador</h1>
       </div>
 
       {regimeTela === 'simples' && simplesCalculo.valido && (
