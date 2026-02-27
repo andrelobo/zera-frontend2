@@ -1,3 +1,4 @@
+import React from 'react';
 import { BarChart3 } from 'lucide-react';
 import { type CalculoSimplesResult, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 
@@ -8,16 +9,16 @@ interface Props {
   visible: boolean;
 }
 
-const TickerItem = ({ label, value }: { label: string; value: string }) => (
+const TickerItem: React.FC<{ label: string; value: string; highlight?: boolean }> = ({ label, value }) => (
   <div className="flex items-center gap-1.5 px-3 py-0.5 whitespace-nowrap bg-primary/10 rounded">
     <span className="text-[9px] uppercase tracking-wide text-primary">{label}</span>
     <span className="text-xs font-bold text-primary">{value}</span>
   </div>
 );
 
-const Separator = () => <span className="text-muted-foreground/30 select-none">|</span>;
+const Separator = () => <span className="text-muted-foreground/30 select-none">│</span>;
 
-const ResumoTributario = ({ rbt12, cnaeAnexo, calculo, visible }: Props) => {
+const ResumoTributario: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, visible }) => {
   if (!visible || !calculo.valido || !calculo.faixa) return null;
 
   const items = (
@@ -27,7 +28,7 @@ const ResumoTributario = ({ rbt12, cnaeAnexo, calculo, visible }: Props) => {
         <span className="text-[10px] font-semibold text-primary uppercase tracking-wider whitespace-nowrap">Analytics</span>
       </div>
       <Separator />
-      <TickerItem label="Anexo" value={cnaeAnexo || 'III'} />
+      <TickerItem label="Anexo" value={cnaeAnexo || 'III'} highlight />
       <Separator />
       <TickerItem label="Faixa" value={`${calculo.faixa.faixa}ª`} />
       <Separator />
@@ -38,7 +39,7 @@ const ResumoTributario = ({ rbt12, cnaeAnexo, calculo, visible }: Props) => {
         <span className="text-xs font-bold text-destructive">{formatPercent(calculo.issReferencia)}</span>
       </div>
       <Separator />
-      <TickerItem label="Alíq. Efetiva" value={formatPercent(calculo.aliquotaEfetiva)} />
+      <TickerItem label="Alíq. Efetiva" value={formatPercent(calculo.aliquotaEfetiva)} highlight />
     </>
   );
 

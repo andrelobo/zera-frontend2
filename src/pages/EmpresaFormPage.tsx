@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Landmark, Loader2, Save, Settings } from 'lucide-react';
+import { ArrowLeft, Building2, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -15,6 +15,7 @@ import TabelaAnexoIII from '@/components/TabelaAnexoIII';
 import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
+import ResumoTributario from '@/components/ResumoTributario';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
 import type { Empresa } from '@/types/api';
@@ -57,16 +58,6 @@ interface EmpresaFormData {
 }
 
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
-
-const PRESTADOR_SUB_TABS: Array<{
-  key: PrestadorSubTab;
-  label: string;
-  icon: typeof Building2;
-}> = [
-  { key: 'cadastro', label: 'Dados Cadastrais', icon: Building2 },
-  { key: 'regime', label: 'Regime Tributário', icon: Landmark },
-  { key: 'parametros', label: 'Parâmetros Fiscais', icon: Settings },
-];
 
 const ToggleSwitch = ({
   checked,
@@ -250,7 +241,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
@@ -453,9 +444,17 @@ const EmpresaFormPage = () => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
-  const handlePrestadorChange = (field: keyof EmpresaFormData, value: string) => {
+  const handlePrestadorChange = (field: string, value: string) => {
     if (field !== 'cnpj') {
-      update(field, value);
+      if (field === 'nomeEmpresarial') {
+        update('razaoSocial', value);
+        return;
+      }
+      if (field === 'logradouro') {
+        update('endereco', value);
+        return;
+      }
+      update(field as keyof EmpresaFormData, value);
       return;
     }
     const formatted = formatCnpj(value);
@@ -542,28 +541,18 @@ const EmpresaFormPage = () => {
         </h1>
       </div>
 
-      <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-        <div className="section-card">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {PRESTADOR_SUB_TABS.map((subTab) => (
-              <button
-                key={subTab.key}
-                type="button"
-                onClick={() => {
-                  setPrestadorSubTab(subTab.key);
-                  setSearchParams({ secao: subTab.key });
-                }}
-                className={`radio-card text-left ${
-                  prestadorSubTab === subTab.key ? 'radio-card-selected' : ''
-                }`}
-              >
-                <subTab.icon className="w-4 h-4 shrink-0 text-primary" />
-                <span className="text-sm font-medium text-foreground">{subTab.label}</span>
-              </button>
-            ))}
-          </div>
+      {regimeTela === 'simples' && simplesCalculo.valido && (
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <ResumoTributario
+            rbt12={rbt12Number}
+            cnaeAnexo="III"
+            calculo={simplesCalculo}
+            visible
+          />
         </div>
+      )}
 
+      <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
         {prestadorSubTab === 'cadastro' && (
           <div className="space-y-2">
             <EmpresaCard
@@ -574,8 +563,9 @@ const EmpresaFormPage = () => {
                 inscricaoMunicipal: form.inscricaoMunicipal,
                 inscricaoEstadual: form.inscricaoEstadual,
                 suframa: form.suframa,
+                dataOpcaoSimples: form.dataOpcaoPeloSimples,
               }}
-              onFieldChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
+              onFieldChange={(field, value) => handlePrestadorChange(field, value)}
               onCNPJChange={(value) => handlePrestadorChange('cnpj', value)}
               loadingCNPJ={previewMutation.isPending}
               simplesStatus={form.opcaoPeloSimples === 'true' ? true : form.opcaoPeloSimples === 'false' ? false : null}
@@ -591,7 +581,7 @@ const EmpresaFormPage = () => {
               localidadeUf={form.cidade && form.uf ? `${form.cidade} - ${form.uf}` : ''}
               onFieldChange={(field, value) => {
                 if (field !== 'localidadeUf') {
-                  handlePrestadorChange(field as keyof EmpresaFormData, value);
+                  handlePrestadorChange(field, value);
                   return;
                 }
                 const [cidade, uf] = value.split('-').map((part) => part.trim());
@@ -605,7 +595,7 @@ const EmpresaFormPage = () => {
             <ContatoCard
               email={form.email}
               whatsapp={form.whatsapp}
-              onFieldChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
+              onFieldChange={(field, value) => handlePrestadorChange(field, value)}
             />
           </div>
         )}
