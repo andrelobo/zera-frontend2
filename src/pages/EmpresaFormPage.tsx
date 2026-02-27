@@ -498,6 +498,10 @@ const EmpresaFormPage = () => {
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
   const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
   const regimeTela = toTelaRegime(form.regimeTributario);
+  const showResumoTicker = (
+    regimeTela === 'simples'
+    || form.opcaoPeloSimples === 'true'
+  ) && simplesCalculo.valido;
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -536,7 +540,7 @@ const EmpresaFormPage = () => {
         <h1 className="text-2xl font-bold tracking-tight">O Prestador</h1>
       </div>
 
-      {regimeTela === 'simples' && simplesCalculo.valido && (
+      {showResumoTicker && (
         <div className="flex-1 min-w-0 overflow-hidden">
           <ResumoTributario
             rbt12={rbt12Number}
