@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -326,4 +326,24 @@
     padding: 0;
     margin: 0;
   }
+}
+
+/* Ticker animation - stock-style scrolling */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+}
+
+.animate-ticker {
+  animation: ticker-scroll 20s linear infinite;
+  flex-shrink: 0;
+}
+
+.ticker-track:hover .animate-ticker {
+  animation-play-state: paused;
 }
