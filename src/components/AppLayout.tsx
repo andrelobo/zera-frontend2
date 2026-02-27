@@ -33,6 +33,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import ThemeToggle from '@/components/ThemeToggle';
+import ResumoTributario from '@/components/ResumoTributario';
+import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 
 type ActiveModule = 'dashboard' | 'prestador' | 'tomador' | 'emissao' | 'usuarios';
 type PrestadorSubItem = 'cadastro' | 'regime' | 'parametros';
@@ -215,6 +217,8 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isEmpresaRoute = location.pathname.startsWith('/empresas');
+  const tickerRbt12 = 120000;
+  const tickerCalculo = calcularSimplesAnexoIII(tickerRbt12, 'III');
 
   return (
     <SidebarProvider>
@@ -249,6 +253,16 @@ const AppLayout = () => {
                 </DropdownMenu>
               </div>
             </header>
+          )}
+          {!isEmpresaRoute && (
+            <div className="px-4 lg:px-6 py-2">
+              <ResumoTributario
+                rbt12={tickerRbt12}
+                cnaeAnexo="III"
+                calculo={tickerCalculo}
+                visible
+              />
+            </div>
           )}
           <main className={`flex-1 overflow-y-auto scrollbar-thin ${isEmpresaRoute ? '' : 'p-4 lg:p-6'}`}>
             <Outlet />
