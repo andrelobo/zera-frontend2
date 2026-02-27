@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, ClipboardList, Landmark, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
-import PrestadorSection from '@/components/PrestadorSection';
-import RegimeEParametrosSection from '@/components/RegimeEParametrosSection';
+import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
 import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
 import SimplesNacionalSection from '@/components/SimplesNacionalSection';
 import CNAESection, { type CNAEAtividade } from '@/components/CNAESection';
 import TabelaAnexoIII from '@/components/TabelaAnexoIII';
+import EmpresaCard from '@/components/prestador/EmpresaCard';
+import EnderecoCard from '@/components/prestador/EnderecoCard';
+import ContatoCard from '@/components/prestador/ContatoCard';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
 import type { Empresa } from '@/types/api';
@@ -109,6 +111,20 @@ const fromBooleanSelectValue = (value: string): boolean | null | undefined => {
   if (value === 'true') return true;
   if (value === 'false') return false;
   return undefined;
+};
+
+const toTelaRegime = (regime: EmpresaFormData['regimeTributario']): RegimeTributarioTela => {
+  if (regime === 'simples_nacional') return 'simples';
+  if (regime === 'lucro_presumido') return 'presumido';
+  if (regime === 'lucro_real') return 'real';
+  return null;
+};
+
+const fromTelaRegime = (regime: RegimeTributarioTela): EmpresaFormData['regimeTributario'] => {
+  if (regime === 'simples') return 'simples_nacional';
+  if (regime === 'presumido') return 'lucro_presumido';
+  if (regime === 'real') return 'lucro_real';
+  return '';
 };
 
 const formatCnpj = (value: string) => {
@@ -482,6 +498,7 @@ const EmpresaFormPage = () => {
 
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
   const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
+  const regimeTela = toTelaRegime(form.regimeTributario);
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -548,58 +565,63 @@ const EmpresaFormPage = () => {
         </div>
 
         {prestadorSubTab === 'cadastro' && (
-          <PrestadorSection
-            data={{
-              razaoSocial: form.razaoSocial,
-              nomeFantasia: form.nomeFantasia,
-              cnpj: form.cnpj,
-              inscricaoMunicipal: form.inscricaoMunicipal,
-              inscricaoEstadual: form.inscricaoEstadual,
-              suframa: form.suframa,
-              situacaoCadastral: form.situacaoCadastral,
-              dataSituacaoCadastral: form.dataSituacaoCadastral,
-              dataInicioAtividade: form.dataInicioAtividade,
-              porte: form.porte,
-              naturezaJuridica: form.naturezaJuridica,
-              capitalSocial: form.capitalSocial,
-              opcaoPeloSimples: form.opcaoPeloSimples,
-              cep: form.cep,
-              endereco: form.endereco,
-              numero: form.numero,
-              complemento: form.complemento,
-              bairro: form.bairro,
-              cidade: form.cidade,
-              uf: form.uf,
-              email: form.email,
-              telefone: form.telefone,
-              whatsapp: form.whatsapp,
-            }}
-            isEdit={isEdit}
-            loadingCnpj={previewMutation.isPending}
-            onAutocompleteByCnpj={handleAutocompleteByCnpj}
-            onChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
-            onCepChange={(value) => update('cep', formatCep(value))}
-            cepHint={cepDigits.length > 0 && cepDigits.length < 8 ? 'Informe os 8 dígitos do CEP.' : undefined}
-            cepLoading={cepLookupQuery.isFetching}
-            cepError={cepLookupQuery.isError
-              ? cepLookupQuery.error instanceof Error
-                ? cepLookupQuery.error.message
-                : 'Falha ao consultar CEP.'
-              : undefined}
-          />
+          <div className="space-y-2">
+            <EmpresaCard
+              data={{
+                cnpj: form.cnpj,
+                nomeEmpresarial: form.razaoSocial,
+                nomeFantasia: form.nomeFantasia,
+                inscricaoMunicipal: form.inscricaoMunicipal,
+                inscricaoEstadual: form.inscricaoEstadual,
+                suframa: form.suframa,
+              }}
+              onFieldChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
+              onCNPJChange={(value) => handlePrestadorChange('cnpj', value)}
+              loadingCNPJ={previewMutation.isPending}
+              simplesStatus={form.opcaoPeloSimples === 'true' ? true : form.opcaoPeloSimples === 'false' ? false : null}
+              onSimplesToggle={(value) => update('opcaoPeloSimples', value ? 'true' : 'false')}
+            />
+
+            <EnderecoCard
+              cep={form.cep}
+              logradouro={form.endereco}
+              numero={form.numero}
+              complemento={form.complemento}
+              bairro={form.bairro}
+              localidadeUf={form.cidade && form.uf ? `${form.cidade} - ${form.uf}` : ''}
+              onFieldChange={(field, value) => {
+                if (field !== 'localidadeUf') {
+                  handlePrestadorChange(field as keyof EmpresaFormData, value);
+                  return;
+                }
+                const [cidade, uf] = value.split('-').map((part) => part.trim());
+                update('cidade', cidade || '');
+                update('uf', (uf || '').toUpperCase());
+              }}
+              onCEPChange={(value) => update('cep', formatCep(value))}
+              loadingCEP={cepLookupQuery.isFetching}
+            />
+
+            <ContatoCard
+              email={form.email}
+              whatsapp={form.whatsapp}
+              onFieldChange={(field, value) => handlePrestadorChange(field as keyof EmpresaFormData, value)}
+            />
+          </div>
         )}
 
         {prestadorSubTab === 'regime' && (
           <div className="space-y-4">
             <RegimeEParametrosSection
-              regimeTributario={form.regimeTributario}
-              aliquotaSimplesNacional={form.aliquotaSimplesNacional}
-              apuracaoSimplesNacional={form.apuracaoSimplesNacional}
-              opcaoPeloSimples={form.opcaoPeloSimples}
-              opcaoPeloMei={form.opcaoPeloMei}
-              dataOpcaoPeloSimples={form.dataOpcaoPeloSimples}
-              dataExclusaoDoSimples={form.dataExclusaoDoSimples}
-              onChange={(field, value) => update(field as keyof EmpresaFormData, value)}
+              regime={regimeTela}
+              onRegimeChange={(regime) => update('regimeTributario', fromTelaRegime(regime))}
+              informarAliquotaSN={form.aliquotaSimplesNacional.trim().length > 0}
+              onInformarAliquotaChange={(value) => update('aliquotaSimplesNacional', value ? form.aliquotaSimplesNacional || '0,00' : '')}
+              aliquotaSN={form.aliquotaSimplesNacional}
+              onAliquotaSNChange={(value) => update('aliquotaSimplesNacional', value)}
+              regimeApuracaoSNParametro={form.apuracaoSimplesNacional.trim().length > 0}
+              onRegimeApuracaoSNParametroChange={(value) => update('apuracaoSimplesNacional', value ? 'MENSAL' : '')}
+              onAutosave={() => undefined}
             />
 
             <CNAESection
@@ -617,7 +639,7 @@ const EmpresaFormPage = () => {
               onCnaesListaChange={handleCnaesRegimeChange}
             />
 
-            {form.regimeTributario === 'simples_nacional' && (
+            {regimeTela === 'simples' && (
               <>
                 <SimplesNacionalSection
                   cnaePrincipal={String(form.cnaeFiscal || '')}
@@ -637,7 +659,7 @@ const EmpresaFormPage = () => {
 
         {prestadorSubTab === 'parametros' && (
           <div className="space-y-2">
-            {form.regimeTributario === 'simples_nacional' && (
+            {regimeTela === 'simples' && (
               <div className="section-card p-3">
                 <h2 className="section-title text-sm mb-2">
                   <Settings className="w-4 h-4 text-primary" />
@@ -678,20 +700,20 @@ const EmpresaFormPage = () => {
               </div>
             )}
 
-            {!form.regimeTributario && (
+            {!regimeTela && (
               <div className="section-card flex items-center justify-center py-8 text-muted-foreground text-sm">
                 Selecione um regime tributário na aba "Regime Tributário" para configurar os parâmetros.
               </div>
             )}
 
-            {form.regimeTributario && form.regimeTributario !== 'simples_nacional' && (
+            {regimeTela && regimeTela !== 'simples' && (
               <div className="section-card">
                 <h2 className="section-title">
                   <Settings className="w-5 h-5 text-primary" />
                   Parâmetros Federais
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Configurações federais para {form.regimeTributario === 'lucro_presumido' ? 'Lucro Presumido' : 'Lucro Real'} serão disponibilizadas em breve.
+                  Configurações federais para {regimeTela === 'presumido' ? 'Lucro Presumido' : 'Lucro Real'} serão disponibilizadas em breve.
                 </p>
               </div>
             )}
@@ -708,6 +730,16 @@ const EmpresaFormPage = () => {
                 onCnaesChange={handleCnaesChange}
                 regimeCnaes={cnaesRegime}
               />
+            </div>
+
+            <div className="section-card">
+              <h2 className="section-title">
+                <Settings className="w-5 h-5 text-primary" />
+                Configurações Operacionais
+              </h2>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Configurações operacionais adicionais serão disponibilizadas em versões futuras.
+              </p>
             </div>
           </div>
         )}

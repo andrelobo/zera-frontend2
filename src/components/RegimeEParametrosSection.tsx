@@ -1,199 +1,62 @@
 import { Landmark } from 'lucide-react';
-import type { ReactNode } from 'react';
 
-type RegimeValue = '' | 'simples_nacional' | 'lucro_presumido' | 'lucro_real';
+export type RegimeTributario = 'simples' | 'presumido' | 'real' | null;
 
-type NovastelasRegime = 'simples' | 'presumido' | 'real' | null;
-
-interface RegimeEParametrosSectionProps {
-  regimeTributario: RegimeValue;
-  aliquotaSimplesNacional: string;
-  apuracaoSimplesNacional: string;
-  opcaoPeloSimples: '' | 'true' | 'false';
-  opcaoPeloMei: '' | 'true' | 'false';
-  dataOpcaoPeloSimples: string;
-  dataExclusaoDoSimples: string;
-  onChange: (field: string, value: string) => void;
-  children?: ReactNode;
+interface Props {
+  regime: RegimeTributario;
+  onRegimeChange: (r: RegimeTributario) => void;
+  informarAliquotaSN: boolean;
+  onInformarAliquotaChange: (v: boolean) => void;
+  aliquotaSN: string;
+  onAliquotaSNChange: (v: string) => void;
+  regimeApuracaoSNParametro: boolean;
+  onRegimeApuracaoSNParametroChange: (v: boolean) => void;
+  onAutosave: () => void;
 }
 
-const regimeToNovastelas = (regime: RegimeValue): NovastelasRegime => {
-  if (regime === 'simples_nacional') return 'simples';
-  if (regime === 'lucro_presumido') return 'presumido';
-  if (regime === 'lucro_real') return 'real';
-  return null;
-};
-
-const novastelasToRegime = (regime: NovastelasRegime): RegimeValue => {
-  if (regime === 'simples') return 'simples_nacional';
-  if (regime === 'presumido') return 'lucro_presumido';
-  if (regime === 'real') return 'lucro_real';
-  return '';
-};
-
-const Toggle = ({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-}) => (
-  <label className="flex items-center gap-3 cursor-pointer select-none">
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`switch-track ${checked ? 'switch-track-on' : 'switch-track-off'}`}
-    >
-      <span className={`switch-thumb ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
-    </button>
-    <span className="text-sm text-foreground">{label}</span>
-  </label>
-);
-
 const RegimeEParametrosSection = ({
-  regimeTributario,
-  aliquotaSimplesNacional,
-  apuracaoSimplesNacional,
-  opcaoPeloSimples,
-  opcaoPeloMei,
-  dataOpcaoPeloSimples,
-  dataExclusaoDoSimples,
-  onChange,
-  children,
-}: RegimeEParametrosSectionProps) => {
-  const regime = regimeToNovastelas(regimeTributario);
-  const informarAliquotaSN = aliquotaSimplesNacional.trim().length > 0;
-  const regimeApuracaoSNParametro = apuracaoSimplesNacional.trim().length > 0;
-
-  const regimes: { value: NovastelasRegime; label: string; desc: string }[] = [
-    { value: 'simples', label: 'Simples Nacional', desc: 'MEI, ME e EPP optantes pelo Simples' },
-    { value: 'presumido', label: 'Lucro Presumido', desc: 'Tributação com base na presunção de lucro' },
-    { value: 'real', label: 'Lucro Real', desc: 'Apuração com base no lucro efetivo' },
+  regime,
+  onRegimeChange,
+}: Props) => {
+  const regimes: { value: RegimeTributario; label: string; desc: string; disabled?: boolean }[] = [
+    { value: 'simples', label: 'Simples Nacional', desc: 'ME/EPP Optantes Simples Nacional' },
+    { value: 'presumido', label: 'Lucro Presumido', desc: 'Em atualização.', disabled: true },
+    { value: 'real', label: 'Lucro Real', desc: 'Em atualização.', disabled: true },
   ];
 
+  const handleRegimeChange = (nextRegime: RegimeTributario) => {
+    onRegimeChange(nextRegime);
+  };
+
   return (
-    <div className="section-card">
-      <h2 className="section-title">
-        <Landmark className="w-5 h-5 text-primary" />
+    <div className="section-card p-3">
+      <h2 className="section-title text-sm mb-2">
+        <Landmark className="w-4 h-4 text-primary" />
         Regime Tributário
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-        {regimes.map((r) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5">
+        {regimes.map((item) => (
           <button
-            key={r.value}
+            key={item.value}
             type="button"
-            onClick={() => onChange('regimeTributario', novastelasToRegime(r.value))}
-            className={`radio-card text-left ${regime === r.value ? 'radio-card-selected' : ''}`}
+            disabled={item.disabled}
+            onClick={() => !item.disabled && handleRegimeChange(item.value)}
+            className={`radio-card text-left p-2 ${regime === item.value ? 'radio-card-selected' : ''} ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div
-              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                regime === r.value ? 'border-primary' : 'border-muted-foreground/40'
-              }`}
+            <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+              regime === item.value ? 'border-primary' : 'border-muted-foreground/40'
+            }`}
             >
-              {regime === r.value && <div className="w-2 h-2 rounded-full bg-primary" />}
+              {regime === item.value && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
             </div>
             <div>
-              <div className="text-sm font-medium text-foreground">{r.label}</div>
-              <div className="text-xs text-muted-foreground">{r.desc}</div>
+              <div className="text-xs font-medium text-foreground leading-tight">{item.label}</div>
+              <div className="text-[10px] text-muted-foreground leading-tight">{item.desc}</div>
             </div>
           </button>
         ))}
       </div>
-
-      {regime && (
-        <h3 className="text-sm font-bold flex items-center gap-2 mb-3" style={{ color: 'hsl(144, 72%, 28%)' }}>
-          Parâmetro Federal
-        </h3>
-      )}
-
-      {regime === 'simples' && (
-        <div className="space-y-4 p-4 rounded-lg bg-muted/50 border border-border mb-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="field-label">Optante pelo Simples</label>
-              <select
-                className="field-input"
-                value={opcaoPeloSimples}
-                onChange={(e) => onChange('opcaoPeloSimples', e.target.value)}
-              >
-                <option value="">Não informado</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
-            <div>
-              <label className="field-label">Optante pelo MEI</label>
-              <select
-                className="field-input"
-                value={opcaoPeloMei}
-                onChange={(e) => onChange('opcaoPeloMei', e.target.value)}
-              >
-                <option value="">Não informado</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="field-label">Data opção pelo Simples</label>
-              <input
-                className="field-input"
-                type="date"
-                value={dataOpcaoPeloSimples}
-                onChange={(e) => onChange('dataOpcaoPeloSimples', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="field-label">Data exclusão do Simples</label>
-              <input
-                className="field-input"
-                type="date"
-                value={dataExclusaoDoSimples}
-                onChange={(e) => onChange('dataExclusaoDoSimples', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <Toggle
-            checked={regimeApuracaoSNParametro}
-            onChange={(v) => onChange('apuracaoSimplesNacional', v ? 'MENSAL' : '')}
-            label="Regime de apuração dos tributos federais e municipal pelo Simples Nacional"
-          />
-          <Toggle
-            checked={informarAliquotaSN}
-            onChange={(v) => onChange('aliquotaSimplesNacional', v ? '0,00' : '')}
-            label="Informar alíquota do Simples Nacional"
-          />
-          {informarAliquotaSN && (
-            <div>
-              <label className="field-label whitespace-nowrap">Simples Nacional</label>
-              <div className="relative w-[55px]">
-                <input
-                  className="field-input pr-7 border-primary"
-                  type="text"
-                  placeholder="00,00"
-                  maxLength={5}
-                  value={aliquotaSimplesNacional}
-                  onChange={(e) => {
-                    let v = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
-                    if (v.length > 2) v = `${v.slice(0, -2)},${v.slice(-2)}`;
-                    onChange('aliquotaSimplesNacional', v);
-                  }}
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      {children}
     </div>
   );
 };
