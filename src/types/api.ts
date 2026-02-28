@@ -99,6 +99,11 @@ export interface Empresa {
   whatsapp?: string;
   fone?: string;
   email?: string;
+  statusCadastro?: 'PENDENTE' | 'COMPLETO';
+  prontoParaEmitir?: boolean;
+  percentualCompletude?: number;
+  camposFaltantes?: string[];
+  camposFaltantesEmissao?: string[];
   createdAt: string;
   updatedAt: string;
 }

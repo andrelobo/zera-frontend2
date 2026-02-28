@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, Save, Settings } from 'lucide-react';
+import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -16,6 +16,7 @@ import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
 import ResumoTributario from '@/components/ResumoTributario';
+import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
 import type { Empresa } from '@/types/api';
@@ -58,6 +59,30 @@ interface EmpresaFormData {
 }
 
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
+type ConfigOperacionalItem = {
+  id: string;
+  natureza: string;
+  descricao: string;
+};
+
+const campoLabel: Record<string, string> = {
+  razaoSocial: 'Razão social',
+  inscricaoMunicipal: 'Inscrição municipal',
+  cnaeFiscal: 'CNAE fiscal',
+  cnaeFiscalDescricao: 'Descrição do CNAE',
+  regimeTributario: 'Regime tributário',
+  apuracaoSimplesNacional: 'Apuração do Simples Nacional',
+  aliquotaSimplesNacional: 'Alíquota do Simples Nacional',
+  'endereco.logradouro': 'Logradouro',
+  'endereco.numero': 'Número',
+  'endereco.bairro': 'Bairro',
+  'endereco.cidade': 'Cidade',
+  'endereco.uf': 'UF',
+  'endereco.cep': 'CEP',
+  'certificado.uploadedAt': 'Certificado digital',
+};
+
+const toCampoLabel = (field: string) => campoLabel[field] ?? field;
 
 const ToggleSwitch = ({
   checked,
@@ -270,10 +295,25 @@ const EmpresaFormPage = () => {
   const [lastPreviewAttemptCnpj, setLastPreviewAttemptCnpj] = useState('');
   const [cnaesRegime, setCnaesRegime] = useState<CNAEAtividade[]>([]);
   const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
+  const [configOperacionais, setConfigOperacionais] = useState<ConfigOperacionalItem[]>([]);
+  const [ultimoResumoCadastro, setUltimoResumoCadastro] = useState<{
+    statusCadastro?: Empresa['statusCadastro'];
+    prontoParaEmitir?: boolean;
+    percentualCompletude?: number;
+    camposFaltantes?: string[];
+    camposFaltantesEmissao?: string[];
+  } | null>(null);
 
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
+      setUltimoResumoCadastro({
+        statusCadastro: existing.statusCadastro,
+        prontoParaEmitir: existing.prontoParaEmitir,
+        percentualCompletude: existing.percentualCompletude,
+        camposFaltantes: existing.camposFaltantes,
+        camposFaltantesEmissao: existing.camposFaltantesEmissao,
+      });
     }
   }, [existing]);
 
@@ -414,9 +454,31 @@ const EmpresaFormPage = () => {
       endereco: payload.endereco,
     }) : empresasApi.create(payload);
     },
-    onSuccess: () => {
-      toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
+    onSuccess: (empresa) => {
+      setUltimoResumoCadastro({
+        statusCadastro: empresa.statusCadastro,
+        prontoParaEmitir: empresa.prontoParaEmitir,
+        percentualCompletude: empresa.percentualCompletude,
+        camposFaltantes: empresa.camposFaltantes,
+        camposFaltantesEmissao: empresa.camposFaltantesEmissao,
+      });
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
+
+      if (empresa.statusCadastro === 'PENDENTE') {
+        const faltantes = (empresa.camposFaltantes || []).slice(0, 3).map(toCampoLabel);
+        const missingText = faltantes.length > 0 ? ` Faltam: ${faltantes.join(', ')}.` : '';
+        toast({
+          title: 'Cadastro salvo parcialmente',
+          description: `Completude atual: ${empresa.percentualCompletude ?? 0}%.${missingText}`,
+          variant: 'destructive',
+        });
+        if (!isEdit && empresa.id) {
+          navigate(`/empresas/${empresa.id}?secao=regime`);
+        }
+        return;
+      }
+
+      toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
       navigate('/empresas');
     },
   });
@@ -503,6 +565,9 @@ const EmpresaFormPage = () => {
   const resumoCalculo = simplesCalculo.valido
     ? simplesCalculo
     : calcularSimplesAnexoIII(resumoRbt12, 'III');
+  const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
+  const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
+  const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -565,6 +630,24 @@ const EmpresaFormPage = () => {
 
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-2">
       <form className="space-y-4">
+        {cadastroPendente && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm">
+            <div className="flex items-center gap-2 text-destructive font-medium">
+              <AlertTriangle className="w-4 h-4" />
+              Cadastro incompleto ({ultimoResumoCadastro?.percentualCompletude ?? 0}%)
+            </div>
+            {camposPendentes.length > 0 && (
+              <p className="mt-2 text-destructive/90">
+                Pendências gerais: {camposPendentes.slice(0, 6).map(toCampoLabel).join(', ')}.
+              </p>
+            )}
+            {camposEmissaoPendentes.length > 0 && (
+              <p className="mt-1 text-destructive/90">
+                Emissão bloqueada até concluir: {camposEmissaoPendentes.slice(0, 6).map(toCampoLabel).join(', ')}.
+              </p>
+            )}
+          </div>
+        )}
         {prestadorSubTab === 'cadastro' && (
           <div className="space-y-2">
             <EmpresaCard
@@ -734,15 +817,10 @@ const EmpresaFormPage = () => {
               />
             </div>
 
-            <div className="section-card">
-              <h2 className="section-title">
-                <Settings className="w-5 h-5 text-primary" />
-                Configurações Operacionais
-              </h2>
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Configurações operacionais adicionais serão disponibilizadas em versões futuras.
-              </p>
-            </div>
+            <ConfigOperacionaisSection
+              items={configOperacionais}
+              onChange={setConfigOperacionais}
+            />
           </div>
         )}
 

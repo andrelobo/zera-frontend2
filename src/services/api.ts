@@ -32,6 +32,16 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     }
     return undefined;
   };
+  const pickStringArray = (...values: unknown[]) => {
+    for (const value of values) {
+      if (!Array.isArray(value)) continue;
+      const items = value
+        .map((item) => (item === null || item === undefined ? '' : String(item).trim()))
+        .filter((item) => item.length > 0);
+      if (items.length > 0) return items;
+    }
+    return [] as string[];
+  };
   const endereco = {
     ...(enderecoRaw as Empresa['endereco']),
     logradouro: pickString(enderecoRaw.logradouro),
@@ -163,6 +173,16 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
     endereco: hasEndereco ? endereco : undefined,
+    statusCadastro: pickString(legacy.statusCadastro) as Empresa['statusCadastro'],
+    prontoParaEmitir: pickBoolean(legacy.prontoParaEmitir),
+    percentualCompletude: (() => {
+      const value = legacy.percentualCompletude;
+      if (value === null || value === undefined || value === '') return undefined;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    })(),
+    camposFaltantes: pickStringArray(legacy.camposFaltantes),
+    camposFaltantesEmissao: pickStringArray(legacy.camposFaltantesEmissao),
   };
 };
 

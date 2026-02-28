@@ -262,10 +262,19 @@ describe('new API flows', () => {
     expect(mockGet).toHaveBeenCalledWith('/empresas', {
       params: { q: undefined, limit: undefined },
     });
-    expect(result).toEqual([
-      { _id: 'mongo-1', id: 'mongo-1', razaoSocial: 'Empresa A', cnpj: '123' },
-      { id: 'api-2', _id: 'mongo-2', razaoSocial: 'Empresa B', cnpj: '456' },
-    ]);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual(expect.objectContaining({
+      _id: 'mongo-1',
+      id: 'mongo-1',
+      razaoSocial: 'Empresa A',
+      cnpj: '123',
+    }));
+    expect(result[1]).toEqual(expect.objectContaining({
+      id: 'api-2',
+      _id: 'mongo-2',
+      razaoSocial: 'Empresa B',
+      cnpj: '456',
+    }));
   });
 
   it('propagates backend error on quick emission', async () => {
