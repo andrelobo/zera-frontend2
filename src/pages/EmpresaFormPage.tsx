@@ -4,8 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
 import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
@@ -83,6 +85,13 @@ const campoLabel: Record<string, string> = {
 };
 
 const toCampoLabel = (field: string) => campoLabel[field] ?? field;
+const getInitials = (name?: string | null, email?: string | null) => {
+  const source = (name || email || '').trim();
+  if (!source) return 'SK';
+  const words = source.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+};
 
 const ToggleSwitch = ({
   checked,
@@ -267,6 +276,7 @@ const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
@@ -568,6 +578,7 @@ const EmpresaFormPage = () => {
   const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
   const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
   const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
+  const userInitials = getInitials(user?.name, user?.email);
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -616,6 +627,18 @@ const EmpresaFormPage = () => {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden md:flex items-center gap-3 rounded-lg border border-border bg-background/70 px-3 py-1.5">
+              <div className="leading-tight">
+                <p className="text-xs text-muted-foreground">Plataforma</p>
+                <p className="text-sm font-semibold text-foreground">Skalë Software</p>
+              </div>
+              <div className="h-7 w-px bg-border" />
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="text-[11px] font-semibold">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <button
               type="button"
               onClick={() => mutation.mutate()}
