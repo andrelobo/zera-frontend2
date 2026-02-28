@@ -61,6 +61,7 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
 
   const handleMunicipioSearch = (value: string) => {
     setSearchMunicipio(value);
+    onChange({ ...data, municipio: value });
     setShowDropdown(true);
   };
 
