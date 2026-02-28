@@ -455,3 +455,46 @@ Fonte: `execucao local`
 - Ultima atualizacao: 2026-02-28T13:10:00-04:00
 - Responsavel: Codex (GPT-5)
 - Tipo de atualizacao: alinhamento de contrato com backend (`lookup`) + protecao de payload de emissao para reduzir rejeicoes fiscais em producao.
+
+## 22. Atualizacao Operacional (2026-02-28) – Cadastro em etapas com aviso de parcial
+
+### 22.1 Objetivo
+Fonte: `codigo local` (`src/pages/EmpresaFormPage.tsx`)
+
+- Tornar o fluxo resiliente para interrupções (queda de internet/energia) sem induzir usuário a emitir com cadastro incompleto.
+
+### 22.2 Ajustes no front
+Fonte: `codigo local` (`src/pages/EmpresaFormPage.tsx`, `src/services/api.ts`, `src/types/api.ts`)
+
+- O front passou a consumir metadados de completude retornados pela API de empresas:
+  - `statusCadastro`
+  - `prontoParaEmitir`
+  - `percentualCompletude`
+  - `camposFaltantes`
+  - `camposFaltantesEmissao`
+- Ao salvar prestador:
+  - se `statusCadastro=PENDENTE`, mostra toast de "cadastro salvo parcialmente";
+  - mantém usuário no fluxo de cadastro (não finaliza como sucesso completo);
+  - exibe banner com pendências e aviso explícito de bloqueio de emissão.
+- Quando completo:
+  - mantém comportamento de sucesso padrão e retorno à listagem.
+
+### 22.3 Contrato operacional com backend
+Fonte: `backend atualizado em 2026-02-28`
+
+- Emissão agora depende de `prontoParaEmitir=true`.
+- Erros esperados em bloqueio de emissão por cadastro parcial:
+  - `PRESTADOR_INCOMPLETO` (emissão normal)
+  - `QUICK_PRESTADOR_INCOMPLETO` (emissão rápida)
+
+### 22.4 Validacao local desta rodada (2026-02-28)
+Fonte: `execucao local`
+
+- `npm run test` -> **17 testes passando**
+- `npm run build` -> **ok**
+- `npm run lint` -> sem erros (warnings recorrentes mantidos)
+
+### 22.5 Rastreabilidade
+- Ultima atualizacao: 2026-02-28T14:35:00-04:00
+- Responsavel: Codex (GPT-5)
+- Tipo de atualizacao: suporte a cadastro parcial orientado por completude e avisos operacionais para evitar emissão com prestador incompleto.
