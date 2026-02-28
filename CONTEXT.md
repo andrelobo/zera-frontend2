@@ -418,3 +418,40 @@ Checklist de contrato vivo (pre-merge):
 - Responsavel: Codex (GPT-5)
 - Tipo de atualizacao: registro de regressao de emissao DANFSE (E0312) com ajuste de contrato no frontend para envio de `codigoTributacao` padrao e alinhamento com payload historico aceito
 - Observacao de continuidade: validar no `providerRequest.payload[0].servico[0]` a presenca de `codigo` + `codigoTributacao` em todo teste de emissao apos mudancas no formulario DANFSE.
+
+## 21. Atualizacao Operacional (2026-02-28)
+
+### 21.1 Emissao normal (DANFSE) – protecao contra E0625
+Fonte: `codigo local` (`src/pages/NfseEmitPage.tsx`)
+
+- Ajuste aplicado no payload do formulario normal:
+  - `servico.iss.aliquota` agora so e enviada quando `issRetido=true`.
+  - quando `issRetido=false`, o campo vai como `undefined` (nao enviado).
+- Objetivo: evitar rejeicao fiscal E0625 em contexto de Simples Nacional sem retencao.
+
+### 21.2 Lookup de CEP – tolerancia a ambiente sem endpoint
+Fonte: `codigo local` (`src/services/cep.ts`)
+
+- `lookupCep` passou a usar `skipGlobalErrorToast: true`.
+- Para `404`, o front retorna fallback vazio (sem quebrar formulario) em vez de disparar erro global.
+- Com backend atualizado, o endpoint oficial esperado permanece:
+  - `GET /empresas/lookup/cep/:cep`
+
+### 21.3 Contrato de lookup de municipios
+Fonte: `codigo local` + `backend atualizado em 2026-02-28`
+
+- O frontend segue usando:
+  - `GET /empresas/lookup/municipios?uf=XX`
+- O backend agora expõe este endpoint de forma oficial, removendo divergencia observada anteriormente.
+
+### 21.4 Validacao local desta rodada (2026-02-28)
+Fonte: `execucao local`
+
+- `npm run test` -> **17 testes passando**
+- `npm run build` -> **ok**
+- `npm run lint` -> sem erros (warnings recorrentes de hooks/fast-refresh mantidos)
+
+### 21.5 Rastreabilidade
+- Ultima atualizacao: 2026-02-28T13:10:00-04:00
+- Responsavel: Codex (GPT-5)
+- Tipo de atualizacao: alinhamento de contrato com backend (`lookup`) + protecao de payload de emissao para reduzir rejeicoes fiscais em producao.
