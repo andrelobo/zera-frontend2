@@ -21,6 +21,61 @@ const first = (value: unknown): Record<string, unknown> | null => {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
 };
 
+type ParsedErrorItem = {
+  code?: string;
+  message: string;
+};
+
+const parseEmbeddedProviderErrors = (message: string): ParsedErrorItem[] => {
+  const start = message.indexOf('[{');
+  const end = message.lastIndexOf('}]');
+  if (start < 0 || end < start) return [];
+
+  const jsonSlice = message.slice(start, end + 2);
+  try {
+    const parsed = JSON.parse(jsonSlice) as Array<Record<string, unknown>>;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => ({
+        code: typeof item.Codigo === 'string' ? item.Codigo : undefined,
+        message: typeof item.Descricao === 'string' ? item.Descricao : '',
+      }))
+      .filter((item) => item.message.trim().length > 0);
+  } catch {
+    return [];
+  }
+};
+
+const parseProviderErrors = (raw: unknown): ParsedErrorItem[] => {
+  const root = first(raw);
+  if (!root) return [];
+
+  const retorno = first(root.retorno);
+  const errors: ParsedErrorItem[] = [];
+
+  const mensagemRetorno = retorno?.mensagemRetorno;
+  if (typeof mensagemRetorno === 'string' && mensagemRetorno.trim()) {
+    errors.push({ message: mensagemRetorno.trim() });
+    errors.push(...parseEmbeddedProviderErrors(mensagemRetorno));
+  }
+
+  const retornoCodigo = retorno?.Codigo ?? retorno?.codigo;
+  const retornoDescricao = retorno?.Descricao ?? retorno?.descricao;
+  if (typeof retornoDescricao === 'string' && retornoDescricao.trim()) {
+    errors.push({
+      code: typeof retornoCodigo === 'string' ? retornoCodigo : undefined,
+      message: retornoDescricao.trim(),
+    });
+  }
+
+  const unique = new Map<string, ParsedErrorItem>();
+  errors.forEach((item) => {
+    const key = `${item.code || ''}::${item.message}`;
+    if (!unique.has(key)) unique.set(key, item);
+  });
+  return Array.from(unique.values());
+};
+
 const readFromRawProvider = (raw: unknown) => {
   const root = first(raw);
   if (!root) return {};
@@ -96,6 +151,21 @@ const NfseDetailPage = () => {
   if (isError || !nfse) return <ErrorState onRetry={() => refetch()} />;
   const inferred = inferNfseDataFromProvider(providerResp);
   const rawInferred = readFromRawProvider(providerResp?.raw);
+  const providerErrors = parseProviderErrors(providerResp?.raw);
+  const errorItems: ParsedErrorItem[] = [];
+  if (nfse.errorMessage) {
+    errorItems.push({ code: nfse.errorCode || undefined, message: nfse.errorMessage });
+  } else if (nfse.errorCode) {
+    errorItems.push({ code: nfse.errorCode, message: '' });
+  }
+  providerErrors.forEach((item) => {
+    if (!item.message.trim()) return;
+    const exists = errorItems.some(
+      (existing) => existing.code === item.code && existing.message === item.message,
+    );
+    if (!exists) errorItems.push(item);
+  });
+
   const numeroNfse = nfse.numero || rawInferred.numeroNfse || inferred.numeroNfse;
   const descricao = getNfseDescricao(nfse) !== '—' ? getNfseDescricao(nfse) : rawInferred.descricao || inferred.descricao || '—';
   const valor = getNfseValor(nfse) > 0 ? getNfseValor(nfse) : rawInferred.valor || inferred.valor || 0;
@@ -145,8 +215,20 @@ const NfseDetailPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
-              {nfse.errorCode && <Badge variant="outline" className="font-mono">{nfse.errorCode}</Badge>}
-              <p className="text-muted-foreground">{nfse.errorMessage || 'Sem detalhes de erro.'}</p>
+              {errorItems.length > 0 ? (
+                <div className="space-y-3">
+                  {errorItems.map((item, index) => (
+                    <div key={`${item.code || 'msg'}-${index}`} className="space-y-1">
+                      {item.code && <Badge variant="outline" className="font-mono">{item.code}</Badge>}
+                      <p className="text-muted-foreground break-words whitespace-pre-wrap">
+                        {item.message || 'Erro sem descrição.'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Sem detalhes de erro.</p>
+              )}
             </CardContent>
           </Card>
         )}
