@@ -73,7 +73,7 @@ const NfseListPage = () => {
             <Zap className="mr-2 h-4 w-4" /> Emissão Rápida
           </Button>
           <Button onClick={() => navigate('/nfse/nova')}>
-            <Plus className="mr-2 h-4 w-4" /> Nova Emissão
+            <Plus className="mr-2 h-4 w-4" /> Nova DANFSE
           </Button>
         </div>
       </div>

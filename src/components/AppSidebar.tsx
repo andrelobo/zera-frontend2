@@ -79,7 +79,7 @@ const AppSidebar = () => {
   };
 
   const goEmissao = () => {
-    navigate('/nfse/nova');
+    navigate('/nfse');
     closeMobile();
   };
 
