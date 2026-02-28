@@ -6,6 +6,8 @@ import ErrorState from '@/components/ErrorState';
 import { empresasApi, nfseApi } from '@/services/api';
 import { getNfseValor } from '@/lib/nfse';
 
+const DASHBOARD_MIN_EMISSAO_DATE = new Date(2026, 1, 11, 0, 0, 0, 0); // 11/02/2026
+
 const DashboardPage = () => {
   const empresasQuery = useQuery({
     queryKey: ['empresas', 'dashboard-header'],
@@ -26,9 +28,10 @@ const DashboardPage = () => {
     const now = new Date();
     const oneYearAgo = new Date(now);
     oneYearAgo.setFullYear(now.getFullYear() - 1);
+    const cutoffDate = oneYearAgo > DASHBOARD_MIN_EMISSAO_DATE ? oneYearAgo : DASHBOARD_MIN_EMISSAO_DATE;
 
     return items
-      .filter((item) => new Date(item.createdAt) >= oneYearAgo)
+      .filter((item) => new Date(item.createdAt) >= cutoffDate)
       .reduce((sum, item) => sum + getNfseValor(item), 0);
   }, [nfseQuery.data]);
 
