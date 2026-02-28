@@ -312,7 +312,8 @@ const NfseEmitPage = () => {
         valor: valores.valorBruto,
         iss: {
           retido: issRetido,
-          aliquota: parsePercent(aliquota),
+          // Simples Nacional sem retencao: nao enviar aliquota para evitar rejeicao E0625.
+          aliquota: issRetido ? parsePercent(aliquota) : undefined,
         },
         tributacaoTotal: {
           federal: {

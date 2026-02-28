@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import axios from 'axios';
 
 export interface CepAddress {
   cep: string;
@@ -24,7 +25,9 @@ export const lookupCep = async (rawCep: string): Promise<CepAddress> => {
   }
 
   try {
-    const response = await api.get<CepAddress>(`/empresas/lookup/cep/${cep}`);
+    const response = await api.get<CepAddress>(`/empresas/lookup/cep/${cep}`, {
+      skipGlobalErrorToast: true,
+    });
     const data = response.data;
 
     return {
@@ -36,6 +39,16 @@ export const lookupCep = async (rawCep: string): Promise<CepAddress> => {
       complemento: data?.complemento || '',
     };
   } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return {
+        cep,
+        logradouro: '',
+        bairro: '',
+        cidade: '',
+        uf: '',
+        complemento: '',
+      };
+    }
     const err = error as { response?: { data?: { message?: string } }; message?: string };
     const message =
       err.response?.data?.message ||
