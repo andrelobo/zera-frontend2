@@ -186,10 +186,27 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   const kpis = useMemo(() => {
     const now = new Date();
     const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const notasMes = notas.filter((n) => {
+    const notasMesAtual = notas.filter((n) => {
       const d = new Date(n.data_emissao);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesAtual;
     });
+    const mesesComNotas = Array.from(
+      new Set(
+        notas.map((n) => {
+          const d = new Date(n.data_emissao);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }),
+      ),
+    ).sort();
+    const mesReferencia = notasMesAtual.length > 0 ? mesAtual : (mesesComNotas[mesesComNotas.length - 1] ?? mesAtual);
+    const notasMes = mesReferencia === mesAtual
+      ? notasMesAtual
+      : notas.filter((n) => {
+          const d = new Date(n.data_emissao);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesReferencia;
+        });
+    const [anoRef, mesRef] = mesReferencia.split('-');
+    const mesReferenciaLabel = `${mesRef}/${anoRef}`;
 
     const faturamentoMes = notasMes.reduce((s, n) => s + n.valor_servico, 0);
     const totalNotas = notas.length;
@@ -203,6 +220,8 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
 
     return {
       faturamentoMes,
+      mesReferencia,
+      mesReferenciaLabel,
       rbt12,
       totalNotas,
       totalNotasMes,
