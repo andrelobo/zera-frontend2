@@ -299,6 +299,8 @@ const normalizeTomador = (raw: Tomador | Record<string, unknown>): Tomador => {
     cpfCnpj: pickString(legacy.cpfCnpj, legacy.cpf_cnpj) || '',
     razaoSocial: pickString(legacy.razaoSocial, legacy.razao_social) || '',
     inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
+    inscricaoEstadual: pickString(legacy.inscricaoEstadual, legacy.inscricao_estadual, legacy.ie),
+    suframa: pickString(legacy.suframa),
     email: pickString(legacy.email),
     endereco: {
       logradouro: pickString(endereco.logradouro),

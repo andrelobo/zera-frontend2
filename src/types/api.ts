@@ -159,6 +159,8 @@ export interface Tomador {
   cpfCnpj: string;
   razaoSocial: string;
   inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  suframa?: string;
   email?: string;
   endereco?: {
     logradouro?: string;
@@ -178,6 +180,8 @@ export interface CreateTomadorRequest {
   cpfCnpj: string;
   razaoSocial: string;
   inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  suframa?: string;
   email?: string;
   endereco?: {
     logradouro?: string;

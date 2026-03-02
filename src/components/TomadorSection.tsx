@@ -37,7 +37,7 @@ const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSect
         Tomadores
       </h2>
 
-      <div className={`grid grid-cols-1 ${isCpf ? 'md:grid-cols-[1.2fr]' : 'md:grid-cols-[1.2fr_1fr_1fr]'} gap-4`}>
+      <div className={`grid grid-cols-1 ${isCpf ? 'md:grid-cols-[1.2fr]' : 'md:grid-cols-[1.2fr_1fr_1fr_1fr]'} gap-4`}>
         <div>
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
           <div className="flex gap-2">
@@ -76,6 +76,18 @@ const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSect
               placeholder="Inscrição"
               value={data.inscricaoEstadual}
               onChange={(e) => onChange('inscricaoEstadual', e.target.value)}
+            />
+          </div>
+        )}
+
+        {!isCpf && (
+          <div>
+            <label className="field-label">Suframa</label>
+            <input
+              className="field-input"
+              placeholder="Suframa"
+              value={data.suframa}
+              onChange={(e) => onChange('suframa', e.target.value)}
             />
           </div>
         )}

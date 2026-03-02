@@ -46,6 +46,47 @@ const formatPhone = (value: string) => {
     .replace(/(\d)(\d{4})$/, '$1-$2');
 };
 
+const preferAutofill = (current: string, next?: string) => {
+  const normalizedCurrent = current.trim();
+  const normalizedNext = (next || '').trim();
+  if (!normalizedNext) return current;
+  if (!normalizedCurrent) return normalizedNext;
+  return current;
+};
+
+type AutofillTomador = {
+  cpfCnpj?: string;
+  razaoSocial?: string;
+  inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  suframa?: string;
+  email?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  localidadeUf?: string;
+};
+
+const mergeAutofill = (base: AutofillTomador, incoming?: AutofillTomador | null): AutofillTomador => {
+  if (!incoming) return base;
+  return {
+    cpfCnpj: base.cpfCnpj || incoming.cpfCnpj,
+    razaoSocial: base.razaoSocial || incoming.razaoSocial,
+    inscricaoMunicipal: base.inscricaoMunicipal || incoming.inscricaoMunicipal,
+    inscricaoEstadual: base.inscricaoEstadual || incoming.inscricaoEstadual,
+    suframa: base.suframa || incoming.suframa,
+    email: base.email || incoming.email,
+    cep: base.cep || incoming.cep,
+    logradouro: base.logradouro || incoming.logradouro,
+    numero: base.numero || incoming.numero,
+    complemento: base.complemento || incoming.complemento,
+    bairro: base.bairro || incoming.bairro,
+    localidadeUf: base.localidadeUf || incoming.localidadeUf,
+  };
+};
+
 const INITIAL_FORM: TomadorSectionData = {
   empresaCnpj: '',
   cpfCnpj: '',
@@ -103,8 +144,8 @@ const TomadorFormPage = () => {
       razaoSocial: existing.razaoSocial,
       nomeFantasia: '',
       inscricaoMunicipal: existing.inscricaoMunicipal || '',
-      inscricaoEstadual: '',
-      suframa: '',
+      inscricaoEstadual: existing.inscricaoEstadual || '',
+      suframa: existing.suframa || '',
       substitutoTributario: false,
       cep: formatCep(existing.endereco?.cep || ''),
       logradouro: existing.endereco?.logradouro || '',
@@ -118,54 +159,140 @@ const TomadorFormPage = () => {
   }, [existing]);
 
   const cpfCnpjDigits = useMemo(() => onlyDigits(form.cpfCnpj), [form.cpfCnpj]);
+  const isCnpjDoc = useMemo(() => cpfCnpjDigits.length === 14, [cpfCnpjDigits]);
   const empresaCnpjBase = useMemo(
     () => onlyDigits(form.empresaCnpj || fallbackEmpresaCnpj),
     [form.empresaCnpj, fallbackEmpresaCnpj],
   );
 
-  const docAutocompleteQuery = useQuery({
-    queryKey: ['tomadores', 'doc-autocomplete', empresaCnpjBase, cpfCnpjDigits],
-    queryFn: () => tomadoresApi.autocomplete({
-      empresaCnpj: empresaCnpjBase,
-      q: cpfCnpjDigits,
-      limit: 10,
-    }),
+  const autofillQuery = useQuery({
+    queryKey: ['tomadores', 'autofill', empresaCnpjBase, cpfCnpjDigits],
     enabled: !isEdit && empresaCnpjBase.length === 14 && cpfCnpjDigits.length >= 11,
     staleTime: 30_000,
+    queryFn: async (): Promise<AutofillTomador | null> => {
+      const isCnpj = cpfCnpjDigits.length === 14;
+      const requests = await Promise.allSettled([
+        tomadoresApi.autocomplete({
+          empresaCnpj: empresaCnpjBase,
+          q: cpfCnpjDigits,
+          limit: 10,
+        }),
+        tomadoresApi.list({
+          empresaCnpj: empresaCnpjBase,
+          q: cpfCnpjDigits,
+        }),
+        isCnpj ? empresasApi.getByCnpj(cpfCnpjDigits) : Promise.resolve(null),
+        isCnpj ? empresasApi.previewByCnpj(cpfCnpjDigits) : Promise.resolve(null),
+      ]);
+
+      const tomadoresAutocomplete =
+        requests[0].status === 'fulfilled' ? requests[0].value : [];
+      const tomadoresList =
+        requests[1].status === 'fulfilled' ? requests[1].value : [];
+      const empresaByCnpj =
+        requests[2].status === 'fulfilled' ? requests[2].value : null;
+      const empresaPreview =
+        requests[3].status === 'fulfilled' ? requests[3].value : null;
+
+      const tomadorExact =
+        tomadoresAutocomplete.find((item) => onlyDigits(item.cpfCnpj) === cpfCnpjDigits)
+        || tomadoresList.find((item) => onlyDigits(item.cpfCnpj) === cpfCnpjDigits);
+
+      const fromTomador: AutofillTomador | null = tomadorExact
+        ? {
+          cpfCnpj: tomadorExact.cpfCnpj,
+          razaoSocial: tomadorExact.razaoSocial,
+          inscricaoMunicipal: tomadorExact.inscricaoMunicipal,
+          inscricaoEstadual: tomadorExact.inscricaoEstadual,
+          suframa: tomadorExact.suframa,
+          email: tomadorExact.email,
+          cep: tomadorExact.endereco?.cep,
+          logradouro: tomadorExact.endereco?.logradouro,
+          numero: tomadorExact.endereco?.numero,
+          complemento: tomadorExact.endereco?.complemento,
+          bairro: tomadorExact.endereco?.bairro,
+          localidadeUf: tomadorExact.endereco?.municipio && tomadorExact.endereco?.uf
+            ? `${tomadorExact.endereco.municipio} - ${tomadorExact.endereco.uf}`
+            : undefined,
+        }
+        : null;
+
+      const fromEmpresa: AutofillTomador | null = empresaByCnpj
+        ? {
+          razaoSocial: empresaByCnpj.razaoSocial,
+          inscricaoMunicipal: empresaByCnpj.inscricaoMunicipal,
+          inscricaoEstadual: empresaByCnpj.inscricaoEstadual,
+          suframa: empresaByCnpj.suframa,
+          email: empresaByCnpj.email,
+          cep: empresaByCnpj.endereco?.cep,
+          logradouro: empresaByCnpj.endereco?.logradouro,
+          numero: empresaByCnpj.endereco?.numero,
+          complemento: empresaByCnpj.endereco?.complemento,
+          bairro: empresaByCnpj.endereco?.bairro,
+          localidadeUf: empresaByCnpj.endereco?.cidade && empresaByCnpj.endereco?.uf
+            ? `${empresaByCnpj.endereco.cidade} - ${empresaByCnpj.endereco.uf}`
+            : undefined,
+        }
+        : null;
+
+      const fromPreview: AutofillTomador | null = empresaPreview
+        ? {
+          razaoSocial: empresaPreview.razaoSocial,
+          inscricaoMunicipal: empresaPreview.inscricaoMunicipal,
+          inscricaoEstadual: empresaPreview.inscricaoEstadual,
+          suframa: empresaPreview.suframa,
+          email: empresaPreview.email,
+          cep: empresaPreview.endereco?.cep,
+          logradouro: empresaPreview.endereco?.logradouro,
+          numero: empresaPreview.endereco?.numero,
+          complemento: empresaPreview.endereco?.complemento,
+          bairro: empresaPreview.endereco?.bairro,
+          localidadeUf: empresaPreview.endereco?.cidade && empresaPreview.endereco?.uf
+            ? `${empresaPreview.endereco.cidade} - ${empresaPreview.endereco.uf}`
+            : undefined,
+        }
+        : null;
+
+      const merged = mergeAutofill(
+        mergeAutofill(
+          mergeAutofill({}, fromTomador),
+          fromEmpresa,
+        ),
+        fromPreview,
+      );
+
+      return Object.values(merged).some(Boolean) ? merged : null;
+    },
   });
 
   useEffect(() => {
     if (isEdit) return;
-    if (!docAutocompleteQuery.data?.length) return;
-    if (cpfCnpjDigits.length < 11) return;
+    if (!autofillQuery.data) return;
     if (lastAutofillDoc === cpfCnpjDigits) return;
 
-    const found = docAutocompleteQuery.data.find((item) => onlyDigits(item.cpfCnpj) === cpfCnpjDigits);
-    if (!found) return;
-
     setForm((prev) => {
-      const municipio = found.endereco?.municipio || '';
-      const uf = found.endereco?.uf || '';
       return {
         ...prev,
-        cpfCnpj: formatDoc(found.cpfCnpj),
-        razaoSocial: found.razaoSocial || prev.razaoSocial,
-        inscricaoMunicipal: found.inscricaoMunicipal || prev.inscricaoMunicipal,
-        email: found.email || prev.email,
-        cep: formatCep(found.endereco?.cep || prev.cep),
-        logradouro: found.endereco?.logradouro || prev.logradouro,
-        numero: found.endereco?.numero || prev.numero,
-        complemento: found.endereco?.complemento || prev.complemento,
-        bairro: found.endereco?.bairro || prev.bairro,
-        localidadeUf: (municipio && uf) ? `${municipio} - ${uf}` : prev.localidadeUf,
+        cpfCnpj: formatDoc(preferAutofill(prev.cpfCnpj, autofillQuery.data.cpfCnpj)),
+        razaoSocial: preferAutofill(prev.razaoSocial, autofillQuery.data.razaoSocial),
+        inscricaoMunicipal: preferAutofill(prev.inscricaoMunicipal, autofillQuery.data.inscricaoMunicipal),
+        inscricaoEstadual: preferAutofill(prev.inscricaoEstadual, autofillQuery.data.inscricaoEstadual),
+        suframa: preferAutofill(prev.suframa, autofillQuery.data.suframa),
+        email: preferAutofill(prev.email, autofillQuery.data.email),
+        cep: formatCep(preferAutofill(prev.cep, autofillQuery.data.cep)),
+        logradouro: preferAutofill(prev.logradouro, autofillQuery.data.logradouro),
+        numero: preferAutofill(prev.numero, autofillQuery.data.numero),
+        complemento: preferAutofill(prev.complemento, autofillQuery.data.complemento),
+        bairro: preferAutofill(prev.bairro, autofillQuery.data.bairro),
+        localidadeUf: preferAutofill(prev.localidadeUf, autofillQuery.data.localidadeUf),
       };
     });
     setLastAutofillDoc(cpfCnpjDigits);
     toast({
-      title: 'Tomador encontrado',
-      description: 'Dados preenchidos automaticamente a partir do CPF/CNPJ informado.',
+      title: 'Autopreenchimento concluído',
+      description: 'Campos preenchidos com merge de múltiplas fontes.',
     });
-  }, [cpfCnpjDigits, docAutocompleteQuery.data, isEdit, lastAutofillDoc]);
+  }, [autofillQuery.data, cpfCnpjDigits, isEdit, lastAutofillDoc]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
   const cepLookupQuery = useQuery({
@@ -196,6 +323,8 @@ const TomadorFormPage = () => {
         cpfCnpj: form.cpfCnpj.replace(/\D/g, ''),
         razaoSocial: form.razaoSocial.trim(),
         inscricaoMunicipal: form.inscricaoMunicipal || undefined,
+        inscricaoEstadual: form.inscricaoEstadual || undefined,
+        suframa: form.suframa || undefined,
         email: form.email || undefined,
         endereco: {
           logradouro: form.logradouro || undefined,
@@ -212,6 +341,8 @@ const TomadorFormPage = () => {
         return tomadoresApi.update(id!, {
           razaoSocial: payload.razaoSocial,
           inscricaoMunicipal: payload.inscricaoMunicipal,
+          inscricaoEstadual: payload.inscricaoEstadual,
+          suframa: payload.suframa,
           email: payload.email,
           endereco: payload.endereco,
         });
@@ -274,7 +405,7 @@ const TomadorFormPage = () => {
           data={form}
           onChange={update}
           cepLoading={cepLookupQuery.isFetching}
-          cnpjLoading={docAutocompleteQuery.isFetching}
+          cnpjLoading={autofillQuery.isFetching}
         />
 
         <div className="flex justify-end">
