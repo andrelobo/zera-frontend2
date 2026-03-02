@@ -556,7 +556,7 @@ const EmpresaFormPage = () => {
       });
       toast({
         title: 'Dados preenchidos',
-        description: 'Autocompletar por CNPJ concluiu (multi-fonte). IE e Suframa preenchidos quando disponíveis.',
+        description: 'Autocompletar por CNPJ concluiu com CNPJA como fonte principal e fallback automático.',
       });
     },
     onError: (error) => {
