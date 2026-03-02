@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import ThemeToggle from '@/components/ThemeToggle';
 import AppSidebar from '@/components/AppSidebar';
+import GlobalTicker from '@/components/GlobalTicker';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -70,6 +71,7 @@ const AppLayout = () => {
               </DropdownMenu>
             </div>
           </header>
+          <GlobalTicker />
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
             <Outlet />
           </main>
