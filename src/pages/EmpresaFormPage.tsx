@@ -494,13 +494,39 @@ const EmpresaFormPage = () => {
   });
 
   const previewMutation = useMutation({
-    mutationFn: (cnpj: string) => empresasApi.previewByCnpj(cnpj),
-    onSuccess: (empresa) => {
-      setLastPreviewCnpj(empresa.cnpj.replace(/\D/g, ''));
-      setForm((prev) => mapEmpresaToForm(empresa, prev));
+    mutationFn: async (cnpj: string) => {
+      const settled = await Promise.allSettled([
+        empresasApi.getByCnpj(cnpj),
+        empresasApi.previewByCnpj(cnpj),
+      ]);
+
+      const empresas = settled
+        .filter((result): result is PromiseFulfilledResult<Empresa> => result.status === 'fulfilled')
+        .map((result) => result.value);
+
+      if (empresas.length === 0) {
+        throw new Error('Não foi possível obter dados de autocomplete para este CNPJ.');
+      }
+
+      return { cnpj, empresas };
+    },
+    onSuccess: ({ cnpj, empresas }) => {
+      setLastPreviewCnpj(cnpj);
+      setForm((prev) => {
+        let merged = prev;
+        for (const empresa of empresas) {
+          merged = mapEmpresaToForm(empresa, merged);
+        }
+
+        return {
+          ...merged,
+          // Regra operacional: IM não deve vir por autocomplete.
+          inscricaoMunicipal: prev.inscricaoMunicipal,
+        };
+      });
       toast({
         title: 'Dados preenchidos',
-        description: 'Autocompletar por CNPJ concluiu o preenchimento dos campos disponíveis.',
+        description: 'Autocompletar por CNPJ concluiu (multi-fonte). IE e Suframa preenchidos quando disponíveis.',
       });
     },
     onError: (error) => {

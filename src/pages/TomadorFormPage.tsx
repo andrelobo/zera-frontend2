@@ -57,7 +57,6 @@ const preferAutofill = (current: string, next?: string) => {
 type AutofillTomador = {
   cpfCnpj?: string;
   razaoSocial?: string;
-  inscricaoMunicipal?: string;
   inscricaoEstadual?: string;
   suframa?: string;
   email?: string;
@@ -74,7 +73,6 @@ const mergeAutofill = (base: AutofillTomador, incoming?: AutofillTomador | null)
   return {
     cpfCnpj: base.cpfCnpj || incoming.cpfCnpj,
     razaoSocial: base.razaoSocial || incoming.razaoSocial,
-    inscricaoMunicipal: base.inscricaoMunicipal || incoming.inscricaoMunicipal,
     inscricaoEstadual: base.inscricaoEstadual || incoming.inscricaoEstadual,
     suframa: base.suframa || incoming.suframa,
     email: base.email || incoming.email,
@@ -202,7 +200,6 @@ const TomadorFormPage = () => {
         ? {
           cpfCnpj: tomadorExact.cpfCnpj,
           razaoSocial: tomadorExact.razaoSocial,
-          inscricaoMunicipal: tomadorExact.inscricaoMunicipal,
           inscricaoEstadual: tomadorExact.inscricaoEstadual,
           suframa: tomadorExact.suframa,
           email: tomadorExact.email,
@@ -220,7 +217,6 @@ const TomadorFormPage = () => {
       const fromEmpresa: AutofillTomador | null = empresaByCnpj
         ? {
           razaoSocial: empresaByCnpj.razaoSocial,
-          inscricaoMunicipal: empresaByCnpj.inscricaoMunicipal,
           inscricaoEstadual: empresaByCnpj.inscricaoEstadual,
           suframa: empresaByCnpj.suframa,
           email: empresaByCnpj.email,
@@ -238,7 +234,6 @@ const TomadorFormPage = () => {
       const fromPreview: AutofillTomador | null = empresaPreview
         ? {
           razaoSocial: empresaPreview.razaoSocial,
-          inscricaoMunicipal: empresaPreview.inscricaoMunicipal,
           inscricaoEstadual: empresaPreview.inscricaoEstadual,
           suframa: empresaPreview.suframa,
           email: empresaPreview.email,
@@ -275,7 +270,6 @@ const TomadorFormPage = () => {
         ...prev,
         cpfCnpj: formatDoc(preferAutofill(prev.cpfCnpj, autofillQuery.data.cpfCnpj)),
         razaoSocial: preferAutofill(prev.razaoSocial, autofillQuery.data.razaoSocial),
-        inscricaoMunicipal: preferAutofill(prev.inscricaoMunicipal, autofillQuery.data.inscricaoMunicipal),
         inscricaoEstadual: preferAutofill(prev.inscricaoEstadual, autofillQuery.data.inscricaoEstadual),
         suframa: preferAutofill(prev.suframa, autofillQuery.data.suframa),
         email: preferAutofill(prev.email, autofillQuery.data.email),
