@@ -67,6 +67,7 @@ const NfseQuickEmitPage = () => {
   const [empresaSearch, setEmpresaSearch] = useState('');
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [cnpj, setCnpj] = useState('');
+  const [empresaAutofillLabel, setEmpresaAutofillLabel] = useState<string | null>(null);
   const [cpfTomador, setCpfTomador] = useState('');
   const [valorDigits, setValorDigits] = useState<string>('');
   const [codigoServico, setCodigoServico] = useState('');
@@ -93,14 +94,24 @@ const NfseQuickEmitPage = () => {
     queryFn: empresasApi.list,
     staleTime: 60_000,
   });
+  const empresaDefaultQuery = useQuery({
+    queryKey: ['empresas', 'quick-emit-default'],
+    queryFn: () => empresasApi.list({ limit: 20 }),
+    staleTime: 60_000,
+  });
+  const empresaDefault = useMemo(() => {
+    const items = empresaDefaultQuery.data || [];
+    if (items.length === 0) return null;
+    return items.find((empresa) => empresa.razaoSocial.toLowerCase().includes('burgus')) || items[0];
+  }, [empresaDefaultQuery.data]);
 
   useEffect(() => {
-    if (empresas.length !== 1) return;
+    if (!empresaDefault) return;
     if (cnpjClean.length > 0 || empresaSearch.trim().length > 0) return;
-    const [empresa] = empresas;
-    setCnpj(formatCnpj(empresa.cnpj));
-    setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
-  }, [cnpjClean.length, empresaSearch, empresas]);
+    setCnpj(formatCnpj(empresaDefault.cnpj));
+    setEmpresaSearch(`${empresaDefault.razaoSocial} (${empresaDefault.cnpj})`);
+    setEmpresaAutofillLabel(empresaDefault.razaoSocial);
+  }, [cnpjClean.length, empresaDefault, empresaSearch]);
 
   const filteredEmpresas = useMemo(() => {
     if (!canSearchEmpresa) return [];
@@ -181,9 +192,17 @@ const NfseQuickEmitPage = () => {
               <Input
                 id="empresaSearch"
                 value={empresaSearch}
-                onChange={(e) => setEmpresaSearch(e.target.value)}
+                onChange={(e) => {
+                  setEmpresaSearch(e.target.value);
+                  setEmpresaAutofillLabel(null);
+                }}
                 placeholder="Digite razão social ou CNPJ"
               />
+              {empresaAutofillLabel && (
+                <p className="text-xs text-muted-foreground">
+                  Empresa padrão carregada: {empresaAutofillLabel}
+                </p>
+              )}
               {empresasLoading && (
                 <p className="text-sm text-muted-foreground">Carregando empresas...</p>
               )}
@@ -197,6 +216,7 @@ const NfseQuickEmitPage = () => {
                       onClick={() => {
                         setCnpj(formatCnpj(empresa.cnpj));
                         setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+                        setEmpresaAutofillLabel(null);
                       }}
                     >
                       <span className="font-medium">{empresa.razaoSocial}</span> ({empresa.cnpj})

@@ -163,18 +163,21 @@ const NfseEmitPage = () => {
   });
   const empresaDefaultQuery = useQuery({
     queryKey: ['empresas', 'emit-normal-default'],
-    queryFn: () => empresasApi.list({ limit: 2 }),
+    queryFn: () => empresasApi.list({ limit: 20 }),
     staleTime: 60_000,
   });
+  const empresaDefault = useMemo(() => {
+    const items = empresaDefaultQuery.data || [];
+    if (items.length === 0) return null;
+    return items.find((empresa) => empresa.razaoSocial.toLowerCase().includes('burgus')) || items[0];
+  }, [empresaDefaultQuery.data]);
 
   useEffect(() => {
-    const empresas = empresaDefaultQuery.data || [];
-    if (empresas.length !== 1) return;
+    if (!empresaDefault) return;
     if (selectedEmpresa || empresaSearch.trim().length > 0) return;
-    const [empresa] = empresas;
-    setSelectedEmpresa(empresa);
-    setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
-  }, [empresaDefaultQuery.data, empresaSearch, selectedEmpresa]);
+    setSelectedEmpresa(empresaDefault);
+    setEmpresaSearch(`${empresaDefault.razaoSocial} (${empresaDefault.cnpj})`);
+  }, [empresaDefault, empresaSearch, selectedEmpresa]);
 
   const tomadoresQuery = useQuery({
     queryKey: ['tomadores', 'emit-normal', selectedEmpresa?.cnpj],
