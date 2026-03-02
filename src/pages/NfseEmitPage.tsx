@@ -161,6 +161,20 @@ const NfseEmitPage = () => {
     enabled: canSearchEmpresa,
     staleTime: 60_000,
   });
+  const empresaDefaultQuery = useQuery({
+    queryKey: ['empresas', 'emit-normal-default'],
+    queryFn: () => empresasApi.list({ limit: 2 }),
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    const empresas = empresaDefaultQuery.data || [];
+    if (empresas.length !== 1) return;
+    if (selectedEmpresa || empresaSearch.trim().length > 0) return;
+    const [empresa] = empresas;
+    setSelectedEmpresa(empresa);
+    setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+  }, [empresaDefaultQuery.data, empresaSearch, selectedEmpresa]);
 
   const tomadoresQuery = useQuery({
     queryKey: ['tomadores', 'emit-normal', selectedEmpresa?.cnpj],

@@ -93,6 +93,15 @@ const NfseQuickEmitPage = () => {
     queryFn: empresasApi.list,
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    if (empresas.length !== 1) return;
+    if (cnpjClean.length > 0 || empresaSearch.trim().length > 0) return;
+    const [empresa] = empresas;
+    setCnpj(formatCnpj(empresa.cnpj));
+    setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+  }, [cnpjClean.length, empresaSearch, empresas]);
+
   const filteredEmpresas = useMemo(() => {
     if (!canSearchEmpresa) return [];
     const search = empresaSearchDebounced.trim().toLowerCase();
