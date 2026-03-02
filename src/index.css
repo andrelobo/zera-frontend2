@@ -347,3 +347,26 @@
 .ticker-track:hover .animate-ticker {
   animation-play-state: paused;
 }
+
+@keyframes ticker-scroll-half {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-marquee {
+  overflow: hidden;
+}
+
+.ticker-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll-half 20s linear infinite;
+}
+
+.ticker-marquee-item {
+  flex-shrink: 0;
+}
+
+.ticker-marquee:hover .ticker-marquee-track {
+  animation-play-state: paused;
+}

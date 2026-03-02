@@ -17,7 +17,6 @@ import TabelaAnexoIII from '@/components/TabelaAnexoIII';
 import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
-import ResumoTributario from '@/components/ResumoTributario';
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
@@ -596,11 +595,6 @@ const EmpresaFormPage = () => {
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
   const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
   const regimeTela = toTelaRegime(form.regimeTributario);
-  const resumoFallbackRbt12 = 120000;
-  const resumoRbt12 = rbt12Number > 0 ? rbt12Number : resumoFallbackRbt12;
-  const resumoCalculo = simplesCalculo.valido
-    ? simplesCalculo
-    : calcularSimplesAnexoIII(resumoRbt12, 'III');
   const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
   const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
   const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
@@ -642,16 +636,6 @@ const EmpresaFormPage = () => {
             <SidebarTrigger />
             <h2 className="text-base font-semibold text-foreground">O Prestador</h2>
           </div>
-
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <ResumoTributario
-              rbt12={resumoRbt12}
-              cnaeAnexo="III"
-              calculo={resumoCalculo}
-              visible
-            />
-          </div>
-
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden md:flex items-center gap-3 rounded-lg border border-border bg-background/70 px-3 py-1.5">
               <div className="leading-tight">

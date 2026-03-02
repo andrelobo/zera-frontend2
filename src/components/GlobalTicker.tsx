@@ -26,13 +26,23 @@ const GlobalTicker = () => {
   );
 
   return (
-    <div className="w-full border-b border-primary/20 bg-gradient-to-r from-primary/5 via-card to-primary/5 overflow-hidden">
-      <div className="ticker-track flex items-center py-1">
-        <div className="ticker-content flex items-center gap-1 animate-ticker">
-          {items}
-        </div>
-        <div className="ticker-content flex items-center gap-1 animate-ticker" aria-hidden>
-          {items}
+    <div className="w-full border-b border-primary/20 bg-gradient-to-r from-primary/5 via-card to-primary/5">
+      <div className="px-4 lg:px-6">
+        <div className="ticker-marquee py-1 rounded-sm">
+          <div className="ticker-marquee-track">
+            <div className="ticker-marquee-item flex items-center gap-1">
+              {items}
+            </div>
+            <div className="ticker-marquee-item flex items-center gap-1" aria-hidden>
+              {items}
+            </div>
+            <div className="ticker-marquee-item flex items-center gap-1" aria-hidden>
+              {items}
+            </div>
+            <div className="ticker-marquee-item flex items-center gap-1" aria-hidden>
+              {items}
+            </div>
+          </div>
         </div>
       </div>
     </div>
