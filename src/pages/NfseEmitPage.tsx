@@ -213,8 +213,8 @@ const NfseEmitPage = () => {
   const emitMutation = useMutation({
     mutationFn: (payload: EmitirNfseRequest) => nfseApi.emitir(payload),
     onSuccess: (result) => {
-      toast({ title: 'NFSe enviada', description: `Emissão: ${result.emissionId}` });
-      navigate(`/nfse/${result.emissionId}`);
+      toast({ title: 'NFSe enviada', description: `Emissão: ${result.emissionId}. Acompanhe o status na listagem.` });
+      navigate('/nfse');
     },
   });
 

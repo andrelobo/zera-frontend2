@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { empresasApi, nfseApi } from '@/services/api';
 import type { ApiError, EmitirNfseQuickResponse } from '@/types/api';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -115,6 +116,8 @@ const NfseQuickEmitPage = () => {
       setFormError(null);
       setCertRequiredBlock(false);
       setSuccess(data);
+      toast({ title: 'NFSe enviada', description: 'Acompanhe o status na listagem de emissões.' });
+      navigate('/nfse');
     },
     onError: (error) => {
       setSuccess(null);
