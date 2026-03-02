@@ -258,6 +258,38 @@ Tela: `src/pages/NfseQuickEmitPage.tsx`
 - `269e8d8` `fix(empresas): dispara preview automático ao completar CNPJ no cadastro`
 
 ### 11.2 Estado atual reportado em produção
+
+## 12. Handover 2026-03-02
+
+### 12.1 Decisões e ajustes aplicados no front
+- Emissão:
+  - Após sucesso na emissão normal e rápida, o fluxo foi ajustado para redirecionar para `/nfse` (listagem) para acompanhamento de status.
+- Prestador (`/empresas/nova`):
+  - Fluxo atualizado para carregar empresa existente automaticamente no formulário quando já houver cadastro.
+  - Hidratação de dados passou a priorizar dados completos via backend para refletir abas de cadastro, regime e parâmetros.
+- Autocomplete CNPJ:
+  - Mensagem de UX atualizada para refletir estratégia com CNPJA primária e fallback no backend.
+- Normalização visual no cadastro do prestador:
+  - Campos textuais principais em maiúsculas no front (exceto email).
+  - CNPJ com máscara ao carregar dados no formulário.
+  - Logradouro normalizado para maiúsculas com prefixo `R` no lugar de `RUA`.
+- Telefone/WhatsApp:
+  - Máscara ajustada para inserir um único `9` após DDD quando número vier com 10 dígitos (padrão celular BR), sem duplicar quando já houver 11 dígitos.
+
+### 12.2 Estado atual para continuar em casa
+- Arquivos com mudanças locais relevantes no frontend:
+  - `src/pages/EmpresaFormPage.tsx`
+  - `src/pages/TomadorFormPage.tsx`
+  - `src/utils/validators.ts`
+- Esses ajustes estão prontos para commit/push conforme comandos já validados em terminal.
+
+### 12.3 Pendências recomendadas
+1. Validar em produção os fluxos:
+   - abertura de `/empresas/nova` com empresa pré-carregada;
+   - atualização de completude após salvar campos de regime;
+   - máscara e auto-inserção do `9` em todos os formulários de telefone.
+2. Revisar cobertura de testes de formatação de telefone e normalização de logradouro.
+3. Registrar no QA checklist visual os padrões exigidos pelo cliente (maiúsculas e abreviações).
 - O fluxo de preview por CNPJ responde, porém ainda há relatos de campos sem preenchimento automático em alguns cenários.
 - Campos críticos reportados:
   - `Data Situação Cadastral`
