@@ -181,7 +181,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
 
   return {
     razaoSocial: toUpperTrimmed(empresa.razaoSocial || legacy.razao_social || previous.razaoSocial),
-    cnpj: empresa.cnpj || previous.cnpj,
+    cnpj: formatCnpj(String(empresa.cnpj || previous.cnpj)),
     nomeFantasia: toUpperTrimmed(empresa.nomeFantasia || legacy.nome_fantasia || previous.nomeFantasia),
     inscricaoMunicipal: toUpperTrimmed(empresa.inscricaoMunicipal || legacy.inscricao_municipal || previous.inscricaoMunicipal),
     inscricaoEstadual: toUpperTrimmed(empresa.inscricaoEstadual || legacy.inscricao_estadual || previous.inscricaoEstadual),
