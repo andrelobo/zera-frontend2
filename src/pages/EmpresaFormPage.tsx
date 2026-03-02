@@ -285,6 +285,12 @@ const EmpresaFormPage = () => {
     queryFn: () => empresasApi.getById(id!),
     enabled: isEdit,
   });
+  const { data: empresasExistentes = [], isLoading: isLoadingEmpresaExistente } = useQuery({
+    queryKey: ['empresas', 'prestador-default'],
+    queryFn: () => empresasApi.list({ limit: 1 }),
+    enabled: !isEdit,
+    staleTime: 60_000,
+  });
 
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
@@ -313,10 +319,14 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
+  const empresaExistente = !isEdit ? empresasExistentes[0] : undefined;
+  const effectiveEmpresaId = id || empresaExistente?.id;
+  const effectiveIsEdit = Boolean(effectiveEmpresaId);
 
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
+      setLastPreviewCnpj(existing.cnpj.replace(/\D/g, ''));
       setUltimoResumoCadastro({
         statusCadastro: existing.statusCadastro,
         prontoParaEmitir: existing.prontoParaEmitir,
@@ -326,6 +336,19 @@ const EmpresaFormPage = () => {
       });
     }
   }, [existing]);
+
+  useEffect(() => {
+    if (isEdit || !empresaExistente) return;
+    setForm((prev) => mapEmpresaToForm(empresaExistente, prev));
+    setLastPreviewCnpj(empresaExistente.cnpj.replace(/\D/g, ''));
+    setUltimoResumoCadastro({
+      statusCadastro: empresaExistente.statusCadastro,
+      prontoParaEmitir: empresaExistente.prontoParaEmitir,
+      percentualCompletude: empresaExistente.percentualCompletude,
+      camposFaltantes: empresaExistente.camposFaltantes,
+      camposFaltantesEmissao: empresaExistente.camposFaltantesEmissao,
+    });
+  }, [empresaExistente, isEdit]);
 
   useEffect(() => {
     if (cnaesRegime.length > 0) return;
@@ -435,7 +458,7 @@ const EmpresaFormPage = () => {
           cep: normalizeCep(form.cep) || undefined,
         },
       };
-      return isEdit ? empresasApi.update(id!, {
+      return effectiveIsEdit ? empresasApi.update(effectiveEmpresaId!, {
       razaoSocial: payload.razaoSocial,
       nomeFantasia: payload.nomeFantasia,
       inscricaoMunicipal: payload.inscricaoMunicipal,
@@ -482,13 +505,13 @@ const EmpresaFormPage = () => {
           description: `Completude atual: ${empresa.percentualCompletude ?? 0}%.${missingText}`,
           variant: 'destructive',
         });
-        if (!isEdit && empresa.id) {
+        if (!effectiveIsEdit && empresa.id) {
           navigate(`/empresas/${empresa.id}?secao=regime`);
         }
         return;
       }
 
-      toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
+      toast({ title: effectiveIsEdit ? 'Empresa atualizada' : 'Empresa criada' });
       navigate('/empresas');
     },
   });
@@ -643,7 +666,7 @@ const EmpresaFormPage = () => {
     window.dispatchEvent(new Event('zera:ticker:update'));
   }, [rbt12Number, simplesCalculo]);
 
-  if (isEdit && isLoading) return <LoadingState />;
+  if ((isEdit && isLoading) || (!isEdit && isLoadingEmpresaExistente)) return <LoadingState />;
 
   return (
     <div className="min-h-screen flex w-full">
