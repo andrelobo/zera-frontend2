@@ -162,6 +162,8 @@ const formatCnpj = (value: string) => {
 };
 
 const toUpperTrimmed = (value: unknown): string => String(value ?? '').toUpperCase();
+const normalizeLogradouro = (value: unknown): string =>
+  toUpperTrimmed(value).replace(/^RUA\b\.?\s*/u, 'R ');
 
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
@@ -267,7 +269,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || providerData.rbt12
       || previous.rbt12,
     ),
-    endereco: toUpperTrimmed(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
+    endereco: normalizeLogradouro(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
     numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
     complemento: toUpperTrimmed(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
     bairro: toUpperTrimmed(empresa.endereco?.bairro || endereco.bairro || previous.bairro),
@@ -426,7 +428,7 @@ const EmpresaFormPage = () => {
     const address = cepLookupQuery.data;
     setForm((prev) => ({
       ...prev,
-      endereco: address.logradouro || prev.endereco,
+      endereco: normalizeLogradouro(address.logradouro || prev.endereco),
       cidade: address.cidade || prev.cidade,
       uf: address.uf || prev.uf,
       cep: formatCep(address.cep),
@@ -597,7 +599,9 @@ const EmpresaFormPage = () => {
       'cidade',
       'uf',
     ]);
-    const normalizedValue = uppercaseFields.has(key) ? value.toUpperCase() : value;
+    const normalizedValue = key === 'endereco'
+      ? normalizeLogradouro(value)
+      : (uppercaseFields.has(key) ? value.toUpperCase() : value);
     setForm(prev => ({ ...prev, [key]: normalizedValue }));
   };
 
