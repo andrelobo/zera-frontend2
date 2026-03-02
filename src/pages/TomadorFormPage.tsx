@@ -359,7 +359,40 @@ const TomadorFormPage = () => {
 
   const update = (field: keyof TomadorSectionData, value: string | boolean) => {
     if (field === 'empresaCnpj' || field === 'cpfCnpj') {
-      setForm((prev) => ({ ...prev, [field]: formatDoc(String(value)) }));
+      if (field === 'cpfCnpj') {
+        setForm((prev) => {
+          const prevDigits = onlyDigits(prev.cpfCnpj);
+          const nextCpfCnpj = formatDoc(String(value));
+          const nextDigits = onlyDigits(nextCpfCnpj);
+          const docChanged = prevDigits !== nextDigits;
+          const hadStableDoc = prevDigits.length === 11 || prevDigits.length === 14;
+
+          // Prevent stale autofill values from a previous document.
+          if (docChanged && hadStableDoc) {
+            return {
+              ...prev,
+              cpfCnpj: nextCpfCnpj,
+              razaoSocial: '',
+              nomeFantasia: '',
+              inscricaoMunicipal: '',
+              inscricaoEstadual: '',
+              suframa: '',
+              cep: '',
+              logradouro: '',
+              numero: '',
+              complemento: '',
+              bairro: '',
+              localidadeUf: '',
+              email: '',
+              whatsapp: '',
+            };
+          }
+
+          return { ...prev, cpfCnpj: nextCpfCnpj };
+        });
+      } else {
+        setForm((prev) => ({ ...prev, [field]: formatDoc(String(value)) }));
+      }
       if (field === 'cpfCnpj') {
         setLastAutofillDoc('');
       }
