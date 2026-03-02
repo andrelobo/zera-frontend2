@@ -345,6 +345,7 @@ export interface NfseFilters {
   limit?: number;
   status?: NfseStatus;
   provider?: NfseProvider;
+  dateFrom?: string;
   sort?: string;
   order?: 'ASC' | 'DESC';
 }

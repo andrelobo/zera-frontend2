@@ -15,6 +15,8 @@ import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 
+const NFSE_LIST_DATE_FROM = '2026-02-01';
+
 const NfseListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,7 +28,15 @@ const NfseListPage = () => {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['nfse', page, status, provider],
-    queryFn: () => nfseApi.list({ page, limit, status, provider, sort: 'createdAt', order: 'DESC' }),
+    queryFn: () => nfseApi.list({
+      page,
+      limit,
+      status,
+      provider,
+      dateFrom: NFSE_LIST_DATE_FROM,
+      sort: 'createdAt',
+      order: 'DESC',
+    }),
   });
 
   const items = data?.data || [];
