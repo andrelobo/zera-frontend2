@@ -291,6 +291,13 @@ const EmpresaFormPage = () => {
     enabled: !isEdit,
     staleTime: 60_000,
   });
+  const empresaExistenteResumo = !isEdit ? empresasExistentes[0] : undefined;
+  const { data: empresaExistenteCompleta, isLoading: isLoadingEmpresaExistenteCompleta } = useQuery({
+    queryKey: ['empresa', 'prestador-default', empresaExistenteResumo?.id],
+    queryFn: () => empresasApi.getById(empresaExistenteResumo!.id),
+    enabled: !isEdit && Boolean(empresaExistenteResumo?.id),
+    staleTime: 60_000,
+  });
 
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
@@ -319,7 +326,7 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
-  const empresaExistente = !isEdit ? empresasExistentes[0] : undefined;
+  const empresaExistente = !isEdit ? (empresaExistenteCompleta || empresaExistenteResumo) : undefined;
   const effectiveEmpresaId = id || empresaExistente?.id;
   const effectiveIsEdit = Boolean(effectiveEmpresaId);
 
@@ -666,7 +673,11 @@ const EmpresaFormPage = () => {
     window.dispatchEvent(new Event('zera:ticker:update'));
   }, [rbt12Number, simplesCalculo]);
 
-  if ((isEdit && isLoading) || (!isEdit && isLoadingEmpresaExistente)) return <LoadingState />;
+  if (
+    (isEdit && isLoading)
+    || (!isEdit && isLoadingEmpresaExistente)
+    || (!isEdit && Boolean(empresaExistenteResumo?.id) && isLoadingEmpresaExistenteCompleta)
+  ) return <LoadingState />;
 
   return (
     <div className="min-h-screen flex w-full">
