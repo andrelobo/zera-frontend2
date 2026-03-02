@@ -84,6 +84,7 @@ const campoLabel: Record<string, string> = {
 };
 
 const toCampoLabel = (field: string) => campoLabel[field] ?? field;
+const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 const getInitials = (name?: string | null, email?: string | null) => {
   const source = (name || email || '').trim();
   if (!source) return 'SK';
@@ -590,8 +591,6 @@ const EmpresaFormPage = () => {
     previewMutation.mutate(cnpj);
   }, [form.cnpj, isEdit, lastPreviewAttemptCnpj, lastPreviewCnpj, previewMutation]);
 
-  if (isEdit && isLoading) return <LoadingState />;
-
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
   const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
   const regimeTela = toTelaRegime(form.regimeTributario);
@@ -627,6 +626,24 @@ const EmpresaFormPage = () => {
       cnaeFiscalDescricao: principal.descricao || prev.cnaeFiscalDescricao,
     }));
   };
+
+  useEffect(() => {
+    if (!simplesCalculo.valido || !simplesCalculo.faixa) return;
+    if (typeof window === 'undefined') return;
+
+    const snapshot = {
+      cnaeAnexo: 'III',
+      faixa: simplesCalculo.faixa.faixa,
+      rbt12: rbt12Number,
+      issReferencia: simplesCalculo.issReferencia,
+      aliquotaEfetiva: simplesCalculo.aliquotaEfetiva,
+    };
+
+    window.localStorage.setItem(TICKER_STORAGE_KEY, JSON.stringify(snapshot));
+    window.dispatchEvent(new Event('zera:ticker:update'));
+  }, [rbt12Number, simplesCalculo]);
+
+  if (isEdit && isLoading) return <LoadingState />;
 
   return (
     <div className="min-h-screen flex w-full">
