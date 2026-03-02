@@ -107,11 +107,12 @@ const NfseQuickEmitPage = () => {
 
   useEffect(() => {
     if (!empresaDefault) return;
-    if (cnpjClean.length > 0 || empresaSearch.trim().length > 0) return;
-    setCnpj(formatCnpj(empresaDefault.cnpj));
-    setEmpresaSearch(`${empresaDefault.razaoSocial} (${empresaDefault.cnpj})`);
+    const defaultCnpj = empresaDefault.cnpj.replace(/\D/g, '');
+    if (cnpjClean === defaultCnpj && empresaSearch.includes(defaultCnpj.slice(-4))) return;
+    setCnpj(formatCnpj(defaultCnpj));
+    setEmpresaSearch(`${empresaDefault.razaoSocial} (${formatCnpj(defaultCnpj)})`);
     setEmpresaAutofillLabel(empresaDefault.razaoSocial);
-  }, [cnpjClean.length, empresaDefault, empresaSearch]);
+  }, [cnpjClean, empresaDefault, empresaSearch]);
 
   const filteredEmpresas = useMemo(() => {
     if (!canSearchEmpresa) return [];

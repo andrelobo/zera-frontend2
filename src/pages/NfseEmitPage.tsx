@@ -103,6 +103,7 @@ const NfseEmitPage = () => {
   const [empresaSearch, setEmpresaSearch] = useState('');
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
+  const [empresaAutofillLabel, setEmpresaAutofillLabel] = useState<string | null>(null);
 
   const [selectedTomador, setSelectedTomador] = useState<Tomador | null>(null);
 
@@ -174,9 +175,12 @@ const NfseEmitPage = () => {
 
   useEffect(() => {
     if (!empresaDefault) return;
-    if (selectedEmpresa || empresaSearch.trim().length > 0) return;
+    const selectedCnpj = selectedEmpresa?.cnpj?.replace(/\D/g, '') || '';
+    const defaultCnpj = empresaDefault.cnpj.replace(/\D/g, '');
+    if (selectedCnpj === defaultCnpj && empresaSearch.includes(defaultCnpj.slice(-4))) return;
     setSelectedEmpresa(empresaDefault);
-    setEmpresaSearch(`${empresaDefault.razaoSocial} (${empresaDefault.cnpj})`);
+    setEmpresaSearch(`${empresaDefault.razaoSocial} (${formatDoc(defaultCnpj)})`);
+    setEmpresaAutofillLabel(empresaDefault.razaoSocial);
   }, [empresaDefault, empresaSearch, selectedEmpresa]);
 
   const tomadoresQuery = useQuery({
@@ -409,9 +413,15 @@ const NfseEmitPage = () => {
               onChange={(e) => {
                 setEmpresaSearch(e.target.value);
                 setSelectedEmpresa(null);
+                setEmpresaAutofillLabel(null);
               }}
               placeholder="Digite razão social ou CNPJ"
             />
+            {empresaAutofillLabel && (
+              <p className="text-xs text-muted-foreground">
+                Empresa padrão carregada: {empresaAutofillLabel}
+              </p>
+            )}
             {canSearchEmpresa && empresasQuery.isLoading && (
               <p className="text-xs text-muted-foreground">Buscando empresas...</p>
             )}
@@ -425,6 +435,7 @@ const NfseEmitPage = () => {
                     onClick={() => {
                       setSelectedEmpresa(empresa);
                       setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+                      setEmpresaAutofillLabel(null);
                     }}
                   >
                     <span className="font-medium">{empresa.razaoSocial}</span> ({empresa.cnpj})
