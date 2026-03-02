@@ -250,7 +250,7 @@ const TomadorFormPage = () => {
     if (!form.cpfCnpj || !form.razaoSocial) {
       toast({
         title: 'Dados obrigatórios',
-        description: 'Preencha CPF/CNPJ e razão social do tomador.',
+        description: 'Preencha CPF/CNPJ e nome completo ou razão social do tomador.',
         variant: 'destructive',
       });
       return;

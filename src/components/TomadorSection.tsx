@@ -27,6 +27,9 @@ interface TomadorSectionProps {
 }
 
 const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSectionProps) => {
+  const cpfCnpjDigits = data.cpfCnpj.replace(/\D/g, '');
+  const isCpf = cpfCnpjDigits.length > 0 && cpfCnpjDigits.length <= 11;
+
   return (
     <div className="section-card">
       <h2 className="section-title">
@@ -34,7 +37,7 @@ const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSect
         Tomadores
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-4">
+      <div className={`grid grid-cols-1 ${isCpf ? 'md:grid-cols-[1.2fr]' : 'md:grid-cols-[1.2fr_1fr_1fr]'} gap-4`}>
         <div>
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
           <div className="flex gap-2">
@@ -53,64 +56,70 @@ const TomadorSection = ({ data, onChange, cepLoading, cnpjLoading }: TomadorSect
           </div>
         </div>
 
-        <div>
-          <label className="field-label">Inscrição Municipal</label>
-          <input
-            className="field-input"
-            placeholder="Inscrição"
-            value={data.inscricaoMunicipal}
-            onChange={(e) => onChange('inscricaoMunicipal', e.target.value)}
-          />
-        </div>
+        {!isCpf && (
+          <div>
+            <label className="field-label">Inscrição Municipal</label>
+            <input
+              className="field-input"
+              placeholder="Inscrição"
+              value={data.inscricaoMunicipal}
+              onChange={(e) => onChange('inscricaoMunicipal', e.target.value)}
+            />
+          </div>
+        )}
 
-        <div>
-          <label className="field-label">Inscrição Estadual</label>
-          <input
-            className="field-input"
-            placeholder="Inscrição"
-            value={data.inscricaoEstadual}
-            onChange={(e) => onChange('inscricaoEstadual', e.target.value)}
-          />
-        </div>
+        {!isCpf && (
+          <div>
+            <label className="field-label">Inscrição Estadual</label>
+            <input
+              className="field-input"
+              placeholder="Inscrição"
+              value={data.inscricaoEstadual}
+              onChange={(e) => onChange('inscricaoEstadual', e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 mt-4 items-end">
         <div>
-          <label className="field-label">TOMADOR(A)</label>
+          <label className="field-label">{isCpf ? 'NOME COMPLETO*' : 'RAZÃO SOCIAL*'}</label>
           <input
             className="field-input"
-            placeholder="Tomador(a)"
+            placeholder={isCpf ? 'Nome completo do tomador(a)' : 'Razão social do tomador(a)'}
             value={data.razaoSocial}
             onChange={(e) => onChange('razaoSocial', e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-3 pb-1">
-          <label className="field-label whitespace-nowrap mb-0">Substituto Tributário</label>
-          <div className="flex items-center gap-0">
-            <button
-              type="button"
-              className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${
-                data.substitutoTributario
-                  ? 'bg-destructive text-destructive-foreground border-destructive'
-                  : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-              }`}
-              onClick={() => onChange('substitutoTributario', true)}
-            >
-              Sim
-            </button>
-            <button
-              type="button"
-              className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${
-                !data.substitutoTributario
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-              }`}
-              onClick={() => onChange('substitutoTributario', false)}
-            >
-              Não
-            </button>
+        {!isCpf && (
+          <div className="flex items-center gap-3 pb-1">
+            <label className="field-label whitespace-nowrap mb-0">Substituto Tributário</label>
+            <div className="flex items-center gap-0">
+              <button
+                type="button"
+                className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${
+                  data.substitutoTributario
+                    ? 'bg-destructive text-destructive-foreground border-destructive'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                }`}
+                onClick={() => onChange('substitutoTributario', true)}
+              >
+                Sim
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${
+                  !data.substitutoTributario
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                }`}
+                onClick={() => onChange('substitutoTributario', false)}
+              >
+                Não
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-5 pt-5 border-t border-border">
