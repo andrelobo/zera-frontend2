@@ -161,6 +161,8 @@ const formatCnpj = (value: string) => {
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
 
+const toUpperTrimmed = (value: unknown): string => String(value ?? '').toUpperCase();
+
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
   const endereco = (empresa.endereco || {}) as Record<string, unknown>;
@@ -178,13 +180,13 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
   );
 
   return {
-    razaoSocial: empresa.razaoSocial || String(legacy.razao_social || previous.razaoSocial),
+    razaoSocial: toUpperTrimmed(empresa.razaoSocial || legacy.razao_social || previous.razaoSocial),
     cnpj: empresa.cnpj || previous.cnpj,
-    nomeFantasia: empresa.nomeFantasia || String(legacy.nome_fantasia || previous.nomeFantasia),
-    inscricaoMunicipal: empresa.inscricaoMunicipal || String(legacy.inscricao_municipal || previous.inscricaoMunicipal),
-    inscricaoEstadual: empresa.inscricaoEstadual || String(legacy.inscricao_estadual || previous.inscricaoEstadual),
-    suframa: empresa.suframa || String(legacy.suframa || previous.suframa),
-    situacaoCadastral: empresa.situacaoCadastral || String(legacy.situacao_cadastral || previous.situacaoCadastral),
+    nomeFantasia: toUpperTrimmed(empresa.nomeFantasia || legacy.nome_fantasia || previous.nomeFantasia),
+    inscricaoMunicipal: toUpperTrimmed(empresa.inscricaoMunicipal || legacy.inscricao_municipal || previous.inscricaoMunicipal),
+    inscricaoEstadual: toUpperTrimmed(empresa.inscricaoEstadual || legacy.inscricao_estadual || previous.inscricaoEstadual),
+    suframa: toUpperTrimmed(empresa.suframa || legacy.suframa || previous.suframa),
+    situacaoCadastral: toUpperTrimmed(empresa.situacaoCadastral || legacy.situacao_cadastral || previous.situacaoCadastral),
     dataSituacaoCadastral: toDateInputValue(
       empresa.dataSituacaoCadastral
       || (legacy.data_situacao_cadastral as string | undefined)
@@ -201,13 +203,14 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || providerData.cnae_fiscal
       || previous.cnaeFiscal,
     ),
-    cnaeFiscalDescricao: empresa.cnaeFiscalDescricao
-      || String(
+    cnaeFiscalDescricao: toUpperTrimmed(
+      empresa.cnaeFiscalDescricao
+      || (
         legacy.cnae_fiscal_descricao
         || providerData.cnae_fiscal_descricao
         || atividadePrincipal?.descricao
-        || previous.cnaeFiscalDescricao,
-      ),
+        || previous.cnaeFiscalDescricao
+      )),
     ctnCodigo: String(
       legacy.ctnCodigo
       || legacy.ctn_codigo
@@ -220,9 +223,14 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || providerData.nbs_codigo
       || previous.nbsCodigo,
     ),
-    porte: empresa.porte
-      || String(providerData.descricao_porte || legacy.porte || providerData.porte || previous.porte),
-    naturezaJuridica: empresa.naturezaJuridica || String(legacy.natureza_juridica || previous.naturezaJuridica),
+    porte: toUpperTrimmed(
+      empresa.porte
+      || providerData.descricao_porte
+      || legacy.porte
+      || providerData.porte
+      || previous.porte,
+    ),
+    naturezaJuridica: toUpperTrimmed(empresa.naturezaJuridica || legacy.natureza_juridica || previous.naturezaJuridica),
     capitalSocial: String(empresa.capitalSocial || legacy.capital_social || previous.capitalSocial),
     opcaoPeloSimples: toBooleanSelectValue(
       empresa.opcaoPeloSimples ?? (legacy.opcao_pelo_simples as boolean | null | undefined),
@@ -259,12 +267,14 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || providerData.rbt12
       || previous.rbt12,
     ),
-    endereco: String(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
+    endereco: toUpperTrimmed(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
     numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
-    complemento: String(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
-    bairro: String(empresa.endereco?.bairro || endereco.bairro || previous.bairro),
-    cidade: empresa.cidade || empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || String(endereco.municipio || previous.cidade),
-    uf: empresa.uf || empresa.endereco?.uf || empresa.endereco?.estado || previous.uf,
+    complemento: toUpperTrimmed(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
+    bairro: toUpperTrimmed(empresa.endereco?.bairro || endereco.bairro || previous.bairro),
+    cidade: toUpperTrimmed(
+      empresa.cidade || empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || endereco.municipio || previous.cidade,
+    ),
+    uf: toUpperTrimmed(empresa.uf || empresa.endereco?.uf || empresa.endereco?.estado || previous.uf),
     cep: formatCep(empresa.cep || empresa.endereco?.cep || String(endereco.cep || previous.cep)),
     telefone: empresa.telefone || empresa.fone || empresa.whatsapp || String(legacy.ddd_telefone_1 || previous.telefone),
     whatsapp: empresa.whatsapp || empresa.telefone || empresa.fone || String(legacy.ddd_telefone_1 || previous.whatsapp),
@@ -569,7 +579,26 @@ const EmpresaFormPage = () => {
   });
 
   const update = (key: keyof EmpresaFormData, value: string) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+    const uppercaseFields = new Set<keyof EmpresaFormData>([
+      'razaoSocial',
+      'nomeFantasia',
+      'inscricaoMunicipal',
+      'inscricaoEstadual',
+      'suframa',
+      'situacaoCadastral',
+      'cnaeFiscalDescricao',
+      'ctnCodigo',
+      'nbsCodigo',
+      'porte',
+      'naturezaJuridica',
+      'endereco',
+      'complemento',
+      'bairro',
+      'cidade',
+      'uf',
+    ]);
+    const normalizedValue = uppercaseFields.has(key) ? value.toUpperCase() : value;
+    setForm(prev => ({ ...prev, [key]: normalizedValue }));
   };
 
   const handlePrestadorChange = (field: string, value: string) => {
