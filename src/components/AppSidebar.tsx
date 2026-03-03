@@ -64,12 +64,12 @@ const AppSidebar = () => {
   };
 
   const goPrestador = () => {
-    navigate('/empresas/nova?secao=cadastro');
+    navigate('/empresas');
     closeMobile();
   };
 
   const goPrestadorSub = (sub: PrestadorSubTab) => {
-    navigate(`/empresas/nova?secao=${sub}`);
+    navigate('/empresas');
     closeMobile();
   };
 
