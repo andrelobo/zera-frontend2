@@ -29,6 +29,8 @@ export interface ListaServicoItem {
   id: string;
   natureza: string;
   descricao: string;
+  codigoServico?: string;
+  aliquota?: string;
 }
 
 interface Props {
@@ -332,7 +334,16 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
             onChange={(e) => {
               const item = listaServico.find(i => i.id === e.target.value);
               if (item) {
-                onChange({ ...data, descricaoServico: data.descricaoServico ? `${data.descricaoServico}\n${item.descricao}` : item.descricao });
+                onChange({
+                  ...data,
+                  codigoServico: item.codigoServico || data.codigoServico,
+                  descricaoServico: item.descricao || data.descricaoServico,
+                  aliquota: item.aliquota || data.aliquota,
+                });
+                if (item.codigoServico) {
+                  const entry = getCTNByCode(item.codigoServico);
+                  setCtnDescricaoSelecionada(entry?.descricao || item.descricao || '');
+                }
               }
             }}
           >

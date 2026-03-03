@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import PrestadorSection from '@/components/emissao/PrestadorSection';
 import TomadorEmissao, { INITIAL_TOMADOR, type TomadorEmissaoData } from '@/components/emissao/TomadorEmissao';
-import PrestacaoServicoSection, { type PrestacaoServicoData } from '@/components/emissao/PrestacaoServicoSection';
+import PrestacaoServicoSection, { type PrestacaoServicoData, type ListaServicoItem } from '@/components/emissao/PrestacaoServicoSection';
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
@@ -94,21 +94,43 @@ const NfseEmitPage: React.FC = () => {
   const [competencia, setCompetencia] = useState('01/2026');
   const [dataEmissao, setDataEmissao] = useState(TODAY_ISO);
   const [nfseNumero, setNfseNumero] = useState('');
-  const [dpsNumero, setDpsNumero] = useState('');
-  const [serieDpsNumero, setSerieDpsNumero] = useState('');
+  const prestadorCnpjDigits = prestador.cnpj.replace(/\D/g, '');
 
   const autosave = useCallback(() => {}, []);
 
   const tomadoresQuery = useQuery({
-    queryKey: ['tomadores', 'emit-normal', prestador.cnpj],
-    queryFn: () => tomadoresApi.autocomplete({
-      empresaCnpj: prestador.cnpj.replace(/\D/g, ''),
-      q: '',
-      limit: 30,
-    }),
-    enabled: prestador.cnpj.replace(/\D/g, '').length === 14,
+    queryKey: ['tomadores', 'emit-normal', prestadorCnpjDigits],
+    queryFn: () => {
+      if (prestadorCnpjDigits.length === 14) {
+        return tomadoresApi.autocomplete({
+          empresaCnpj: prestadorCnpjDigits,
+          q: '',
+          limit: 30,
+        });
+      }
+      return tomadoresApi.list();
+    },
+    enabled: true,
     staleTime: 60_000,
   });
+
+  const servicosQuery = useQuery({
+    queryKey: ['servicos', 'emit-normal', prestadorCnpjDigits],
+    queryFn: async () => {
+      const result = await nfseApi.servicosList({ limit: 200, page: 1 }, { skipGlobalErrorToast: true });
+      return result.items || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const listaServico = useMemo<ListaServicoItem[]>(() => {
+    return (servicosQuery.data || []).map((item, index) => ({
+      id: `${item.codigoServico}-${index}`,
+      natureza: item.codigoServico,
+      descricao: item.descricao,
+      codigoServico: item.codigoServico,
+    }));
+  }, [servicosQuery.data]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
@@ -283,7 +305,7 @@ const NfseEmitPage: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
         <div className="section-card p-3">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="field-label">Competência</label>
               <input
@@ -319,28 +341,6 @@ const NfseEmitPage: React.FC = () => {
                 onChange={(e) => setNfseNumero(e.target.value.replace(/\D/g, ''))}
               />
             </div>
-            <div>
-              <label className="field-label">DPS Nº</label>
-              <input
-                className="field-input"
-                type="text"
-                placeholder="Número"
-                inputMode="numeric"
-                value={dpsNumero}
-                onChange={(e) => setDpsNumero(e.target.value.replace(/\D/g, ''))}
-              />
-            </div>
-            <div>
-              <label className="field-label">Série DPS Nº</label>
-              <input
-                className="field-input"
-                type="text"
-                placeholder="Número"
-                inputMode="numeric"
-                value={serieDpsNumero}
-                onChange={(e) => setSerieDpsNumero(e.target.value.replace(/\D/g, ''))}
-              />
-            </div>
           </div>
         </div>
 
@@ -368,6 +368,13 @@ const NfseEmitPage: React.FC = () => {
           mostrarRetencoesFederais={true}
           optanteSimples={false}
           tomadorSubstituto={false}
+          favoritos={(servicosQuery.data || []).map((item) => ({
+            codigo: item.codigoServico,
+            cnaeDescricao: item.descricao,
+            lc116Item: item.itemLc116 || '',
+            vinculos: [{ ctn: item.codigoServico, ctnDescricao: item.descricao }],
+          }))}
+          listaServico={listaServico}
         />
 
         <ValoresTotaisSection

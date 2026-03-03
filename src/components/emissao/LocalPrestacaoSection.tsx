@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MapPin, Loader2, Globe } from 'lucide-react';
+import { listMunicipiosByUf } from '@/services/location';
 
 export interface LocalPrestacaoData {
   pais: string;
@@ -43,11 +44,8 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
     lastUf.current = uf;
     setLoadingMunicipios(true);
     try {
-      const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`);
-      if (res.ok) {
-        const list = await res.json();
-        setMunicipios(list.map((m: any) => ({ nome: m.nome, id: m.id })));
-      }
+      const list = await listMunicipiosByUf(uf);
+      setMunicipios(list.map((m) => ({ nome: m.nome, id: m.id })));
     } catch {
       // silently fail
     } finally {

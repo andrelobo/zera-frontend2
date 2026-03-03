@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Building2, Loader2, FileText, MapPin, Shield } from 'lucide-react';
 import { formatCNPJ, formatCEP, formatPhone, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
+import { empresasApi } from '@/services/api';
+import { lookupCep } from '@/services/cep';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -31,73 +33,31 @@ interface Props {
 
 async function fetchCNPJData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
-
-  // Usa BrasilAPI como fonte primária (mesma do Cartão CNPJ)
-  try {
-    const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleaned}`);
-    if (res.ok) {
-      const data = await res.json();
-      // Concatena tipo de logradouro ao logradouro
-      let logradouroCompleto = data.logradouro || '';
-      if (data.descricao_tipo_de_logradouro && logradouroCompleto && !logradouroCompleto.toUpperCase().startsWith(data.descricao_tipo_de_logradouro.toUpperCase())) {
-        logradouroCompleto = `${data.descricao_tipo_de_logradouro} ${logradouroCompleto}`;
-      }
-      return {
-        razao_social: data.razao_social || '',
-        nome_fantasia: data.nome_fantasia || '',
-        cep: data.cep || '',
-        logradouro: logradouroCompleto,
-        numero: data.numero || '',
-        complemento: data.complemento || '',
-        bairro: data.bairro || '',
-        municipio: data.municipio || '',
-        uf: data.uf || '',
-        email: data.email || '',
-        telefone: data.ddd_telefone_1?.replace(/\D/g, '') || '',
-        opcao_pelo_simples: data.opcao_pelo_simples ?? null,
-      };
-    }
-  } catch {
-    // fallback abaixo
-  }
-
-  // Fallback: ReceitaWS
-  const res = await fetch(`https://receitaws.com.br/v1/cnpj/${cleaned}`, {
-    headers: { 'Accept': 'application/json' },
-  });
-  if (!res.ok) throw new Error('CNPJ não encontrado');
-  const d = await res.json();
-  if (d.status === 'ERROR') throw new Error('CNPJ não encontrado');
-  let logradouroCompleto = d.logradouro || '';
-  if (d.tipo && logradouroCompleto && !logradouroCompleto.toUpperCase().startsWith(d.tipo.toUpperCase())) {
-    logradouroCompleto = `${d.tipo} ${logradouroCompleto}`;
-  }
+  const empresa = await empresasApi.previewByCnpj(cleaned);
+  let logradouroCompleto = empresa.endereco?.logradouro || '';
   return {
-    razao_social: d.nome || '',
-    nome_fantasia: d.fantasia || '',
-    cep: d.cep?.replace(/[.\-]/g, '') || '',
+    razao_social: empresa.razaoSocial || '',
+    nome_fantasia: empresa.nomeFantasia || '',
+    cep: empresa.endereco?.cep || '',
     logradouro: logradouroCompleto,
-    numero: d.numero || '',
-    complemento: d.complemento || '',
-    bairro: d.bairro || '',
-    municipio: d.municipio || '',
-    uf: d.uf || '',
-    email: d.email || '',
-    telefone: d.telefone?.replace(/\D/g, '') || '',
-    opcao_pelo_simples: d.simples?.optante ?? null,
+    numero: empresa.endereco?.numero || '',
+    complemento: empresa.endereco?.complemento || '',
+    bairro: empresa.endereco?.bairro || '',
+    municipio: empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || '',
+    uf: empresa.endereco?.uf || empresa.endereco?.estado || '',
+    email: empresa.email || '',
+    telefone: empresa.whatsapp || empresa.fone || '',
+    opcao_pelo_simples: empresa.opcaoPeloSimples ?? null,
   };
 }
 
 async function fetchCEPData(cep: string) {
-  const cleaned = cep.replace(/\D/g, '');
-  const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleaned}`);
-  if (!res.ok) throw new Error('CEP não encontrado');
-  const data = await res.json();
+  const data = await lookupCep(cep);
   return {
-    logradouro: data.street || '',
-    bairro: data.neighborhood || '',
-    municipio: data.city || '',
-    uf: data.state || '',
+    logradouro: data.logradouro || '',
+    bairro: data.bairro || '',
+    municipio: data.cidade || '',
+    uf: data.uf || '',
   };
 }
 
