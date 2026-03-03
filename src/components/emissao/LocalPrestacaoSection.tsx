@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { MapPin, Loader2, Globe } from 'lucide-react';
-import { listMunicipiosByUf } from '@/services/location';
 
 export interface LocalPrestacaoData {
   pais: string;
@@ -31,6 +30,10 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
   const lastUf = useRef('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (data.uf) fetchMunicipios(data.uf);
+  }, []);
+
   const update = (field: keyof LocalPrestacaoData, value: string) => {
     onChange({ ...data, [field]: value });
   };
@@ -40,18 +43,17 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
     lastUf.current = uf;
     setLoadingMunicipios(true);
     try {
-      const list = await listMunicipiosByUf(uf);
-      setMunicipios(list.map((m) => ({ nome: m.nome, id: m.id })));
+      const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`);
+      if (res.ok) {
+        const list = await res.json();
+        setMunicipios(list.map((m: any) => ({ nome: m.nome, id: m.id })));
+      }
     } catch {
       // silently fail
     } finally {
       setLoadingMunicipios(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (data.uf) fetchMunicipios(data.uf);
-  }, [data.uf, fetchMunicipios]);
 
   const handleUfChange = (uf: string) => {
     onChange({ ...data, uf, municipio: '' });
@@ -61,7 +63,6 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
 
   const handleMunicipioSearch = (value: string) => {
     setSearchMunicipio(value);
-    onChange({ ...data, municipio: value });
     setShowDropdown(true);
   };
 
@@ -82,7 +83,7 @@ const LocalPrestacaoSection: React.FC<Props> = ({ data, onChange }) => {
         Local da Prestação do Serviço
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_0.5fr_3fr] gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_0.5fr_3fr] gap-2">
         <div>
           <label className="field-label flex items-center gap-1">
             <Globe className="w-3.5 h-3.5" />País

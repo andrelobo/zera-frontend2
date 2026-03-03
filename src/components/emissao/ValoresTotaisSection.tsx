@@ -31,29 +31,29 @@ const ValoresTotaisSection: React.FC<Props> = ({
         Valores e Totais
       </h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-3 rounded-lg bg-muted/30 border border-border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="p-2.5 rounded-lg bg-muted/30 border border-border">
           <span className="text-xs text-muted-foreground">Valor Bruto</span>
-          <p className="text-lg font-bold text-foreground">R$ {fmt(valorBruto)}</p>
+          <p className="text-base font-bold text-foreground">R$ {fmt(valorBruto)}</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30 border border-border">
+        <div className="p-2.5 rounded-lg bg-muted/30 border border-border">
           <span className="text-xs text-muted-foreground">Deduções</span>
-          <p className="text-lg font-bold text-foreground">R$ {fmt(desconto)}</p>
+          <p className="text-base font-bold text-foreground">R$ {fmt(desconto)}</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30 border border-border">
+        <div className="p-2.5 rounded-lg bg-muted/30 border border-border">
           <span className="text-xs text-muted-foreground">Impostos / Retenções</span>
-          <p className="text-lg font-bold text-foreground">R$ {fmt(totalRetencoes)}</p>
+          <p className="text-base font-bold text-foreground">R$ {fmt(totalRetencoes)}</p>
         </div>
-        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+        <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
           <span className="text-xs text-primary">Valor Líquido</span>
-          <p className="text-lg font-bold text-primary">R$ {fmt(Math.max(0, valorLiquido))}</p>
+          <p className="text-base font-bold text-primary">R$ {fmt(Math.max(0, valorLiquido))}</p>
         </div>
       </div>
 
       {/* Detalhamento */}
-      <div className="mt-4 pt-4 border-t border-border">
-        <p className="text-xs font-bold text-foreground mb-3">Detalhamento</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+      <div className="mt-3 pt-3 border-t border-border">
+        <p className="text-xs font-bold text-foreground mb-2">Detalhamento</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">ISS {issRetido ? '(retido)' : ''}</span>
             <span className="font-medium text-foreground">R$ {fmt(issValor)}</span>
