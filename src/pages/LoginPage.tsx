@@ -22,6 +22,7 @@ const LOADING_STEPS = [
   'Inicializando ambiente',
   'Validando credenciais',
 ];
+const WARMUP_PING_INTERVAL_MS = 12_000;
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -35,16 +36,32 @@ const LoginPage = () => {
 
   useEffect(() => {
     let active = true;
-    authApi.warmup()
-      .then(() => {
+    let inFlight = false;
+
+    const runWarmup = async () => {
+      if (!active || inFlight) return;
+      inFlight = true;
+      try {
+        await authApi.warmup();
         if (active) setWarmupState('ready');
-      })
-      .catch(() => {
-        if (active) setWarmupState('failed');
-      });
+      } catch {
+        if (active) {
+          setWarmupState((prev) => (prev === 'ready' ? prev : 'failed'));
+        }
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    void runWarmup();
+    const pingTimer = setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void runWarmup();
+    }, WARMUP_PING_INTERVAL_MS);
 
     return () => {
       active = false;
+      clearInterval(pingTimer);
     };
   }, []);
 
