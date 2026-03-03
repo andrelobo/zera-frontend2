@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertCircle, ArrowLeft, Building2, FileOutput, Loader2, MapPin, Send, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { AlertCircle, ArrowLeft, Building2, Loader2, MapPin, Printer, Send, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
@@ -14,6 +9,7 @@ import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
+import DANFSePrint from '@/components/emissao/DANFSePrint';
 
 const MIN_AUTOCOMPLETE_CHARS = 2;
 const buildReferencia = () => `nfse-front-${Date.now()}`;
@@ -67,12 +63,7 @@ const formatAliquotaFromCatalog = (raw: unknown) => {
 };
 
 const getServicoAliquota = (item: Record<string, unknown>) => {
-  const candidates = [
-    item.aliquotaIss,
-    item.aliquota,
-    item.aliquotaSimplesNacional,
-    item.aliquota_simples_nacional,
-  ];
+  const candidates = [item.aliquotaIss, item.aliquota, item.aliquotaSimplesNacional, item.aliquota_simples_nacional];
   for (const candidate of candidates) {
     const value = formatAliquotaFromCatalog(candidate);
     if (value) return value;
@@ -145,9 +136,7 @@ const NfseEmitPage = () => {
   const tomadorIsCnpj = tomadorDocType === 'cnpj';
 
   useEffect(() => {
-    if (!tomadorIsCnpj && tomadorInscricaoMunicipal) {
-      setTomadorInscricaoMunicipal('');
-    }
+    if (!tomadorIsCnpj && tomadorInscricaoMunicipal) setTomadorInscricaoMunicipal('');
   }, [tomadorIsCnpj, tomadorInscricaoMunicipal]);
 
   useEffect(() => {
@@ -162,11 +151,13 @@ const NfseEmitPage = () => {
     enabled: canSearchEmpresa,
     staleTime: 60_000,
   });
+
   const empresaDefaultQuery = useQuery({
     queryKey: ['empresas', 'emit-normal-default'],
     queryFn: () => empresasApi.list({ limit: 20 }),
     staleTime: 60_000,
   });
+
   const empresaDefault = useMemo(() => {
     const items = empresaDefaultQuery.data || [];
     if (items.length === 0) return null;
@@ -185,11 +176,7 @@ const NfseEmitPage = () => {
 
   const tomadoresQuery = useQuery({
     queryKey: ['tomadores', 'emit-normal', selectedEmpresa?.cnpj],
-    queryFn: () => tomadoresApi.autocomplete({
-      empresaCnpj: selectedEmpresa!.cnpj,
-      q: '',
-      limit: 30,
-    }),
+    queryFn: () => tomadoresApi.autocomplete({ empresaCnpj: selectedEmpresa!.cnpj, q: '', limit: 30 }),
     enabled: Boolean(selectedEmpresa?.cnpj),
     staleTime: 60_000,
   });
@@ -229,7 +216,7 @@ const NfseEmitPage = () => {
       retIr: parseCurrency(retIr),
       retInss: parseCurrency(retInss),
     };
-  }, [aliquota, desconto, issRetido, retCofins, retCsll, retInss, retIr, retPis, valorServico]);
+  }, [aliquota, desconto, retCofins, retCsll, retInss, retIr, retPis, valorServico]);
 
   const emitMutation = useMutation({
     mutationFn: (payload: EmitirNfseRequest) => nfseApi.emitir(payload),
@@ -265,9 +252,7 @@ const NfseEmitPage = () => {
     if (tomadorDocDigits.length !== 11 && tomadorDocDigits.length !== 14) {
       found.push('CPF/CNPJ do tomador deve ter 11 (CPF) ou 14 (CNPJ) dígitos.');
     }
-    if (!tomadorRazaoSocial.trim()) {
-      found.push(tomadorIsCpf ? 'Nome do tomador é obrigatório.' : 'Razão social do tomador é obrigatória.');
-    }
+    if (!tomadorRazaoSocial.trim()) found.push(tomadorIsCpf ? 'Nome do tomador é obrigatório.' : 'Razão social do tomador é obrigatória.');
     if (!tomadorLogradouro.trim()) found.push('Logradouro do tomador é obrigatório.');
     if (!tomadorNumero.trim()) found.push('Número do tomador é obrigatório.');
     if (!tomadorBairro.trim()) found.push('Bairro do tomador é obrigatório.');
@@ -298,11 +283,7 @@ const NfseEmitPage = () => {
         cnpj: selectedEmpresa.cnpj,
         inscricaoMunicipal: selectedEmpresa.inscricaoMunicipal,
         razaoSocial: selectedEmpresa.razaoSocial,
-        regimeTributarioSn: {
-          opSimpNac: 3,
-          regApTribSN: 1,
-          regEspTrib: 0,
-        },
+        regimeTributarioSn: { opSimpNac: 3, regApTribSN: 1, regEspTrib: 0 },
         endereco: {
           logradouro: selectedEmpresa.endereco?.logradouro,
           numero: selectedEmpresa.endereco?.numero,
@@ -333,16 +314,11 @@ const NfseEmitPage = () => {
         valor: valores.valorBruto,
         iss: {
           retido: issRetido,
-          // Simples Nacional sem retencao: nao enviar aliquota para evitar rejeicao E0625.
           aliquota: issRetido ? parsePercent(aliquota) : undefined,
         },
         tributacaoTotal: {
-          federal: {
-            valor: parseCurrency(retPis) + parseCurrency(retCofins) + parseCurrency(retCsll) + parseCurrency(retIr),
-          },
-          municipal: {
-            valor: parseCurrency(retInss),
-          },
+          federal: { valor: parseCurrency(retPis) + parseCurrency(retCofins) + parseCurrency(retCsll) + parseCurrency(retIr) },
+          municipal: { valor: parseCurrency(retInss) },
         },
       },
       referenciaExterna,
@@ -353,7 +329,7 @@ const NfseEmitPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/nfse')} className="p-2 rounded-lg hover:bg-muted transition-colors">
@@ -366,20 +342,20 @@ const NfseEmitPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button type="button" className="btn-outline flex items-center gap-2 text-sm py-2">
-              <FileOutput className="w-4 h-4" />
+            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
+              <Printer className="w-4 h-4" />
               <span className="hidden sm:inline">Visualizar</span>
             </button>
-            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
-              <FileOutput className="w-4 h-4" />
-              <span className="hidden sm:inline">Imprimir</span>
+            <button type="submit" form="nfse-normal-form" disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
+              {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="hidden sm:inline">Emitir</span>
             </button>
           </div>
         </div>
       </header>
 
       {errors.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 no-print">
           <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-destructive" />
@@ -392,298 +368,315 @@ const NfseEmitPage = () => {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-3">
-      <form id="nfse-normal-form" onSubmit={handleSubmit} className="space-y-3">
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-primary">
-              <Building2 className="w-4 h-4" />
-            </span>
-            <span>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
+        <form id="nfse-normal-form" onSubmit={handleSubmit} className="space-y-2">
+          <div className="section-card">
+            <h2 className="section-title">
+              <Building2 className="w-5 h-5 text-primary" />
               O Prestador
-              <span className="section-subtitle block">Autocomplete via backend</span>
-            </span>
-          </h2>
+            </h2>
 
-          <div className="space-y-2">
-            <Label className="field-label">Empresa Emissora</Label>
-            <Input
-              className="field-input"
-              value={empresaSearch}
-              onChange={(e) => {
-                setEmpresaSearch(e.target.value);
-                setSelectedEmpresa(null);
-                setEmpresaAutofillLabel(null);
-              }}
-              placeholder="Digite razão social ou CNPJ"
-            />
-            {empresaAutofillLabel && (
-              <p className="text-xs text-muted-foreground">
-                Empresa padrão carregada: {empresaAutofillLabel}
-              </p>
-            )}
-            {canSearchEmpresa && empresasQuery.isLoading && (
-              <p className="text-xs text-muted-foreground">Buscando empresas...</p>
-            )}
-            {canSearchEmpresa && (empresasQuery.data?.length || 0) > 0 && (
-              <div className="max-h-44 overflow-auto rounded-md border p-1">
-                {(empresasQuery.data || []).map((empresa) => (
-                  <button
-                    key={empresa.id}
-                    type="button"
-                    className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
-                    onClick={() => {
-                      setSelectedEmpresa(empresa);
-                      setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
-                      setEmpresaAutofillLabel(null);
-                    }}
-                  >
-                    <span className="font-medium">{empresa.razaoSocial}</span> ({empresa.cnpj})
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="space-y-2">
+              <label className="field-label">Empresa Emissora</label>
+              <input
+                className="field-input"
+                value={empresaSearch}
+                onChange={(e) => {
+                  setEmpresaSearch(e.target.value);
+                  setSelectedEmpresa(null);
+                  setEmpresaAutofillLabel(null);
+                }}
+                placeholder="Digite razão social ou CNPJ"
+              />
+              {empresaAutofillLabel && <p className="text-xs text-muted-foreground">Empresa padrão carregada: {empresaAutofillLabel}</p>}
+              {canSearchEmpresa && empresasQuery.isLoading && <p className="text-xs text-muted-foreground">Buscando empresas...</p>}
+              {canSearchEmpresa && (empresasQuery.data?.length || 0) > 0 && (
+                <div className="max-h-44 overflow-auto rounded-md border p-1">
+                  {(empresasQuery.data || []).map((empresa) => (
+                    <button
+                      key={empresa.id}
+                      type="button"
+                      className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
+                      onClick={() => {
+                        setSelectedEmpresa(empresa);
+                        setEmpresaSearch(`${empresa.razaoSocial} (${empresa.cnpj})`);
+                        setEmpresaAutofillLabel(null);
+                      }}
+                    >
+                      <span className="font-medium">{empresa.razaoSocial}</span> ({empresa.cnpj})
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {selectedEmpresa && (
-              <p className="text-xs text-muted-foreground">
-                Selecionada: {selectedEmpresa.razaoSocial} ({selectedEmpresa.cnpj})
-              </p>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_3fr] gap-3 mt-3">
+                <div>
+                  <label className="field-label">CNPJ</label>
+                  <input className="field-input" value={selectedEmpresa.cnpj || ''} readOnly />
+                </div>
+                <div>
+                  <label className="field-label">Inscrição Municipal</label>
+                  <input className="field-input" value={selectedEmpresa.inscricaoMunicipal || ''} readOnly />
+                </div>
+                <div>
+                  <label className="field-label">Nome Empresarial</label>
+                  <input className="field-input" value={selectedEmpresa.razaoSocial || ''} readOnly />
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-secondary">
-              <Users className="w-4 h-4" />
-            </span>
-            <span>
+          <div className="section-card">
+            <h2 className="section-title">
+              <Users className="w-5 h-5 text-primary" />
               Tomador(a)
-              <span className="section-subtitle block">Dados do tomador para emissão</span>
-            </span>
-          </h2>
+            </h2>
 
-          {selectedEmpresa && (tomadoresQuery.data?.length || 0) > 0 && (
-            <div className="mb-4">
-              <Label className="field-label">Tomadores Cadastrados</Label>
-              <div className="max-h-44 overflow-auto rounded-md border p-1 mt-2">
-                {(tomadoresQuery.data || []).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`w-full rounded px-2 py-1 text-left text-sm hover:bg-accent ${
-                      selectedTomador?.id === item.id ? 'bg-accent' : ''
-                    }`}
-                    onClick={() => applyTomador(item)}
-                  >
-                    <span className="font-medium">{item.razaoSocial}</span> ({formatDoc(item.cpfCnpj)})
-                  </button>
-                ))}
+            {selectedEmpresa && (tomadoresQuery.data?.length || 0) > 0 && (
+              <div className="mb-3">
+                <label className="field-label">Tomadores Cadastrados</label>
+                <div className="max-h-44 overflow-auto rounded-md border p-1">
+                  {(tomadoresQuery.data || []).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`w-full rounded px-2 py-1 text-left text-sm hover:bg-accent ${selectedTomador?.id === item.id ? 'bg-accent' : ''}`}
+                      onClick={() => applyTomador(item)}
+                    >
+                      <span className="font-medium">{item.razaoSocial}</span> ({formatDoc(item.cpfCnpj)})
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="field-label">CPF/CNPJ *</Label>
-              <Input
-                className="field-input"
-                value={tomadorCpfCnpj}
-                onChange={(e) => setTomadorCpfCnpj(formatDoc(e.target.value))}
-                placeholder={tomadorDocDigits.length > 11 ? '00.000.000/0000-00' : '000.000.000-00'}
-                maxLength={18}
-                required
-              />
-            </div>
-            <div>
-              <Label className="field-label">{tomadorIsCpf ? 'Nome Completo *' : 'Razão Social *'}</Label>
-              <Input
-                className="field-input"
-                value={tomadorRazaoSocial}
-                onChange={(e) => setTomadorRazaoSocial(e.target.value)}
-                required
-              />
-            </div>
-            {tomadorIsCnpj && (
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_3fr] gap-3">
               <div>
-                <Label className="field-label">Inscrição Municipal</Label>
-                <Input
+                <label className="field-label">CNPJ/CPF*</label>
+                <input
+                  className="field-input"
+                  value={tomadorCpfCnpj}
+                  onChange={(e) => setTomadorCpfCnpj(formatDoc(e.target.value))}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                />
+              </div>
+              <div>
+                <label className="field-label">Inscrição Municipal</label>
+                <input
                   className="field-input"
                   value={tomadorInscricaoMunicipal}
                   onChange={(e) => setTomadorInscricaoMunicipal(e.target.value)}
+                  disabled={!tomadorIsCnpj}
                 />
               </div>
-            )}
-            <div>
-              <Label className="field-label">E-mail</Label>
-              <Input
-                className="field-input"
-                value={tomadorEmail}
-                onChange={(e) => setTomadorEmail(e.target.value)}
-                type="email"
-              />
+              <div>
+                <label className="field-label">{tomadorIsCpf ? 'Nome Completo*' : 'Razão Social*'}</label>
+                <input className="field-input" value={tomadorRazaoSocial} onChange={(e) => setTomadorRazaoSocial(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_0.8fr_1.2fr] gap-3 mt-3">
+              <div>
+                <label className="field-label">CEP</label>
+                <input className="field-input" value={tomadorCep} onChange={(e) => setTomadorCep(formatCep(e.target.value))} placeholder="00000-000" />
+              </div>
+              <div>
+                <label className="field-label">Logradouro</label>
+                <input className="field-input" value={tomadorLogradouro} onChange={(e) => setTomadorLogradouro(e.target.value)} />
+              </div>
+              <div>
+                <label className="field-label">Número</label>
+                <input className="field-input" value={tomadorNumero} onChange={(e) => setTomadorNumero(e.target.value)} />
+              </div>
+              <div>
+                <label className="field-label">Bairro</label>
+                <input className="field-input" value={tomadorBairro} onChange={(e) => setTomadorBairro(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[2fr_0.6fr_1.2fr] gap-3 mt-3">
+              <div>
+                <label className="field-label">Município</label>
+                <input className="field-input" value={tomadorMunicipio} onChange={(e) => setTomadorMunicipio(e.target.value)} />
+              </div>
+              <div>
+                <label className="field-label">UF</label>
+                <input className="field-input" value={tomadorUf} onChange={(e) => setTomadorUf(e.target.value.toUpperCase())} maxLength={2} />
+              </div>
+              <div>
+                <label className="field-label">E-mail</label>
+                <input className="field-input" type="email" value={tomadorEmail} onChange={(e) => setTomadorEmail(e.target.value)} />
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-[1fr_2fr_0.8fr] mt-4">
-            <div>
-              <Label className="field-label">CEP</Label>
-              <Input
-                className="field-input"
-                value={tomadorCep}
-                onChange={(e) => setTomadorCep(formatCep(e.target.value))}
-                placeholder="00000-000"
-              />
-            </div>
-            <div>
-              <Label className="field-label">Logradouro</Label>
-              <Input className="field-input" value={tomadorLogradouro} onChange={(e) => setTomadorLogradouro(e.target.value)} />
-            </div>
-            <div>
-              <Label className="field-label">Número</Label>
-              <Input className="field-input" value={tomadorNumero} onChange={(e) => setTomadorNumero(e.target.value)} />
-            </div>
-            <div>
-              <Label className="field-label">Bairro</Label>
-              <Input className="field-input" value={tomadorBairro} onChange={(e) => setTomadorBairro(e.target.value)} />
-            </div>
-            <div>
-              <Label className="field-label">Município</Label>
-              <Input className="field-input" value={tomadorMunicipio} onChange={(e) => setTomadorMunicipio(e.target.value)} />
-            </div>
-            <div>
-              <Label className="field-label">UF</Label>
-              <Input className="field-input" value={tomadorUf} onChange={(e) => setTomadorUf(e.target.value.toUpperCase())} maxLength={2} />
-            </div>
-          </div>
-        </div>
-
-        <div className="section-card">
-          <h2 className="section-title">
-            <span className="section-title-icon section-title-icon-accent">
-              <MapPin className="w-4 h-4" />
-            </span>
-            <span>
+          <div className="section-card">
+            <h2 className="section-title">
+              <MapPin className="w-5 h-5 text-primary" />
               Serviço Prestado
-              <span className="section-subtitle block">Autocomplete de serviços via backend</span>
-            </span>
-          </h2>
-          <div className="mb-4">
-            <ServicoAutocomplete
-              queryScope="emit-normal"
-              helperClassName="text-xs"
-              value={serviceSearch}
-              selectedCode={codigoNacional.replace(/\D/g, '')}
-              onValueChange={(next) => {
-                setServiceSearch(next);
-                setCodigoNacional(extractServiceCode(next));
-              }}
-              onSelect={(item) => {
-                setCodigoNacional(item.codigoServico);
-                setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
-                setDescricao(item.descricao || '');
-                const aliquotaCatalog = getServicoAliquota(item as unknown as Record<string, unknown>);
-                if (aliquotaCatalog) setAliquota(aliquotaCatalog);
-              }}
-            />
-          </div>
+            </h2>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="field-label">Código Tributação Nacional*</Label>
-              <Input className="field-input" value={codigoNacional} onChange={(e) => setCodigoNacional(e.target.value.replace(/\D/g, '').slice(0, 6))} required />
-            </div>
-            <div>
-              <Label className="field-label">Alíquota %</Label>
-              <Input
-                className="field-input"
-                value={aliquota}
-                onChange={(e) => setAliquota(e.target.value.replace(/[^\d,]/g, ''))}
-                placeholder="0,00"
+            <div className="mb-3">
+              <ServicoAutocomplete
+                queryScope="emit-normal"
+                helperClassName="text-xs"
+                value={serviceSearch}
+                selectedCode={codigoNacional.replace(/\D/g, '')}
+                onValueChange={(next) => {
+                  setServiceSearch(next);
+                  setCodigoNacional(extractServiceCode(next));
+                }}
+                onSelect={(item) => {
+                  setCodigoNacional(item.codigoServico);
+                  setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
+                  setDescricao(item.descricao || '');
+                  const aliquotaCatalog = getServicoAliquota(item as unknown as Record<string, unknown>);
+                  if (aliquotaCatalog) setAliquota(aliquotaCatalog);
+                }}
               />
             </div>
-          </div>
 
-          <div className="mt-4">
-            <Label className="field-label">Descrição do Serviço *</Label>
-            <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} required />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="field-label">Código Tributação Nacional*</label>
+                <input
+                  className="field-input"
+                  value={codigoNacional}
+                  onChange={(e) => setCodigoNacional(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                />
+              </div>
+              <div>
+                <label className="field-label">Alíquota %</label>
+                <input
+                  className="field-input text-right"
+                  value={aliquota}
+                  onChange={(e) => setAliquota(e.target.value.replace(/[^\d,]/g, ''))}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            <div>
-              <Label className="field-label">Valor do Serviço (R$)*</Label>
-              <Input
-                className="field-input text-right"
-                value={valorServico}
-                onChange={(e) => setValorServico(formatCurrencyInput(e.target.value))}
-                placeholder="0,00"
-                required
+            <div className="mt-3">
+              <label className="field-label">Descrição do Serviço*</label>
+              <textarea
+                className="field-input min-h-[60px] resize-y"
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={3}
               />
             </div>
-            <div>
-              <Label className="field-label">Desconto (R$)</Label>
-              <Input
-                className="field-input text-right"
-                value={desconto}
-                onChange={(e) => setDesconto(formatCurrencyInput(e.target.value))}
-                placeholder="0,00"
-              />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+              <div>
+                <label className="field-label">Valor do Serviço (R$)*</label>
+                <input
+                  className="field-input text-right"
+                  value={valorServico}
+                  onChange={(e) => setValorServico(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+              <div>
+                <label className="field-label">Desconto (R$)</label>
+                <input
+                  className="field-input text-right"
+                  value={desconto}
+                  onChange={(e) => setDesconto(formatCurrencyInput(e.target.value))}
+                  placeholder="0,00"
+                />
+              </div>
+              <div>
+                <label className="field-label">PIS (R$)</label>
+                <input className="field-input text-right" value={retPis} onChange={(e) => setRetPis(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+              </div>
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={issRetido}
+                    onClick={() => setIssRetido((prev) => !prev)}
+                    className={`switch-track ${issRetido ? 'switch-track-on' : 'switch-track-off'}`}
+                  >
+                    <span className={`switch-thumb ${issRetido ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                  <span className="text-sm text-foreground font-medium">ISS Retido</span>
+                </label>
+              </div>
             </div>
-            <div>
-              <Label className="field-label">PIS (R$)</Label>
-              <Input className="field-input text-right" value={retPis} onChange={(e) => setRetPis(formatCurrencyInput(e.target.value))} placeholder="0,00" />
-            </div>
-            <div className="flex items-end pb-2">
-              <label className="inline-flex items-center gap-2 text-sm">
-                <Checkbox checked={issRetido} onCheckedChange={(checked) => setIssRetido(Boolean(checked))} />
-                ISS Retido
-              </label>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+              <div>
+                <label className="field-label">COFINS (R$)</label>
+                <input className="field-input text-right" value={retCofins} onChange={(e) => setRetCofins(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+              </div>
+              <div>
+                <label className="field-label">CSLL (R$)</label>
+                <input className="field-input text-right" value={retCsll} onChange={(e) => setRetCsll(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+              </div>
+              <div>
+                <label className="field-label">IR (R$)</label>
+                <input className="field-input text-right" value={retIr} onChange={(e) => setRetIr(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+              </div>
+              <div>
+                <label className="field-label">INSS (R$)</label>
+                <input className="field-input text-right" value={retInss} onChange={(e) => setRetInss(formatCurrencyInput(e.target.value))} placeholder="0,00" />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            <div>
-              <Label className="field-label">COFINS (R$)</Label>
-              <Input className="field-input text-right" value={retCofins} onChange={(e) => setRetCofins(formatCurrencyInput(e.target.value))} placeholder="0,00" />
-            </div>
-            <div>
-              <Label className="field-label">CSLL (R$)</Label>
-              <Input className="field-input text-right" value={retCsll} onChange={(e) => setRetCsll(formatCurrencyInput(e.target.value))} placeholder="0,00" />
-            </div>
-            <div>
-              <Label className="field-label">IR (R$)</Label>
-              <Input className="field-input text-right" value={retIr} onChange={(e) => setRetIr(formatCurrencyInput(e.target.value))} placeholder="0,00" />
-            </div>
-            <div>
-              <Label className="field-label">INSS (R$)</Label>
-              <Input className="field-input text-right" value={retInss} onChange={(e) => setRetInss(formatCurrencyInput(e.target.value))} placeholder="0,00" />
-            </div>
-          </div>
-        </div>
+          <LocalPrestacaoSection data={localPrestacao} onChange={setLocalPrestacao} />
 
-        <LocalPrestacaoSection data={localPrestacao} onChange={setLocalPrestacao} />
-
-        <ValoresTotaisSection
-          valorBruto={valores.valorBruto}
-          desconto={valores.desconto}
-          issValor={valores.issValor}
-          issRetido={issRetido}
-          retPis={valores.retPis}
-          retCofins={valores.retCofins}
-          retCsll={valores.retCsll}
-          retIr={valores.retIr}
-          retInss={valores.retInss}
-        />
-
-        <div className="section-card">
-          <div className="flex justify-end">
-            <button type="submit" disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
-              {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              <span>Emitir</span>
-            </button>
-          </div>
-        </div>
-      </form>
+          <ValoresTotaisSection
+            valorBruto={valores.valorBruto}
+            desconto={valores.desconto}
+            issValor={valores.issValor}
+            issRetido={issRetido}
+            retPis={valores.retPis}
+            retCofins={valores.retCofins}
+            retCsll={valores.retCsll}
+            retIr={valores.retIr}
+            retInss={valores.retInss}
+          />
+        </form>
       </main>
+
+      <DANFSePrint
+        data={{
+          prestador: {
+            cnpj: selectedEmpresa?.cnpj || '',
+            inscricaoMunicipal: selectedEmpresa?.inscricaoMunicipal || '',
+            nomeEmpresarial: selectedEmpresa?.razaoSocial || '',
+            nomeFantasia: selectedEmpresa?.nomeFantasia || '',
+          },
+          tomador: {
+            cnpjCpf: tomadorCpfCnpj,
+            nomeRazaoSocial: tomadorRazaoSocial,
+            inscricaoMunicipal: tomadorInscricaoMunicipal,
+            email: tomadorEmail,
+            logradouro: tomadorLogradouro,
+            numero: tomadorNumero,
+            complemento: '',
+            bairro: tomadorBairro,
+            localidadeUf: [tomadorMunicipio, tomadorUf].filter(Boolean).join(' - '),
+            cep: tomadorCep,
+          },
+          localPrestacao,
+          servico: {
+            codigoServico: codigoNacional,
+            descricaoServico: descricao,
+            valorServico,
+            aliquota,
+            baseCalculo: valores.baseCalculo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            desconto,
+            issRetido,
+          },
+          valores,
+        }}
+      />
     </div>
   );
 };
