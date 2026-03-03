@@ -215,6 +215,7 @@ const NfseEmitPage: React.FC = () => {
     const tomadorLocal = splitLocalidadeUf(tomador.localidadeUf);
 
     const payload: EmitirNfseRequest = {
+      numeroNfse: nfseNumero || undefined,
       prestador: {
         cnpj: prestador.cnpj.replace(/\D/g, ''),
         inscricaoMunicipal: prestador.inscricaoMunicipal || undefined,

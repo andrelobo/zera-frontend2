@@ -249,6 +249,7 @@ export interface Nfse {
 }
 
 export interface EmitirNfseRequest {
+  numeroNfse?: string;
   prestador: {
     cnpj: string;
     inscricaoMunicipal?: string;
