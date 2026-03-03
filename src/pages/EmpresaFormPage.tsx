@@ -525,13 +525,24 @@ const EmpresaFormPage = () => {
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
 
       if (empresa.statusCadastro === 'PENDENTE') {
-        const faltantes = (empresa.camposFaltantes || []).slice(0, 3).map(toCampoLabel);
-        const missingText = faltantes.length > 0 ? ` Faltam: ${faltantes.join(', ')}.` : '';
+        const pendenciasGerais = (empresa.camposFaltantes || []).slice(0, 4).map(toCampoLabel);
+        const pendenciasEmissao = (empresa.camposFaltantesEmissao || []).slice(0, 4).map(toCampoLabel);
+        const partes: string[] = [`Completude atual: ${empresa.percentualCompletude ?? 0}%.`];
+        if (pendenciasGerais.length > 0) {
+          partes.push(`Pendências gerais: ${pendenciasGerais.join(', ')}.`);
+        }
+        if (pendenciasEmissao.length > 0) {
+          partes.push(`Para emitir: ${pendenciasEmissao.join(', ')}.`);
+        }
         toast({
-          title: 'Cadastro salvo parcialmente',
-          description: `Completude atual: ${empresa.percentualCompletude ?? 0}%.${missingText}`,
-          variant: 'destructive',
+          title: 'Cadastro salvo com pendências',
+          description: `${partes.join(' ')} Continue nas próximas etapas para liberar emissão.`,
         });
+        const targetEmpresaId = empresa.id || id;
+        if (targetEmpresaId) {
+          navigate(`/empresas/${targetEmpresaId}?secao=regime`);
+          return;
+        }
         navigate('/empresas');
         return;
       }
@@ -626,20 +637,12 @@ const EmpresaFormPage = () => {
     }
     const formatted = formatCnpj(value);
     const digits = formatted.replace(/\D/g, '');
-    setForm((prev) => {
-      const prevDigits = prev.cnpj.replace(/\D/g, '');
-      const hadStableDoc = prevDigits.length === 14;
-      const docChanged = prevDigits !== digits;
-      if (docChanged && hadStableDoc) {
-        return {
-          ...clearAutofillCadastroFields(prev),
-          cnpj: formatted,
-        };
-      }
-      return { ...prev, cnpj: formatted };
-    });
+    setForm((prev) => ({ ...prev, cnpj: formatted }));
     if (digits !== lastPreviewCnpj) {
       setLastPreviewAttemptCnpj('');
+    }
+    if (digits.length < 14) {
+      setLastPreviewCnpj('');
     }
   };
 
@@ -677,6 +680,7 @@ const EmpresaFormPage = () => {
   const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
   const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
   const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
+  const certificadoPendente = camposEmissaoPendentes.includes('certificado.uploadedAt');
   const userInitials = getInitials(user?.name, user?.email);
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
@@ -775,6 +779,21 @@ const EmpresaFormPage = () => {
               <p className="mt-1 text-destructive/90">
                 Emissão bloqueada até concluir: {camposEmissaoPendentes.slice(0, 6).map(toCampoLabel).join(', ')}.
               </p>
+            )}
+            {certificadoPendente && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  className="btn-outline h-9 px-3 text-xs sm:text-sm"
+                  onClick={() => {
+                    const cnpjDigits = form.cnpj.replace(/\D/g, '');
+                    const cnpjQuery = cnpjDigits ? `?cnpj=${cnpjDigits}` : '';
+                    navigate(`/certificado-digital${cnpjQuery}`);
+                  }}
+                >
+                  Importar certificado digital agora
+                </button>
+              </div>
             )}
           </div>
         )}

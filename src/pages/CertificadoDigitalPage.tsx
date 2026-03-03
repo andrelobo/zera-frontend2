@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { empresasApi } from '@/services/api';
 import type { ApiError, ImportCertificadoDigitalResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ const getApiError = (error: unknown): ApiError => {
 
 const CertificadoDigitalPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [cnpj, setCnpj] = useState('');
   const [senhaCertificado, setSenhaCertificado] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -51,6 +52,13 @@ const CertificadoDigitalPage = () => {
   const [success, setSuccess] = useState<ImportCertificadoDigitalResponse | null>(null);
 
   const cnpjClean = useMemo(() => cnpj.replace(/\D/g, ''), [cnpj]);
+  const cnpjFromQuery = (searchParams.get('cnpj') || '').replace(/\D/g, '');
+
+  useEffect(() => {
+    if (!cnpjFromQuery) return;
+    if (cnpjClean.length > 0) return;
+    setCnpj(cnpjFromQuery);
+  }, [cnpjClean.length, cnpjFromQuery]);
 
   const mutation = useMutation({
     mutationFn: () => empresasApi.importCertificadoDigital({

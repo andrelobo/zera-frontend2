@@ -348,9 +348,10 @@ const TomadorFormPage = () => {
           const nextDigits = onlyDigits(nextCpfCnpj);
           const docChanged = prevDigits !== nextDigits;
           const hadStableDoc = prevDigits.length === 11 || prevDigits.length === 14;
+          const hasStableNextDoc = nextDigits.length === 11 || nextDigits.length === 14;
 
           // Prevent stale autofill values from a previous document.
-          if (docChanged && hadStableDoc) {
+          if (docChanged && hadStableDoc && hasStableNextDoc) {
             return {
               ...prev,
               cpfCnpj: nextCpfCnpj,
