@@ -80,6 +80,7 @@ const splitLocalidadeUf = (value: string) => {
 
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
@@ -90,6 +91,11 @@ const NfseEmitPage: React.FC = () => {
   const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({ pais: 'Brasil', uf: 'AM', municipio: 'Manaus' });
   const [errors, setErrors] = useState<string[]>([]);
   const [referenciaExterna] = useState(buildReferencia());
+  const [competencia, setCompetencia] = useState('01/2026');
+  const [dataEmissao, setDataEmissao] = useState(TODAY_ISO);
+  const [nfseNumero, setNfseNumero] = useState('');
+  const [dpsNumero, setDpsNumero] = useState('');
+  const [serieDpsNumero, setSerieDpsNumero] = useState('');
 
   const autosave = useCallback(() => {}, []);
 
@@ -276,6 +282,68 @@ const NfseEmitPage: React.FC = () => {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
+        <div className="section-card p-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div>
+              <label className="field-label">Competência</label>
+              <input
+                className="field-input"
+                type="text"
+                placeholder="mm/aaaa"
+                maxLength={7}
+                value={competencia}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  const next = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+                  setCompetencia(next);
+                }}
+              />
+            </div>
+            <div>
+              <label className="field-label">Data de Emissão</label>
+              <input
+                className="field-input"
+                type="date"
+                value={dataEmissao}
+                onChange={(e) => setDataEmissao(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label">NFS-e Nº</label>
+              <input
+                className="field-input"
+                type="text"
+                placeholder="Número"
+                inputMode="numeric"
+                value={nfseNumero}
+                onChange={(e) => setNfseNumero(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+            <div>
+              <label className="field-label">DPS Nº</label>
+              <input
+                className="field-input"
+                type="text"
+                placeholder="Número"
+                inputMode="numeric"
+                value={dpsNumero}
+                onChange={(e) => setDpsNumero(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+            <div>
+              <label className="field-label">Série DPS Nº</label>
+              <input
+                className="field-input"
+                type="text"
+                placeholder="Número"
+                inputMode="numeric"
+                value={serieDpsNumero}
+                onChange={(e) => setSerieDpsNumero(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+          </div>
+        </div>
+
         <PrestadorSection
           data={prestador}
           onChange={setPrestador}
