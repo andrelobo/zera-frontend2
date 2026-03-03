@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, CheckCircle, Printer, Save } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { empresasApi, tomadoresApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
+import { validateCNPJ, validateEmail } from '@/utils/validators';
 
 const formatDoc = (value: string) => {
   const digits = value.replace(/\D/g, '');
@@ -23,6 +23,22 @@ const formatDoc = (value: string) => {
     .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
+const validateCPF = (cpf: string): boolean => {
+  const cleaned = cpf.replace(/\D/g, '');
+  if (cleaned.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cleaned)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) sum += Number(cleaned[i]) * (10 - i);
+  let rest = (sum * 10) % 11;
+  if (rest === 10) rest = 0;
+  if (Number(cleaned[9]) !== rest) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) sum += Number(cleaned[i]) * (11 - i);
+  rest = (sum * 10) % 11;
+  if (rest === 10) rest = 0;
+  return Number(cleaned[10]) === rest;
 };
 
 const parseLocalidadeUf = (value: string) => {
@@ -402,10 +418,28 @@ const TomadorFormPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.cpfCnpj || !form.razaoSocial) {
+    const docDigits = onlyDigits(form.cpfCnpj);
+    const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
+    if (!docOk) {
+      toast({
+        title: 'Documento inválido',
+        description: 'CNPJ/CPF inválido. Verifique o número informado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (form.email && !validateEmail(form.email)) {
+      toast({
+        title: 'E-mail inválido',
+        description: 'Verifique o e-mail informado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!form.razaoSocial) {
       toast({
         title: 'Dados obrigatórios',
-        description: 'Preencha CPF/CNPJ e nome completo ou razão social do tomador.',
+        description: 'Preencha nome completo ou razão social do tomador.',
         variant: 'destructive',
       });
       return;
@@ -415,30 +449,64 @@ const TomadorFormPage = () => {
 
   if (isEdit && isLoading) return <LoadingState />;
 
+  const docDigits = onlyDigits(form.cpfCnpj);
+  const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
+  const configValida = docDigits.length >= 11 && docOk && (form.email === '' || validateEmail(form.email));
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/tomadores')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Tomador' : 'Novo Tomador'}</h1>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <TomadorSection
-          data={form}
-          onChange={update}
-          cepLoading={cepLookupQuery.isFetching}
-          cnpjLoading={autofillQuery.isFetching}
-        />
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={mutation.isPending}>
-            <Save className="mr-2 h-4 w-4" />
-            {mutation.isPending ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Cadastrar Tomador'}
-          </Button>
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/tomadores')} className="btn-outline p-2" title="Voltar">
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight">O Tomador</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {configValida && (
+              <div className="alert-success flex items-center gap-2 text-xs">
+                <CheckCircle className="w-4 h-4" />
+                Dados do tomador válidos
+              </div>
+            )}
+          </div>
         </div>
-      </form>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <TomadorSection
+            data={form}
+            onChange={update}
+            cepLoading={cepLookupQuery.isFetching}
+            cnpjLoading={autofillQuery.isFetching}
+          />
+
+          <div className="section-card">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {configValida && (
+                <div className="alert-success flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-4 h-4" />
+                  Dados do tomador válidos
+                </div>
+              )}
+              <div className="flex items-center gap-3 ml-auto no-print">
+                <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2">
+                  <Printer className="w-4 h-4" />
+                  Imprimir
+                </button>
+                <button type="submit" disabled={mutation.isPending} className="btn-primary flex items-center gap-2">
+                  <Save className="w-4 h-4" />
+                  {mutation.isPending ? 'Salvando...' : isEdit ? 'Salvar Tomador' : 'Salvar Tomador'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </main>
     </div>
   );
 };
