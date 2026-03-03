@@ -35,13 +35,12 @@ const parseLocalidadeUf = (value: string) => {
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
 const formatPhone = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 10) {
-    return digits
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d)(\d{4})$/, '$1-$2');
-  }
-  return digits
+  const digits = value.replace(/\D/g, '');
+  const normalized = digits.length === 10
+    ? `${digits.slice(0, 2)}9${digits.slice(2)}`
+    : digits;
+  const cleaned = normalized.slice(0, 11);
+  return cleaned
     .replace(/^(\d{2})(\d)/, '($1) $2')
     .replace(/(\d)(\d{4})$/, '$1-$2');
 };
