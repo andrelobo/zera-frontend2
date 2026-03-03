@@ -10,9 +10,8 @@ import { toast } from '@/hooks/use-toast';
 import { validateCNPJ, validateEmail } from '@/utils/validators';
 
 const INITIAL_FORM: TomadorSectionData = {
-  empresaCnpj: '',
-  cpfCnpj: '',
-  razaoSocial: '',
+  cnpjCpf: '',
+  nomeEmpresarial: '',
   nomeFantasia: '',
   inscricaoMunicipal: '',
   inscricaoEstadual: '',
@@ -116,9 +115,8 @@ const TomadorFormPage = () => {
     const uf = existing.endereco?.uf || '';
 
     setForm({
-      empresaCnpj: formatDoc(existing.empresaCnpj),
-      cpfCnpj: formatDoc(existing.cpfCnpj),
-      razaoSocial: existing.razaoSocial,
+      cnpjCpf: formatDoc(existing.cpfCnpj),
+      nomeEmpresarial: existing.razaoSocial,
       nomeFantasia: '',
       inscricaoMunicipal: existing.inscricaoMunicipal || '',
       inscricaoEstadual: existing.inscricaoEstadual || '',
@@ -139,9 +137,9 @@ const TomadorFormPage = () => {
     mutationFn: () => {
       const { municipio, uf } = parseLocalidadeUf(form.localidadeUf);
       const payload = {
-        empresaCnpj: (form.empresaCnpj || fallbackEmpresaCnpj).replace(/\D/g, ''),
-        cpfCnpj: form.cpfCnpj.replace(/\D/g, ''),
-        razaoSocial: form.razaoSocial.trim(),
+        empresaCnpj: fallbackEmpresaCnpj.replace(/\D/g, ''),
+        cpfCnpj: form.cnpjCpf.replace(/\D/g, ''),
+        razaoSocial: form.nomeEmpresarial.trim(),
         inscricaoMunicipal: form.inscricaoMunicipal || undefined,
         inscricaoEstadual: form.inscricaoEstadual || undefined,
         suframa: form.suframa || undefined,
@@ -177,33 +175,25 @@ const TomadorFormPage = () => {
     },
   });
 
-  const update = (field: keyof TomadorSectionData, value: string | boolean) => {
-    if (field === 'empresaCnpj' || field === 'cpfCnpj') {
-      setForm((prev) => ({ ...prev, [field]: formatDoc(String(value)) }));
-      return;
-    }
-    if (field === 'cep') {
-      setForm((prev) => ({ ...prev, cep: formatCep(String(value)) }));
-      return;
-    }
-    if (field === 'whatsapp') {
-      setForm((prev) => ({ ...prev, whatsapp: formatPhone(String(value)) }));
-      return;
-    }
-    if (field === 'logradouro') {
-      setForm((prev) => ({ ...prev, logradouro: normalizeLogradouro(String(value)) }));
-      return;
-    }
-    if (field === 'razaoSocial' || field === 'inscricaoMunicipal' || field === 'inscricaoEstadual' || field === 'suframa' || field === 'bairro' || field === 'localidadeUf') {
-      setForm((prev) => ({ ...prev, [field]: toUpperTrimmed(String(value)) as never }));
-      return;
-    }
-    setForm((prev) => ({ ...prev, [field]: value as never }));
+  const handleSectionChange = (nextData: TomadorSectionData) => {
+    setForm({
+      ...nextData,
+      cnpjCpf: formatDoc(nextData.cnpjCpf || ''),
+      cep: formatCep(nextData.cep || ''),
+      whatsapp: formatPhone(nextData.whatsapp || ''),
+      logradouro: normalizeLogradouro(nextData.logradouro || ''),
+      nomeEmpresarial: toUpperTrimmed(nextData.nomeEmpresarial),
+      inscricaoMunicipal: toUpperTrimmed(nextData.inscricaoMunicipal),
+      inscricaoEstadual: toUpperTrimmed(nextData.inscricaoEstadual),
+      suframa: toUpperTrimmed(nextData.suframa),
+      bairro: toUpperTrimmed(nextData.bairro),
+      localidadeUf: toUpperTrimmed(nextData.localidadeUf),
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const docDigits = onlyDigits(form.cpfCnpj);
+    const docDigits = onlyDigits(form.cnpjCpf);
     const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
     if (!docOk) {
       toast({ title: 'Documento inválido', description: 'CNPJ/CPF inválido.', variant: 'destructive' });
@@ -213,7 +203,7 @@ const TomadorFormPage = () => {
       toast({ title: 'E-mail inválido', description: 'Verifique o e-mail informado.', variant: 'destructive' });
       return;
     }
-    if (!form.razaoSocial) {
+    if (!form.nomeEmpresarial) {
       toast({ title: 'Dados obrigatórios', description: 'Preencha o nome/razão social.', variant: 'destructive' });
       return;
     }
@@ -222,7 +212,7 @@ const TomadorFormPage = () => {
 
   if (isEdit && isLoading) return <LoadingState />;
 
-  const docDigits = onlyDigits(form.cpfCnpj);
+  const docDigits = onlyDigits(form.cnpjCpf);
   const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
   const configValida = docDigits.length >= 11 && docOk && (form.email === '' || validateEmail(form.email));
 
@@ -251,7 +241,7 @@ const TomadorFormPage = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-2">
         <form onSubmit={handleSubmit} className="space-y-2">
-          <TomadorSection data={form} onChange={update} />
+          <TomadorSection data={form} onChange={handleSectionChange} onAutosave={() => undefined} />
 
           <div className="section-card">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
