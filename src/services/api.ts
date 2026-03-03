@@ -64,8 +64,11 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     nomeFantasia: pickString(
       legacy.nomeFantasia,
       legacy.nome_fantasia,
+      legacy.fantasia,
+      legacy.nome,
       providerData.nome_fantasia,
       providerData.fantasia,
+      providerData.nome,
     ),
     inscricaoMunicipal: pickString(
       legacy.inscricaoMunicipal,

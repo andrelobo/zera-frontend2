@@ -213,7 +213,15 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
   return {
     razaoSocial: toUpperTrimmed(empresa.razaoSocial || legacy.razao_social || previous.razaoSocial),
     cnpj: formatCnpj(String(empresa.cnpj || previous.cnpj)),
-    nomeFantasia: toUpperTrimmed(empresa.nomeFantasia || legacy.nome_fantasia || previous.nomeFantasia),
+    nomeFantasia: toUpperTrimmed(
+      empresa.nomeFantasia
+      || legacy.nome_fantasia
+      || legacy.fantasia
+      || providerData.nome_fantasia
+      || providerData.fantasia
+      || providerData.nome
+      || previous.nomeFantasia,
+    ),
     inscricaoMunicipal: toUpperTrimmed(empresa.inscricaoMunicipal || legacy.inscricao_municipal || previous.inscricaoMunicipal),
     inscricaoEstadual: toUpperTrimmed(empresa.inscricaoEstadual || legacy.inscricao_estadual || previous.inscricaoEstadual),
     suframa: toUpperTrimmed(empresa.suframa || legacy.suframa || previous.suframa),
