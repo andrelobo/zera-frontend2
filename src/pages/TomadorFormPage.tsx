@@ -34,6 +34,9 @@ const parseLocalidadeUf = (value: string) => {
 };
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
+const toUpperTrimmed = (value?: string) => (value || '').trim().toUpperCase();
+const normalizeLogradouro = (value?: string) =>
+  toUpperTrimmed(value).replace(/^RUA\b\.?\s*/u, 'R ');
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, '');
   const normalized = digits.length === 10
@@ -43,14 +46,6 @@ const formatPhone = (value: string) => {
   return cleaned
     .replace(/^(\d{2})(\d)/, '($1) $2')
     .replace(/(\d)(\d{4})$/, '$1-$2');
-};
-
-const preferAutofill = (current: string, next?: string) => {
-  const normalizedCurrent = current.trim();
-  const normalizedNext = (next || '').trim();
-  if (!normalizedNext) return current;
-  if (!normalizedCurrent) return normalizedNext;
-  return current;
 };
 
 type AutofillTomador = {
@@ -67,21 +62,11 @@ type AutofillTomador = {
   localidadeUf?: string;
 };
 
-const mergeAutofill = (base: AutofillTomador, incoming?: AutofillTomador | null): AutofillTomador => {
-  if (!incoming) return base;
-  return {
-    cpfCnpj: base.cpfCnpj || incoming.cpfCnpj,
-    razaoSocial: base.razaoSocial || incoming.razaoSocial,
-    inscricaoEstadual: base.inscricaoEstadual || incoming.inscricaoEstadual,
-    suframa: base.suframa || incoming.suframa,
-    email: base.email || incoming.email,
-    cep: base.cep || incoming.cep,
-    logradouro: base.logradouro || incoming.logradouro,
-    numero: base.numero || incoming.numero,
-    complemento: base.complemento || incoming.complemento,
-    bairro: base.bairro || incoming.bairro,
-    localidadeUf: base.localidadeUf || incoming.localidadeUf,
-  };
+const pickAutofill = (...values: Array<string | undefined>) => {
+  for (const value of values) {
+    if ((value || '').trim()) return value;
+  }
+  return undefined;
 };
 
 const INITIAL_FORM: TomadorSectionData = {
@@ -247,13 +232,19 @@ const TomadorFormPage = () => {
         }
         : null;
 
-      const merged = mergeAutofill(
-        mergeAutofill(
-          mergeAutofill({}, fromTomador),
-          fromEmpresa,
-        ),
-        fromPreview,
-      );
+      const merged: AutofillTomador = {
+        cpfCnpj: pickAutofill(fromTomador?.cpfCnpj),
+        razaoSocial: pickAutofill(fromPreview?.razaoSocial, fromEmpresa?.razaoSocial, fromTomador?.razaoSocial),
+        inscricaoEstadual: pickAutofill(fromPreview?.inscricaoEstadual, fromEmpresa?.inscricaoEstadual, fromTomador?.inscricaoEstadual),
+        suframa: pickAutofill(fromPreview?.suframa, fromEmpresa?.suframa, fromTomador?.suframa),
+        email: pickAutofill(fromPreview?.email, fromEmpresa?.email, fromTomador?.email),
+        cep: pickAutofill(fromPreview?.cep, fromEmpresa?.cep, fromTomador?.cep),
+        logradouro: pickAutofill(fromPreview?.logradouro, fromEmpresa?.logradouro, fromTomador?.logradouro),
+        numero: pickAutofill(fromPreview?.numero, fromEmpresa?.numero, fromTomador?.numero),
+        complemento: pickAutofill(fromPreview?.complemento, fromEmpresa?.complemento, fromTomador?.complemento),
+        bairro: pickAutofill(fromPreview?.bairro, fromEmpresa?.bairro, fromTomador?.bairro),
+        localidadeUf: pickAutofill(fromPreview?.localidadeUf, fromEmpresa?.localidadeUf, fromTomador?.localidadeUf),
+      };
 
       return Object.values(merged).some(Boolean) ? merged : null;
     },
@@ -264,22 +255,20 @@ const TomadorFormPage = () => {
     if (!autofillQuery.data) return;
     if (lastAutofillDoc === cpfCnpjDigits) return;
 
-    setForm((prev) => {
-      return {
-        ...prev,
-        cpfCnpj: formatDoc(preferAutofill(prev.cpfCnpj, autofillQuery.data.cpfCnpj)),
-        razaoSocial: preferAutofill(prev.razaoSocial, autofillQuery.data.razaoSocial),
-        inscricaoEstadual: preferAutofill(prev.inscricaoEstadual, autofillQuery.data.inscricaoEstadual),
-        suframa: preferAutofill(prev.suframa, autofillQuery.data.suframa),
-        email: preferAutofill(prev.email, autofillQuery.data.email),
-        cep: formatCep(preferAutofill(prev.cep, autofillQuery.data.cep)),
-        logradouro: preferAutofill(prev.logradouro, autofillQuery.data.logradouro),
-        numero: preferAutofill(prev.numero, autofillQuery.data.numero),
-        complemento: preferAutofill(prev.complemento, autofillQuery.data.complemento),
-        bairro: preferAutofill(prev.bairro, autofillQuery.data.bairro),
-        localidadeUf: preferAutofill(prev.localidadeUf, autofillQuery.data.localidadeUf),
-      };
-    });
+    setForm((prev) => ({
+      ...prev,
+      cpfCnpj: formatDoc(autofillQuery.data.cpfCnpj || cpfCnpjDigits),
+      razaoSocial: toUpperTrimmed(autofillQuery.data.razaoSocial),
+      inscricaoEstadual: toUpperTrimmed(autofillQuery.data.inscricaoEstadual),
+      suframa: toUpperTrimmed(autofillQuery.data.suframa),
+      email: (autofillQuery.data.email || '').trim(),
+      cep: formatCep((autofillQuery.data.cep || '').trim()),
+      logradouro: normalizeLogradouro(autofillQuery.data.logradouro),
+      numero: (autofillQuery.data.numero || '').trim(),
+      complemento: toUpperTrimmed(autofillQuery.data.complemento),
+      bairro: toUpperTrimmed(autofillQuery.data.bairro),
+      localidadeUf: toUpperTrimmed(autofillQuery.data.localidadeUf),
+    }));
     setLastAutofillDoc(cpfCnpjDigits);
     toast({
       title: 'Autopreenchimento concluído',
@@ -300,10 +289,10 @@ const TomadorFormPage = () => {
     setForm((prev) => ({
       ...prev,
       cep: formatCep(cepLookupQuery.data.cep),
-      logradouro: cepLookupQuery.data.logradouro || prev.logradouro,
-      bairro: cepLookupQuery.data.bairro || prev.bairro,
+      logradouro: normalizeLogradouro(cepLookupQuery.data.logradouro || prev.logradouro),
+      bairro: toUpperTrimmed(cepLookupQuery.data.bairro || prev.bairro),
       localidadeUf: cepLookupQuery.data.cidade && cepLookupQuery.data.uf
-        ? `${cepLookupQuery.data.cidade} - ${cepLookupQuery.data.uf}`
+        ? `${toUpperTrimmed(cepLookupQuery.data.cidade)} - ${toUpperTrimmed(cepLookupQuery.data.uf)}`
         : prev.localidadeUf,
     }));
   }, [cepLookupQuery.data]);
@@ -397,6 +386,14 @@ const TomadorFormPage = () => {
     }
     if (field === 'whatsapp') {
       setForm((prev) => ({ ...prev, whatsapp: formatPhone(String(value)) }));
+      return;
+    }
+    if (field === 'logradouro') {
+      setForm((prev) => ({ ...prev, logradouro: normalizeLogradouro(String(value)) }));
+      return;
+    }
+    if (field === 'razaoSocial' || field === 'inscricaoMunicipal' || field === 'inscricaoEstadual' || field === 'suframa' || field === 'bairro' || field === 'localidadeUf') {
+      setForm((prev) => ({ ...prev, [field]: toUpperTrimmed(String(value)) as never }));
       return;
     }
     setForm((prev) => ({ ...prev, [field]: value as never }));

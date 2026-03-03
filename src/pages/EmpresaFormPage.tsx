@@ -164,6 +164,35 @@ const formatCnpj = (value: string) => {
 const toUpperTrimmed = (value: unknown): string => String(value ?? '').toUpperCase();
 const normalizeLogradouro = (value: unknown): string =>
   toUpperTrimmed(value).replace(/^RUA\b\.?\s*/u, 'R ');
+const clearAutofillCadastroFields = (prev: EmpresaFormData): EmpresaFormData => ({
+  ...prev,
+  razaoSocial: '',
+  nomeFantasia: '',
+  inscricaoEstadual: '',
+  suframa: '',
+  situacaoCadastral: '',
+  dataSituacaoCadastral: '',
+  dataInicioAtividade: '',
+  cnaeFiscal: '',
+  cnaeFiscalDescricao: '',
+  porte: '',
+  naturezaJuridica: '',
+  capitalSocial: '',
+  opcaoPeloSimples: '',
+  opcaoPeloMei: '',
+  dataOpcaoPeloSimples: '',
+  dataExclusaoDoSimples: '',
+  endereco: '',
+  numero: '',
+  complemento: '',
+  bairro: '',
+  cidade: '',
+  uf: '',
+  cep: '',
+  telefone: '',
+  whatsapp: '',
+  email: '',
+});
 
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
@@ -297,26 +326,13 @@ const EmpresaFormPage = () => {
     queryFn: () => empresasApi.getById(id!),
     enabled: isEdit,
   });
-  const { data: empresasExistentes = [], isLoading: isLoadingEmpresaExistente } = useQuery({
-    queryKey: ['empresas', 'prestador-default'],
-    queryFn: () => empresasApi.list({ limit: 1 }),
-    enabled: !isEdit,
-    staleTime: 60_000,
-  });
-  const empresaExistenteResumo = !isEdit ? empresasExistentes[0] : undefined;
-  const { data: empresaExistenteCompleta, isLoading: isLoadingEmpresaExistenteCompleta } = useQuery({
-    queryKey: ['empresa', 'prestador-default', empresaExistenteResumo?.id],
-    queryFn: () => empresasApi.getById(empresaExistenteResumo!.id),
-    enabled: !isEdit && Boolean(empresaExistenteResumo?.id),
-    staleTime: 60_000,
-  });
 
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
-    cnaeFiscal: '6920601', cnaeFiscalDescricao: 'Atividades de contabilidade', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
+    cnaeFiscal: '', cnaeFiscalDescricao: '', ctnCodigo: '', nbsCodigo: '', porte: '', naturezaJuridica: '', capitalSocial: '',
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
-    regimeTributario: 'simples_nacional', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '120.000,00',
+    regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
   });
   const initialSubTab = (() => {
@@ -338,9 +354,6 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
-  const empresaExistente = !isEdit ? (empresaExistenteCompleta || empresaExistenteResumo) : undefined;
-  const effectiveEmpresaId = id || empresaExistente?.id;
-  const effectiveIsEdit = Boolean(effectiveEmpresaId);
 
   useEffect(() => {
     if (existing) {
@@ -355,19 +368,6 @@ const EmpresaFormPage = () => {
       });
     }
   }, [existing]);
-
-  useEffect(() => {
-    if (isEdit || !empresaExistente) return;
-    setForm((prev) => mapEmpresaToForm(empresaExistente, prev));
-    setLastPreviewCnpj(empresaExistente.cnpj.replace(/\D/g, ''));
-    setUltimoResumoCadastro({
-      statusCadastro: empresaExistente.statusCadastro,
-      prontoParaEmitir: empresaExistente.prontoParaEmitir,
-      percentualCompletude: empresaExistente.percentualCompletude,
-      camposFaltantes: empresaExistente.camposFaltantes,
-      camposFaltantesEmissao: empresaExistente.camposFaltantesEmissao,
-    });
-  }, [empresaExistente, isEdit]);
 
   useEffect(() => {
     if (cnaesRegime.length > 0) return;
@@ -477,7 +477,7 @@ const EmpresaFormPage = () => {
           cep: normalizeCep(form.cep) || undefined,
         },
       };
-      return effectiveIsEdit ? empresasApi.update(effectiveEmpresaId!, {
+      return isEdit ? empresasApi.update(id!, {
       razaoSocial: payload.razaoSocial,
       nomeFantasia: payload.nomeFantasia,
       inscricaoMunicipal: payload.inscricaoMunicipal,
@@ -524,13 +524,11 @@ const EmpresaFormPage = () => {
           description: `Completude atual: ${empresa.percentualCompletude ?? 0}%.${missingText}`,
           variant: 'destructive',
         });
-        if (!effectiveIsEdit && empresa.id) {
-          navigate(`/empresas/${empresa.id}?secao=regime`);
-        }
+        navigate('/empresas');
         return;
       }
 
-      toast({ title: effectiveIsEdit ? 'Empresa atualizada' : 'Empresa criada' });
+      toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
       navigate('/empresas');
     },
   });
@@ -555,7 +553,7 @@ const EmpresaFormPage = () => {
     onSuccess: ({ cnpj, empresas }) => {
       setLastPreviewCnpj(cnpj);
       setForm((prev) => {
-        let merged = prev;
+        let merged = clearAutofillCadastroFields(prev);
         for (const empresa of empresas) {
           merged = mapEmpresaToForm(empresa, merged);
         }
@@ -620,7 +618,18 @@ const EmpresaFormPage = () => {
     }
     const formatted = formatCnpj(value);
     const digits = formatted.replace(/\D/g, '');
-    setForm((prev) => ({ ...prev, cnpj: formatted }));
+    setForm((prev) => {
+      const prevDigits = prev.cnpj.replace(/\D/g, '');
+      const hadStableDoc = prevDigits.length === 14;
+      const docChanged = prevDigits !== digits;
+      if (docChanged && hadStableDoc) {
+        return {
+          ...clearAutofillCadastroFields(prev),
+          cnpj: formatted,
+        };
+      }
+      return { ...prev, cnpj: formatted };
+    });
     if (digits !== lastPreviewCnpj) {
       setLastPreviewAttemptCnpj('');
     }
@@ -706,11 +715,7 @@ const EmpresaFormPage = () => {
     window.dispatchEvent(new Event('zera:ticker:update'));
   }, [rbt12Number, simplesCalculo]);
 
-  if (
-    (isEdit && isLoading)
-    || (!isEdit && isLoadingEmpresaExistente)
-    || (!isEdit && Boolean(empresaExistenteResumo?.id) && isLoadingEmpresaExistenteCompleta)
-  ) return <LoadingState />;
+  if (isEdit && isLoading) return <LoadingState />;
 
   return (
     <div className="min-h-screen flex w-full">
