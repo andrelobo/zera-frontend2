@@ -69,7 +69,9 @@ const AppSidebar = () => {
   };
 
   const goPrestadorSub = (sub: PrestadorSubTab) => {
-    navigate('/empresas');
+    const isFormPath = /^\/empresas\/([^/]+)$/.test(location.pathname);
+    const basePath = isFormPath ? location.pathname : '/empresas/nova';
+    navigate(`${basePath}?secao=${sub}`);
     closeMobile();
   };
 
