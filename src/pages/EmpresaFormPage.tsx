@@ -14,7 +14,9 @@ import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
 import SimplesNacionalSection from '@/components/SimplesNacionalSection';
 import CNAESection, { type CNAEAtividade } from '@/components/CNAESection';
 import TabelaAnexoIII from '@/components/TabelaAnexoIII';
-import PrestadorSection, { type PrestadorSectionData } from '@/components/PrestadorSection';
+import EmpresaCard from '@/components/prestador/EmpresaCard';
+import EnderecoCard from '@/components/prestador/EnderecoCard';
+import ContatoCard from '@/components/prestador/ContatoCard';
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
@@ -620,43 +622,27 @@ const EmpresaFormPage = () => {
     setForm(prev => ({ ...prev, [key]: normalizedValue }));
   };
 
-  const handlePrestadorSectionChange = (nextData: PrestadorSectionData) => {
-    const formattedCnpj = formatCnpj(nextData.cnpj || '');
-    const cnpjDigits = formattedCnpj.replace(/\D/g, '');
-    const { municipio, uf } = parseLocalidadeUf(nextData.localidadeUf || '');
-
-    setForm((prev) => ({
-      ...prev,
-      cnpj: formattedCnpj,
-      razaoSocial: toUpperTrimmed(nextData.nomeEmpresarial),
-      nomeFantasia: toUpperTrimmed(nextData.nomeFantasia),
-      inscricaoMunicipal: toUpperTrimmed(nextData.inscricaoMunicipal),
-      inscricaoEstadual: toUpperTrimmed(nextData.inscricaoEstadual),
-      suframa: toUpperTrimmed(nextData.suframa),
-      cep: formatCep(nextData.cep || ''),
-      endereco: normalizeLogradouro(nextData.logradouro),
-      numero: nextData.numero || '',
-      complemento: toUpperTrimmed(nextData.complemento),
-      bairro: toUpperTrimmed(nextData.bairro),
-      cidade: toUpperTrimmed(municipio),
-      uf: toUpperTrimmed(uf),
-      email: nextData.email || '',
-      whatsapp: nextData.whatsapp || '',
-      telefone: nextData.whatsapp || prev.telefone,
-    }));
-
-    if (cnpjDigits !== lastPreviewCnpj) {
+  const handlePrestadorChange = (field: string, value: string) => {
+    if (field !== 'cnpj') {
+      if (field === 'nomeEmpresarial') {
+        update('razaoSocial', value);
+        return;
+      }
+      if (field === 'logradouro') {
+        update('endereco', value);
+        return;
+      }
+      update(field as keyof EmpresaFormData, value);
+      return;
+    }
+    const formatted = formatCnpj(value);
+    const digits = formatted.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, cnpj: formatted }));
+    if (digits !== lastPreviewCnpj) {
       setLastPreviewAttemptCnpj('');
     }
-    if (cnpjDigits.length < 14) {
+    if (digits.length < 14) {
       setLastPreviewCnpj('');
-    }
-  };
-
-  const handlePrestadorSimplesDetected = (isOptante: boolean) => {
-    update('opcaoPeloSimples', isOptante ? 'true' : 'false');
-    if (isOptante && !form.regimeTributario) {
-      update('regimeTributario', 'simples_nacional');
     }
   };
 
@@ -798,7 +784,7 @@ const EmpresaFormPage = () => {
         )}
         {prestadorSubTab === 'cadastro' && (
           <div className="space-y-2">
-            <PrestadorSection
+            <EmpresaCard
               data={{
                 cnpj: form.cnpj,
                 nomeEmpresarial: form.razaoSocial,
@@ -806,19 +792,39 @@ const EmpresaFormPage = () => {
                 inscricaoMunicipal: form.inscricaoMunicipal,
                 inscricaoEstadual: form.inscricaoEstadual,
                 suframa: form.suframa,
-                cep: form.cep,
-                logradouro: form.endereco,
-                numero: form.numero,
-                complemento: form.complemento,
-                bairro: form.bairro,
-                localidadeUf: form.cidade && form.uf ? `${form.cidade} - ${form.uf}` : '',
-                email: form.email,
-                whatsapp: form.whatsapp || form.telefone,
+                dataOpcaoSimples: form.dataOpcaoPeloSimples,
               }}
-              onChange={handlePrestadorSectionChange}
-              onAutosave={() => undefined}
-              onSimplesDetected={handlePrestadorSimplesDetected}
-              optanteSimples={form.opcaoPeloSimples === 'true' ? true : form.opcaoPeloSimples === 'false' ? false : null}
+              onFieldChange={(field, value) => handlePrestadorChange(field, value)}
+              onCNPJChange={(value) => handlePrestadorChange('cnpj', value)}
+              loadingCNPJ={previewMutation.isPending}
+              simplesStatus={form.opcaoPeloSimples === 'true' ? true : form.opcaoPeloSimples === 'false' ? false : null}
+              onSimplesToggle={(value) => update('opcaoPeloSimples', value ? 'true' : 'false')}
+            />
+
+            <EnderecoCard
+              cep={form.cep}
+              logradouro={form.endereco}
+              numero={form.numero}
+              complemento={form.complemento}
+              bairro={form.bairro}
+              localidadeUf={form.cidade && form.uf ? `${form.cidade} - ${form.uf}` : ''}
+              onFieldChange={(field, value) => {
+                if (field !== 'localidadeUf') {
+                  handlePrestadorChange(field, value);
+                  return;
+                }
+                const [cidade, uf] = value.split('-').map((part) => part.trim());
+                update('cidade', cidade || '');
+                update('uf', (uf || '').toUpperCase());
+              }}
+              onCEPChange={(value) => update('cep', formatCep(value))}
+              loadingCEP={cepLookupQuery.isFetching}
+            />
+
+            <ContatoCard
+              email={form.email}
+              whatsapp={form.whatsapp}
+              onFieldChange={(field, value) => handlePrestadorChange(field, value)}
             />
           </div>
         )}
