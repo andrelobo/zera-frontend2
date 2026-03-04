@@ -221,7 +221,7 @@ const TomadorFormPage = () => {
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/tomadores')} className="btn-outline p-2" title="Voltar">
+            <button onClick={() => navigate('/tomadores')} className="btn-secondary p-2" title="Voltar">
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
@@ -252,7 +252,7 @@ const TomadorFormPage = () => {
                 </div>
               )}
               <div className="flex items-center gap-3 ml-auto no-print">
-                <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2">
+                <button type="button" onClick={() => window.print()} className="btn-secondary flex items-center gap-2">
                   <Printer className="w-4 h-4" />
                   Imprimir
                 </button>
