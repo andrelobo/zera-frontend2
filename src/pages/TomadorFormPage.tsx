@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle, Printer, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Save } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, normalizeCep } from '@/services/cep';
@@ -252,9 +252,12 @@ const TomadorFormPage = () => {
                 </div>
               )}
               <div className="flex items-center gap-3 ml-auto no-print">
-                <button type="button" onClick={() => window.print()} className="btn-secondary flex items-center gap-2">
-                  <Printer className="w-4 h-4" />
-                  Imprimir
+                <button
+                  type="button"
+                  onClick={() => navigate('/tomadores')}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  Voltar para listagem
                 </button>
                 <button type="submit" disabled={mutation.isPending} className="btn-primary flex items-center gap-2">
                   <Save className="w-4 h-4" />
