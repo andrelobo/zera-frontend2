@@ -188,7 +188,7 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
 
       {manualActivities.length > 0 && (
         <div className="mt-3">
-          <p className="text-[10px] tracking-wider text-destructive font-medium mb-1.5">Lista Cnae</p>
+          <p className="section-title text-sm mb-1.5"><Briefcase className="w-4 h-4 text-primary" />Lista Cnae</p>
           <div className="border border-border rounded-lg divide-y divide-border">
             {manualActivities.map((atividade) => {
               const codigo = String(atividade.codigo);
@@ -212,7 +212,7 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
                       )}
                     </p>
                   </button>
-                  <button type="button" onClick={(e) => handleRemove(e, codigo)} title="Remover" className="shrink-0 p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100">
+                  <button type="button" onClick={(e) => handleRemove(e, codigo)} title="Remover" className="shrink-0 p-1 rounded text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>

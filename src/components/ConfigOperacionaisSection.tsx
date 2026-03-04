@@ -43,10 +43,10 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
   };
 
   return (
-    <div className="section-card">
+    <div className="section-card p-3">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="section-title mb-0">
-          <Settings className="w-5 h-5 text-primary" />
+        <h2 className="section-title text-sm font-bold mb-0">
+          <Settings className="w-4 h-4 text-primary" />
           Lista Serviço
         </h2>
         <button
@@ -61,7 +61,7 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
 
       {/* Table header */}
       {(items.length > 0 || adding) && (
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 text-xs font-medium text-muted-foreground mb-1 px-1">
+        <div className="grid grid-cols-[1fr_2fr_auto] gap-2 text-xs font-medium text-muted-foreground mb-1 px-1">
           <span>Natureza</span>
           <span>Descrição</span>
           <span className="w-16 text-center">Ações</span>
@@ -71,7 +71,7 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
       {/* Items list */}
       <div className="space-y-1">
         {items.map(item => (
-          <div key={item.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center px-1 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
+          <div key={item.id} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-center px-1 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
             {editingId === item.id ? (
               <>
                 <input
@@ -105,7 +105,7 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
 
         {/* Add row */}
         {adding && (
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center px-1 py-1.5 bg-muted/30 rounded-md">
+          <div className="grid grid-cols-[1fr_2fr_auto] gap-2 items-center px-1 py-1.5 bg-muted/30 rounded-md">
             <input
               className="field-input text-xs py-1"
               placeholder="Natureza"
