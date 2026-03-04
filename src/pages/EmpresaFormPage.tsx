@@ -850,6 +850,19 @@ const EmpresaFormPage = () => {
               onAutosave={() => undefined}
             />
 
+            {regimeTela === 'simples' && (
+              <SimplesNacionalSection
+                cnaePrincipal={String(form.cnaeFiscal || '')}
+                cnaeDescricao={form.cnaeFiscalDescricao}
+                cnaeAnexo="III"
+                rbt12={rbt12Number}
+                onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                calculo={simplesCalculo}
+                alertas={simplesCalculo.alertas}
+                permiteFatorR={false}
+              />
+            )}
+
             <CNAESection
               cnpj={form.cnpj}
               cnaeEscolhido={form.cnaeFiscal || null}
@@ -873,19 +886,6 @@ const EmpresaFormPage = () => {
                 }));
               }}
             />
-
-            {regimeTela === 'simples' && (
-              <SimplesNacionalSection
-                cnaePrincipal={String(form.cnaeFiscal || '')}
-                cnaeDescricao={form.cnaeFiscalDescricao}
-                cnaeAnexo="III"
-                rbt12={rbt12Number}
-                onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
-                calculo={simplesCalculo}
-                alertas={simplesCalculo.alertas}
-                permiteFatorR={false}
-              />
-            )}
 
             {regimeTela === 'simples' && (
               <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
