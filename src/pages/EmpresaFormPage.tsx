@@ -5,7 +5,7 @@ import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
+import { AlertTriangle, Briefcase, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingState from '@/components/LoadingState';
@@ -859,6 +859,11 @@ const EmpresaFormPage = () => {
               onAutosave={() => undefined}
             />
 
+            <h2 className="section-title text-sm mb-0">
+              <Briefcase className="w-4 h-4 text-primary" />
+              Lista Cnae
+            </h2>
+
             <CNAESection
               cnpj={form.cnpj}
               cnaeEscolhido={form.cnaeFiscal || null}
@@ -889,6 +894,18 @@ const EmpresaFormPage = () => {
                 <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
               </>
             )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+                className="flex items-center gap-2 text-sm py-2 btn-primary"
+              >
+                {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                SALVAR
+              </button>
+            </div>
           </div>
         )}
 
@@ -971,6 +988,18 @@ const EmpresaFormPage = () => {
               items={configOperacionais}
               onChange={setConfigOperacionais}
             />
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+                className="flex items-center gap-2 text-sm py-2 btn-primary"
+              >
+                {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                SALVAR
+              </button>
+            </div>
           </div>
         )}
 
