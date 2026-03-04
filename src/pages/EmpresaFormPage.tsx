@@ -376,9 +376,13 @@ const EmpresaFormPage = () => {
   const [cnaesRegime, setCnaesRegime] = useState<CNAEAtividade[]>([]);
   const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
   const [configOperacionais, setConfigOperacionais] = useState<ConfigOperacionalItem[]>([]);
+  const [regimeApuracaoSNParametro, setRegimeApuracaoSNParametro] = useState(false);
+  const [informarAliquotaSN, setInformarAliquotaSN] = useState(false);
   const [nfseNum, setNfseNum] = useState('');
   const [dpsNum, setDpsNum] = useState('');
   const [serieDpsNum, setSerieDpsNum] = useState('');
+  const [lastApuracaoSimples, setLastApuracaoSimples] = useState('MENSAL');
+  const [lastAliquotaSimples, setLastAliquotaSimples] = useState('0,00');
   const [ultimoResumoCadastro, setUltimoResumoCadastro] = useState<{
     statusCadastro?: Empresa['statusCadastro'];
     prontoParaEmitir?: boolean;
@@ -404,6 +408,15 @@ const EmpresaFormPage = () => {
       });
     }
   }, [existing]);
+
+  useEffect(() => {
+    const hasApuracao = form.apuracaoSimplesNacional.trim().length > 0;
+    const hasAliquota = form.aliquotaSimplesNacional.trim().length > 0;
+    setRegimeApuracaoSNParametro(hasApuracao);
+    setInformarAliquotaSN(hasAliquota);
+    if (hasApuracao) setLastApuracaoSimples(form.apuracaoSimplesNacional);
+    if (hasAliquota) setLastAliquotaSimples(form.aliquotaSimplesNacional);
+  }, [form.apuracaoSimplesNacional, form.aliquotaSimplesNacional]);
 
   useEffect(() => {
     if (cnaesRegime.length > 0) return;
@@ -948,16 +961,36 @@ const EmpresaFormPage = () => {
                 </h2>
                 <div className="space-y-2 p-2.5 rounded-lg bg-muted/50 border border-border">
                   <ToggleSwitch
-                    checked={form.apuracaoSimplesNacional.trim().length > 0}
-                    onChange={(value) => update('apuracaoSimplesNacional', value ? 'MENSAL' : '')}
+                    checked={regimeApuracaoSNParametro}
+                    onChange={(value) => {
+                      setRegimeApuracaoSNParametro(value);
+                      if (value) {
+                        update('apuracaoSimplesNacional', lastApuracaoSimples || 'MENSAL');
+                        return;
+                      }
+                      if (form.apuracaoSimplesNacional.trim().length > 0) {
+                        setLastApuracaoSimples(form.apuracaoSimplesNacional);
+                      }
+                      update('apuracaoSimplesNacional', '');
+                    }}
                     label="Regime de apuração dos tributos federais e municipal pelo Simples Nacional"
                   />
                   <ToggleSwitch
-                    checked={form.aliquotaSimplesNacional.trim().length > 0}
-                    onChange={(value) => update('aliquotaSimplesNacional', value ? '0,00' : '')}
+                    checked={informarAliquotaSN}
+                    onChange={(value) => {
+                      setInformarAliquotaSN(value);
+                      if (value) {
+                        update('aliquotaSimplesNacional', lastAliquotaSimples || '0,00');
+                        return;
+                      }
+                      if (form.aliquotaSimplesNacional.trim().length > 0) {
+                        setLastAliquotaSimples(form.aliquotaSimplesNacional);
+                      }
+                      update('aliquotaSimplesNacional', '');
+                    }}
                     label="Informar alíquota do Simples Nacional"
                   />
-                  {form.aliquotaSimplesNacional.trim().length > 0 && (
+                  {informarAliquotaSN && (
                     <div>
                       <label className="field-label whitespace-nowrap">Simples Nacional</label>
                       <div className="relative w-[55px]">
@@ -970,6 +1003,7 @@ const EmpresaFormPage = () => {
                           onChange={(e) => {
                             let value = e.target.value.replace(/[^\d]/g, '').slice(0, 4);
                             if (value.length > 2) value = `${value.slice(0, -2)},${value.slice(-2)}`;
+                            if (value.trim().length > 0) setLastAliquotaSimples(value);
                             update('aliquotaSimplesNacional', value);
                           }}
                         />
@@ -988,9 +1022,9 @@ const EmpresaFormPage = () => {
             )}
 
             {regimeTela && regimeTela !== 'simples' && (
-              <div className="section-card">
-                <h2 className="section-title">
-                  <Settings className="w-5 h-5 text-primary" />
+              <div className="section-card p-3">
+                <h2 className="section-title text-sm mb-2">
+                  <Settings className="w-4 h-4 text-primary" />
                   Parâmetros Federais
                 </h2>
                 <p className="text-sm text-muted-foreground">
@@ -1006,7 +1040,7 @@ const EmpresaFormPage = () => {
               </h2>
               <CTNSection
                 ctnSelecionado={form.ctnCodigo || null}
-                onCtnChange={(codigo) => update('ctnCodigo', codigo)}
+                onCtnChange={(codigo, _descricao, _itemFormatado) => update('ctnCodigo', codigo)}
                 savedCnaes={cnaesParam}
                 onCnaesChange={handleCnaesChange}
                 regimeCnaes={cnaesRegime}
