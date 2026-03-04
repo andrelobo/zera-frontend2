@@ -68,6 +68,12 @@ function parseCurrency(value: string): number {
   return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
 }
 
+function parseOptionalCurrency(value: string): number | undefined {
+  if (!value || !value.trim()) return undefined;
+  const parsed = parseFloat(value.replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function parsePercent(value: string): number {
   if (!value) return 0;
   return parseFloat(value.replace(',', '.')) || 0;
@@ -216,6 +222,8 @@ const NfseEmitPage: React.FC = () => {
 
     const payload: EmitirNfseRequest = {
       numeroNfse: nfseNumero || undefined,
+      competencia: competencia || undefined,
+      dataEmissao: dataEmissao || undefined,
       prestador: {
         cnpj: prestador.cnpj.replace(/\D/g, ''),
         inscricaoMunicipal: prestador.inscricaoMunicipal || undefined,
@@ -248,9 +256,18 @@ const NfseEmitPage: React.FC = () => {
         codigoTributacao: CODIGO_TRIBUTACAO_PADRAO || undefined,
         descricao: prestacao.descricaoServico,
         valor: parseCurrency(prestacao.valorServico),
+        baseCalculo: parseOptionalCurrency(prestacao.baseCalculo),
+        desconto: parseOptionalCurrency(prestacao.desconto),
+        retencoesFederais: {
+          pis: parseOptionalCurrency(prestacao.retPis),
+          cofins: parseOptionalCurrency(prestacao.retCofins),
+          csll: parseOptionalCurrency(prestacao.retCsll),
+          ir: parseOptionalCurrency(prestacao.retIr),
+          inss: parseOptionalCurrency(prestacao.retInss),
+        },
         iss: {
           retido: prestacao.issRetido,
-          aliquota: prestacao.issRetido ? parsePercent(prestacao.aliquota) : undefined,
+          aliquota: prestacao.aliquota?.trim() ? parsePercent(prestacao.aliquota) : undefined,
         },
         tributacaoTotal: {
           federal: { valor: parseCurrency(prestacao.retPis) + parseCurrency(prestacao.retCofins) + parseCurrency(prestacao.retCsll) + parseCurrency(prestacao.retIr) },

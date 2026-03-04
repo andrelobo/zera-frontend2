@@ -43,7 +43,12 @@ const UserFormPage = () => {
   const mutation = useMutation({
     mutationFn: () => {
       if (isEdit) {
-        const payload: Record<string, unknown> = { name: form.name, email: form.email, role: form.role };
+        const payload: Record<string, unknown> = {
+          name: form.name,
+          email: form.email,
+          role: form.role,
+          status: form.status,
+        };
         if (form.password) payload.password = form.password;
         return usersApi.update(id!, payload);
       }

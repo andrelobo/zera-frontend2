@@ -81,6 +81,7 @@ export interface Empresa {
   regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
   aliquotaSimplesNacional?: number | string;
   apuracaoSimplesNacional?: string;
+  rbt12?: number | string;
   cnaesLista?: Array<{
     codigo?: number | string;
     descricao?: string;
@@ -111,6 +112,9 @@ export interface Empresa {
   cep?: string;
   telefone?: string;
   whatsapp?: string;
+  nfseNum?: string;
+  dpsNum?: string;
+  serieDpsNum?: string;
   fone?: string;
   email?: string;
   statusCadastro?: 'PENDENTE' | 'COMPLETO';
@@ -146,6 +150,7 @@ export interface CreateEmpresaRequest {
   regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
   aliquotaSimplesNacional?: number | string;
   apuracaoSimplesNacional?: string;
+  rbt12?: number | string;
   cnaesLista?: Array<{
     codigo?: number | string;
     descricao?: string;
@@ -174,6 +179,9 @@ export interface CreateEmpresaRequest {
   cep?: string;
   telefone?: string;
   whatsapp?: string;
+  nfseNum?: string;
+  dpsNum?: string;
+  serieDpsNum?: string;
   email?: string;
 }
 
@@ -268,14 +276,25 @@ export interface Nfse {
     codigoMunicipal?: string;
     descricao?: string;
     valor?: number;
+    baseCalculo?: number;
+    desconto?: number;
   };
   tomadorCnpjCpf?: string;
   tomadorRazaoSocial?: string;
   descricaoServico?: string;
   valorServico?: number;
+  baseCalculo?: number;
+  desconto?: number;
   aliquotaIss?: number;
   valorIss?: number;
+  retPis?: number;
+  retCofins?: number;
+  retCsll?: number;
+  retIr?: number;
+  retInss?: number;
   codigoServico?: string;
+  competencia?: string;
+  dataEmissao?: string;
   errorCode?: string;
   errorMessage?: string;
   createdAt: string;
@@ -284,6 +303,8 @@ export interface Nfse {
 
 export interface EmitirNfseRequest {
   numeroNfse?: string;
+  competencia?: string;
+  dataEmissao?: string;
   prestador: {
     cnpj: string;
     inscricaoMunicipal?: string;
@@ -307,6 +328,15 @@ export interface EmitirNfseRequest {
     codigoMunicipal?: string;
     descricao: string;
     valor: number;
+    baseCalculo?: number;
+    desconto?: number;
+    retencoesFederais?: {
+      pis?: number;
+      cofins?: number;
+      csll?: number;
+      ir?: number;
+      inss?: number;
+    };
     iss?: {
       tipoTributacao?: number;
       exigibilidade?: number;
@@ -381,8 +411,45 @@ export interface NfseFilters {
   status?: NfseStatus;
   provider?: NfseProvider;
   dateFrom?: string;
+  dateTo?: string;
   sort?: string;
   order?: 'ASC' | 'DESC';
+}
+
+export interface NfseBiSummary {
+  totals: {
+    totalEmissoes: number;
+    totalAutorizadas: number;
+    totalPendentes: number;
+    totalRejeitadas: number;
+    totalCanceladas: number;
+    totalComErro: number;
+    somaValorServico: number;
+    somaBaseCalculo: number;
+    somaDesconto: number;
+    somaValorIss: number;
+    somaRetencoes: number;
+    ticketMedio: number;
+  };
+  retencoes: {
+    pis: number;
+    cofins: number;
+    csll: number;
+    ir: number;
+    inss: number;
+  };
+  seriesCompetencia: Array<{
+    competencia: string;
+    quantidade: number;
+    valorServico: number;
+    valorIss: number;
+  }>;
+  topServicos: Array<{
+    codigoServico: string;
+    descricaoServico: string;
+    quantidade: number;
+    valorServico: number;
+  }>;
 }
 
 // Certificado digital

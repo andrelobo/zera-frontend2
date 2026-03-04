@@ -3,7 +3,7 @@ import type {
   LoginRequest, LoginResponse, User, CreateUserRequest, UpdateUserRequest,
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
-  NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem,
+  NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem, NfseBiSummary,
   Tomador, CreateTomadorRequest, UpdateTomadorRequest,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
@@ -224,12 +224,19 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       legacy.apuracao_simples_nacional,
       providerData.apuracao_simples_nacional,
     ),
+    rbt12: pickString(
+      legacy.rbt12,
+      providerData.rbt12,
+    ),
     cnaesLista: pickCnaesLista(legacy.cnaesLista, legacy.cnaes_lista),
     parametroMunicipal: pickObjectArray(legacy.parametroMunicipal, legacy.parametro_municipal),
     configOperacionais: pickConfigOperacionais(legacy.configOperacionais, legacy.config_operacionais),
     email: pickString(legacy.email),
     whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
+    nfseNum: pickString(legacy.nfseNum, legacy.nfse_num),
+    dpsNum: pickString(legacy.dpsNum, legacy.dps_num),
+    serieDpsNum: pickString(legacy.serieDpsNum, legacy.serie_dps_num),
     endereco: hasEndereco ? endereco : undefined,
     statusCadastro: pickString(legacy.statusCadastro) as Empresa['statusCadastro'],
     prontoParaEmitir: pickBoolean(legacy.prontoParaEmitir),
@@ -276,6 +283,15 @@ export const nfseApi = {
         totalPages: r.data.meta?.totalPages || 1,
       } as PaginatedResponse<Nfse>));
   },
+  biSummary: (filters: {
+    provider?: string;
+    status?: string;
+    empresaCnpj?: string;
+    codigoServico?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {}) =>
+    api.get<NfseBiSummary>('/nfse/bi/summary', { params: filters }).then(r => r.data),
   getById: (id: string) =>
     api.get<Nfse>(`/nfse/${id}`).then(r => r.data),
   emitir: (data: EmitirNfseRequest) =>
@@ -423,12 +439,16 @@ export const empresasApi = {
       regimeTributario: data.regimeTributario,
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
+      rbt12: data.rbt12,
       cnaesLista: data.cnaesLista,
       parametroMunicipal: data.parametroMunicipal,
       configOperacionais: data.configOperacionais,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,
+      nfseNum: data.nfseNum,
+      dpsNum: data.dpsNum,
+      serieDpsNum: data.serieDpsNum,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
     }).then(r => normalizeEmpresa(r.data)),
   update: (id: string, data: UpdateEmpresaRequest) =>
@@ -455,12 +475,16 @@ export const empresasApi = {
       regimeTributario: data.regimeTributario,
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
+      rbt12: data.rbt12,
       cnaesLista: data.cnaesLista,
       parametroMunicipal: data.parametroMunicipal,
       configOperacionais: data.configOperacionais,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,
+      nfseNum: data.nfseNum,
+      dpsNum: data.dpsNum,
+      serieDpsNum: data.serieDpsNum,
       endereco: typeof data.endereco === 'object' ? data.endereco : undefined,
     }).then(r => normalizeEmpresa(r.data)),
   delete: (id: string) =>

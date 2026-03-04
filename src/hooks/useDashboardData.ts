@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { nfseApi } from '@/services/api';
 import { getNfseValor } from '@/lib/nfse';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
@@ -53,89 +53,44 @@ export interface MesData {
   qtdNotas: number;
 }
 
-const parseProviderValor = (raw: unknown): number => {
-  const root = Array.isArray(raw) ? raw[0] : raw;
-  if (!root || typeof root !== 'object') return 0;
-  const rootObj = root as Record<string, unknown>;
-  const servicoRaw = rootObj.servico;
-  const servico = Array.isArray(servicoRaw) ? servicoRaw[0] : servicoRaw;
-  if (!servico || typeof servico !== 'object') return 0;
-  const servicoObj = servico as Record<string, unknown>;
-  const valorRaw = servicoObj.valor;
-  if (!valorRaw || typeof valorRaw !== 'object') return 0;
-  const valorObj = valorRaw as Record<string, unknown>;
-  const valorServico = valorObj.servico;
-  if (typeof valorServico === 'number' && Number.isFinite(valorServico)) return valorServico;
-  if (typeof valorServico === 'string') {
-    const parsed = Number(valorServico);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-};
-
-const parseProviderIssValor = (raw: unknown): number => {
-  const root = Array.isArray(raw) ? raw[0] : raw;
-  if (!root || typeof root !== 'object') return 0;
-  const rootObj = root as Record<string, unknown>;
-  const servicoRaw = rootObj.servico;
-  const servico = Array.isArray(servicoRaw) ? servicoRaw[0] : servicoRaw;
-  if (!servico || typeof servico !== 'object') return 0;
-  const servicoObj = servico as Record<string, unknown>;
-  const valorRaw = servicoObj.valor;
-  if (!valorRaw || typeof valorRaw !== 'object') return 0;
-  const valorObj = valorRaw as Record<string, unknown>;
-  const iss = valorObj.iss;
-  if (typeof iss === 'number' && Number.isFinite(iss)) return iss;
-  if (typeof iss === 'string') {
-    const parsed = Number(iss);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-};
+function monthLabelFromCompetencia(competencia: string): string {
+  const cleaned = (competencia || '').trim();
+  if (/^\d{2}\/\d{4}$/.test(cleaned)) return cleaned;
+  if (/^\d{4}-\d{2}$/.test(cleaned)) return `${cleaned.slice(5, 7)}/${cleaned.slice(0, 4)}`;
+  if (cleaned === 'SEM_COMPETENCIA') return 'Sem comp.';
+  return cleaned || 'Sem comp.';
+}
 
 export function useDashboardData(prestadorId: string | null, rbt12: number, cnaeAnexo: string) {
+  const now = new Date();
+  const oneYearAgo = new Date(now);
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+  const dateFrom = oneYearAgo.toISOString().slice(0, 10);
+  const dateTo = now.toISOString().slice(0, 10);
+
+  const biQuery = useQuery({
+    queryKey: ['nfse-dashboard-bi-summary-v1', prestadorId, dateFrom, dateTo],
+    queryFn: () => nfseApi.biSummary({ dateFrom, dateTo }),
+    staleTime: 60_000,
+  });
+
   const nfseQuery = useQuery({
-    queryKey: ['nfse-dashboard-v2', prestadorId],
-    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
+    queryKey: ['nfse-dashboard-list-v3', prestadorId, dateFrom, dateTo],
+    queryFn: () => nfseApi.list({ page: 1, limit: 1000, dateFrom, dateTo }),
     staleTime: 60_000,
   });
 
   const baseItems = nfseQuery.data?.data || [];
 
-  const itemsToEnrich = useMemo(() => (
-    baseItems.filter((item) => item.status === 'AUTHORIZED' && getNfseValor(item) <= 0)
-  ), [baseItems]);
-
-  const providerQueries = useQueries({
-    queries: itemsToEnrich.map((item) => ({
-      queryKey: ['nfse-dashboard-provider-v2', item.id, item.updatedAt],
-      queryFn: () => nfseApi.providerResponse(item.id),
-      staleTime: 5 * 60 * 1000,
-      retry: 0,
-      enabled: Boolean(item.id),
-    })),
-  });
-
-  const providerMap = useMemo(() => {
-    const map = new Map<string, { valor: number; iss: number }>();
-    itemsToEnrich.forEach((item, index) => {
-      const q = providerQueries[index];
-      if (!q || !q.data) return;
-      map.set(item.id, {
-        valor: parseProviderValor(q.data.raw),
-        iss: parseProviderIssValor(q.data.raw),
-      });
-    });
-    return map;
-  }, [itemsToEnrich, providerQueries]);
-
   const notas = useMemo<NotaDashboard[]>(() => {
     return baseItems.map((item) => {
-      const fallback = providerMap.get(item.id);
-      const valorServico = getNfseValor(item) > 0 ? getNfseValor(item) : (fallback?.valor ?? 0);
-      const issValor = typeof item.valorIss === 'number' ? item.valorIss : (fallback?.iss ?? 0);
-      const baseCalculo = Math.max(0, valorServico);
-      const aliquota = valorServico > 0 ? ((issValor / valorServico) * 100) : 0;
+      const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
+      const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
+      const baseCalculo = typeof item.baseCalculo === 'number'
+        ? item.baseCalculo
+        : Math.max(0, valorServico - desconto);
+      const issValor = typeof item.valorIss === 'number' ? item.valorIss : 0;
+      const aliquota = baseCalculo > 0 ? ((issValor / baseCalculo) * 100) : 0;
       const tomadorNome = item.tomadorRazaoSocial || item.tomador?.razaoSocial || 'Cliente sem nome';
       const tomadorDoc = item.tomadorCnpjCpf || item.tomador?.cpfCnpj || '';
 
@@ -144,77 +99,64 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
         tomador_id: tomadorDoc || tomadorNome,
         tomador_nome: tomadorNome,
         valor_servico: valorServico,
-        desconto: 0,
+        desconto,
         base_calculo: baseCalculo,
         iss_valor: issValor,
-        iss_retido: false,
-        valor_liquido: Math.max(0, valorServico - issValor),
-        ret_pis: 0,
-        ret_cofins: 0,
-        ret_csll: 0,
-        ret_ir: 0,
-        ret_inss: 0,
+        iss_retido: issValor > 0 && aliquota <= 0,
+        valor_liquido: Math.max(
+          0,
+          valorServico -
+            issValor -
+            (item.retPis || 0) -
+            (item.retCofins || 0) -
+            (item.retCsll || 0) -
+            (item.retIr || 0) -
+            (item.retInss || 0),
+        ),
+        ret_pis: typeof item.retPis === 'number' ? item.retPis : 0,
+        ret_cofins: typeof item.retCofins === 'number' ? item.retCofins : 0,
+        ret_csll: typeof item.retCsll === 'number' ? item.retCsll : 0,
+        ret_ir: typeof item.retIr === 'number' ? item.retIr : 0,
+        ret_inss: typeof item.retInss === 'number' ? item.retInss : 0,
         aliquota,
-        data_emissao: item.createdAt,
+        data_emissao: item.dataEmissao || item.createdAt,
         status: item.status,
       };
     });
-  }, [baseItems, providerMap]);
+  }, [baseItems]);
 
   const splits = useMemo<SplitPaymentRow[]>(() => [], []);
 
   const calculo = useMemo(() => calcularSimplesAnexoIII(rbt12, cnaeAnexo || 'III'), [rbt12, cnaeAnexo]);
 
   const dadosMensais = useMemo<MesData[]>(() => {
-    const map = new Map<string, MesData>();
-    notas.forEach((n) => {
-      const d = new Date(n.data_emissao);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-      if (!map.has(key)) {
-        map.set(key, { mes: key, label, faturamento: 0, tributoEstimado: 0, issRetido: 0, qtdNotas: 0 });
-      }
-      const m = map.get(key)!;
-      m.faturamento += n.valor_servico;
-      m.tributoEstimado += n.valor_servico * (calculo.aliquotaEfetiva || 0);
-      m.issRetido += n.iss_retido ? n.iss_valor : 0;
-      m.qtdNotas += 1;
-    });
-    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
-  }, [notas, calculo.aliquotaEfetiva]);
+    const series = biQuery.data?.seriesCompetencia || [];
+    return series.map((item) => ({
+      mes: item.competencia,
+      label: monthLabelFromCompetencia(item.competencia),
+      faturamento: item.valorServico || 0,
+      tributoEstimado: (item.valorServico || 0) * (calculo.aliquotaEfetiva || 0),
+      issRetido: item.valorIss || 0,
+      qtdNotas: item.quantidade || 0,
+    }));
+  }, [biQuery.data?.seriesCompetencia, calculo.aliquotaEfetiva]);
 
   const kpis = useMemo(() => {
-    const now = new Date();
-    const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const notasMesAtual = notas.filter((n) => {
-      const d = new Date(n.data_emissao);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesAtual;
-    });
-    const mesesComNotas = Array.from(
-      new Set(
-        notas.map((n) => {
-          const d = new Date(n.data_emissao);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        }),
-      ),
-    ).sort();
-    const mesReferencia = notasMesAtual.length > 0 ? mesAtual : (mesesComNotas[mesesComNotas.length - 1] ?? mesAtual);
-    const notasMes = mesReferencia === mesAtual
-      ? notasMesAtual
-      : notas.filter((n) => {
-          const d = new Date(n.data_emissao);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesReferencia;
-        });
-    const [anoRef, mesRef] = mesReferencia.split('-');
-    const mesReferenciaLabel = `${mesRef}/${anoRef}`;
+    const totals = biQuery.data?.totals;
+    const retencoes = biQuery.data?.retencoes;
+    const serie = biQuery.data?.seriesCompetencia || [];
+    const latest = serie[serie.length - 1];
 
-    const faturamentoMes = notasMes.reduce((s, n) => s + n.valor_servico, 0);
-    const totalNotas = notas.length;
-    const totalNotasMes = notasMes.length;
-    const issRetidoMes = notasMes.filter((n) => n.iss_retido).reduce((s, n) => s + n.iss_valor, 0);
+    const faturamentoMes = latest?.valorServico || 0;
+    const totalNotasMes = latest?.quantidade || 0;
+    const mesReferencia = latest?.competencia || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const mesReferenciaLabel = monthLabelFromCompetencia(mesReferencia);
+    const issRetidoMes = latest?.valorIss || 0;
     const dasEstimado = faturamentoMes * (calculo.aliquotaEfetiva || 0);
-    const totalRetencoes = notasMes.reduce((s, n) => s + n.ret_pis + n.ret_cofins + n.ret_csll + n.ret_ir + n.ret_inss, 0);
-    const valorLiquidoMes = notasMes.reduce((s, n) => s + n.valor_liquido, 0);
+    const dasAPagar = Math.max(dasEstimado - issRetidoMes, 0);
+    const totalRetencoes = totals?.somaRetencoes
+      ?? ((retencoes?.pis || 0) + (retencoes?.cofins || 0) + (retencoes?.csll || 0) + (retencoes?.ir || 0) + (retencoes?.inss || 0));
+    const valorLiquidoMes = Math.max(0, faturamentoMes - dasAPagar - totalRetencoes);
     const totalReservado = 0;
     const margemLiquida = faturamentoMes > 0 ? ((valorLiquidoMes - dasEstimado) / faturamentoMes) * 100 : 0;
 
@@ -222,10 +164,12 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
       faturamentoMes,
       mesReferencia,
       mesReferenciaLabel,
+      competenciaLabel: mesReferenciaLabel,
       rbt12,
-      totalNotas,
+      totalNotas: totals?.totalEmissoes || 0,
       totalNotasMes,
       dasEstimado,
+      dasAPagar,
       issRetidoMes,
       valorLiquidoMes,
       totalReservado,
@@ -233,7 +177,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
       margemLiquida,
       totalRetencoes,
     };
-  }, [notas, calculo, rbt12]);
+  }, [biQuery.data, calculo.aliquotaEfetiva, now, rbt12]);
 
   const analiseClientes = useMemo<ClienteAnalise[]>(() => {
     const map = new Map<string, { faturamento: number; qtd: number; nome: string }>();
@@ -284,11 +228,11 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
 
   const fluxoCaixa = useMemo(() => {
     const operacional = kpis.valorLiquidoMes;
-    const tributario = kpis.dasEstimado + kpis.issRetidoMes;
+    const tributario = kpis.dasAPagar + kpis.issRetidoMes;
     return { operacional, tributario, saldo: operacional - tributario };
   }, [kpis]);
 
-  const loading = nfseQuery.isLoading || providerQueries.some((q) => q.isLoading || q.isFetching);
+  const loading = biQuery.isLoading || nfseQuery.isLoading;
 
   return { loading, notas, splits, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa };
 }

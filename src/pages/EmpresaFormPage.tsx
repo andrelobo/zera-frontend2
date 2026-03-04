@@ -442,6 +442,9 @@ const EmpresaFormPage = () => {
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
+      setNfseNum(String((existing as Record<string, unknown>).nfseNum ?? ''));
+      setDpsNum(String((existing as Record<string, unknown>).dpsNum ?? ''));
+      setSerieDpsNum(String((existing as Record<string, unknown>).serieDpsNum ?? ''));
       const cnaesFromBackend = mapEmpresaCnaesListaToRegime(existing);
       if (cnaesFromBackend.length > 0) {
         setCnaesRegime(cnaesFromBackend);
@@ -572,6 +575,9 @@ const EmpresaFormPage = () => {
         regimeTributario: form.regimeTributario || undefined,
         aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
         apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
+        rbt12: form.rbt12.trim()
+          ? Number(form.rbt12.replace(/\./g, '').replace(',', '.'))
+          : undefined,
         cnaesLista: cnaesRegime
           .map((item) => ({
             codigo: String(item.codigo ?? '').replace(/\D/g, '') || undefined,
@@ -593,6 +599,9 @@ const EmpresaFormPage = () => {
         email: form.email || undefined,
         telefone: form.telefone || form.whatsapp || undefined,
         whatsapp: form.whatsapp || form.telefone || undefined,
+        nfseNum: nfseNum || undefined,
+        dpsNum: dpsNum || undefined,
+        serieDpsNum: serieDpsNum || undefined,
         endereco: {
           logradouro: form.endereco || undefined,
           numero: form.numero || undefined,
@@ -626,12 +635,16 @@ const EmpresaFormPage = () => {
       regimeTributario: payload.regimeTributario,
       aliquotaSimplesNacional: payload.aliquotaSimplesNacional,
       apuracaoSimplesNacional: payload.apuracaoSimplesNacional,
+      rbt12: payload.rbt12,
       cnaesLista: payload.cnaesLista,
       parametroMunicipal: payload.parametroMunicipal,
       configOperacionais: payload.configOperacionais,
       email: payload.email,
       telefone: payload.telefone,
       whatsapp: payload.whatsapp,
+      nfseNum: payload.nfseNum,
+      dpsNum: payload.dpsNum,
+      serieDpsNum: payload.serieDpsNum,
       endereco: payload.endereco,
     }) : empresasApi.create(payload);
     },
