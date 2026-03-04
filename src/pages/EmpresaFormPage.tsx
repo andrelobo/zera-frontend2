@@ -342,6 +342,54 @@ const mapEmpresaCnaesListaToRegime = (empresa: Empresa): CNAEAtividade[] => {
     .filter((item): item is CNAEAtividade => item !== null);
 };
 
+const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
+  if (!Array.isArray(empresa.parametroMunicipal)) return [];
+  return empresa.parametroMunicipal
+    .map((item) => {
+      const raw = (item ?? {}) as Record<string, unknown>;
+      const codigo = String(raw.codigo ?? '').replace(/\D/g, '');
+      if (!codigo) return null;
+      const vinculosRaw = Array.isArray(raw.vinculos) ? raw.vinculos : [];
+      const vinculos = vinculosRaw
+        .map((vinculo, idx) => {
+          const row = (vinculo ?? {}) as Record<string, unknown>;
+          return {
+            id: String(row.id ?? `imported_${codigo}_${idx + 1}`),
+            ctn: String(row.ctn ?? '').trim() || undefined,
+            ctnDescricao: String(row.ctnDescricao ?? '').trim() || undefined,
+            nbs: String(row.nbs ?? '').trim() || undefined,
+            nbsDescricao: String(row.nbsDescricao ?? '').trim() || undefined,
+          };
+        })
+        .filter((vinculo) => Boolean(vinculo.ctn || vinculo.nbs));
+
+      return {
+        codigo,
+        cnaeDescricao: String(raw.cnaeDescricao ?? '').trim() || 'CNAE principal',
+        lc116Descricao: String(raw.lc116Descricao ?? '').trim(),
+        lc116Item: String(raw.lc116Item ?? '').trim(),
+        vinculos,
+        isManual: Boolean(raw.isManual),
+        isPrincipal: Boolean(raw.isPrincipal),
+        vinculadoSN: Boolean(raw.vinculadoSN),
+      } satisfies CnaeAdicionado;
+    })
+    .filter((item): item is CnaeAdicionado => item !== null);
+};
+
+const mapEmpresaConfigOperacionais = (empresa: Empresa): ConfigOperacionalItem[] => {
+  if (!Array.isArray(empresa.configOperacionais)) return [];
+  return empresa.configOperacionais
+    .map((item, idx) => {
+      const id = String(item?.id ?? '').trim() || `imported_${idx + 1}`;
+      const natureza = String(item?.natureza ?? '').trim();
+      const descricao = String(item?.descricao ?? '').trim();
+      if (!natureza && !descricao) return null;
+      return { id, natureza, descricao };
+    })
+    .filter((item): item is ConfigOperacionalItem => item !== null);
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -397,6 +445,14 @@ const EmpresaFormPage = () => {
       const cnaesFromBackend = mapEmpresaCnaesListaToRegime(existing);
       if (cnaesFromBackend.length > 0) {
         setCnaesRegime(cnaesFromBackend);
+      }
+      const parametroMunicipalFromBackend = mapEmpresaParametroMunicipal(existing);
+      if (parametroMunicipalFromBackend.length > 0) {
+        setCnaesParam(parametroMunicipalFromBackend);
+      }
+      const configOperacionaisFromBackend = mapEmpresaConfigOperacionais(existing);
+      if (configOperacionaisFromBackend.length > 0) {
+        setConfigOperacionais(configOperacionaisFromBackend);
       }
       setLastPreviewCnpj(existing.cnpj.replace(/\D/g, ''));
       setUltimoResumoCadastro({
@@ -526,6 +582,14 @@ const EmpresaFormPage = () => {
             anexoLoading: item.anexoLoading,
           }))
           .filter((item) => Boolean(item.codigo)),
+        parametroMunicipal: cnaesParam as unknown as Record<string, unknown>[],
+        configOperacionais: configOperacionais
+          .map((item) => ({
+            id: item.id || undefined,
+            natureza: item.natureza || undefined,
+            descricao: item.descricao || undefined,
+          }))
+          .filter((item) => Boolean(item.natureza || item.descricao)),
         email: form.email || undefined,
         telefone: form.telefone || form.whatsapp || undefined,
         whatsapp: form.whatsapp || form.telefone || undefined,

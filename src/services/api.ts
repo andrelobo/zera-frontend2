@@ -71,6 +71,29 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     }
     return undefined;
   };
+  const pickObjectArray = (...values: unknown[]) => {
+    for (const value of values) {
+      if (!Array.isArray(value)) continue;
+      const items = value
+        .map((item) => ((item && typeof item === 'object') ? (item as Record<string, unknown>) : null))
+        .filter((item): item is Record<string, unknown> => item !== null);
+      if (items.length > 0) return items;
+    }
+    return undefined;
+  };
+  const pickConfigOperacionais = (...values: unknown[]) => {
+    const items = pickObjectArray(...values);
+    if (!items || items.length === 0) return undefined;
+    return items
+      .map((raw) => {
+        const id = pickString(raw.id);
+        const natureza = pickString(raw.natureza);
+        const descricao = pickString(raw.descricao);
+        if (!id && !natureza && !descricao) return null;
+        return { id, natureza, descricao };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  };
   const endereco = {
     ...(enderecoRaw as Empresa['endereco']),
     logradouro: pickString(enderecoRaw.logradouro),
@@ -202,6 +225,8 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       providerData.apuracao_simples_nacional,
     ),
     cnaesLista: pickCnaesLista(legacy.cnaesLista, legacy.cnaes_lista),
+    parametroMunicipal: pickObjectArray(legacy.parametroMunicipal, legacy.parametro_municipal),
+    configOperacionais: pickConfigOperacionais(legacy.configOperacionais, legacy.config_operacionais),
     email: pickString(legacy.email),
     whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
@@ -390,6 +415,8 @@ export const empresasApi = {
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
       cnaesLista: data.cnaesLista,
+      parametroMunicipal: data.parametroMunicipal,
+      configOperacionais: data.configOperacionais,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,
@@ -420,6 +447,8 @@ export const empresasApi = {
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
       cnaesLista: data.cnaesLista,
+      parametroMunicipal: data.parametroMunicipal,
+      configOperacionais: data.configOperacionais,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,

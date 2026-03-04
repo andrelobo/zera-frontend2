@@ -277,6 +277,33 @@ describe('new API flows', () => {
     }));
   });
 
+  it('sends parametroMunicipal and configOperacionais on empresa create', async () => {
+    const { empresasApi } = await import('@/services/api');
+    mockPost.mockResolvedValue({
+      data: {
+        id: 'empresa-1',
+        cnpj: '43521115000134',
+        razaoSocial: 'BURGUS LTDA',
+        parametroMunicipal: [{ codigo: '6201500' }],
+        configOperacionais: [{ id: 'svc-1', natureza: 'TRIBUTAVEL', descricao: 'SERVICO' }],
+      },
+    });
+
+    await empresasApi.create({
+      cnpj: '43521115000134',
+      razaoSocial: 'BURGUS LTDA',
+      parametroMunicipal: [{ codigo: '6201500', vinculos: [{ ctn: '1.01' }] }],
+      configOperacionais: [{ id: 'svc-1', natureza: 'TRIBUTAVEL', descricao: 'SERVICO' }],
+    });
+
+    expect(mockPost).toHaveBeenCalledWith('/empresas', expect.objectContaining({
+      cnpj: '43521115000134',
+      razaoSocial: 'BURGUS LTDA',
+      parametroMunicipal: [{ codigo: '6201500', vinculos: [{ ctn: '1.01' }] }],
+      configOperacionais: [{ id: 'svc-1', natureza: 'TRIBUTAVEL', descricao: 'SERVICO' }],
+    }));
+  });
+
   it('propagates backend error on quick emission', async () => {
     const { nfseApi } = await import('@/services/api');
     const backendError = {

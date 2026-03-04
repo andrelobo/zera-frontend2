@@ -89,6 +89,12 @@ export interface Empresa {
     anexo?: string | null;
     anexoLoading?: boolean;
   }>;
+  parametroMunicipal?: Array<Record<string, unknown>>;
+  configOperacionais?: Array<{
+    id?: string;
+    natureza?: string;
+    descricao?: string;
+  }>;
   endereco?: {
     logradouro?: string;
     numero?: string;
@@ -147,6 +153,12 @@ export interface CreateEmpresaRequest {
     isManual?: boolean;
     anexo?: string | null;
     anexoLoading?: boolean;
+  }>;
+  parametroMunicipal?: Array<Record<string, unknown>>;
+  configOperacionais?: Array<{
+    id?: string;
+    natureza?: string;
+    descricao?: string;
   }>;
   endereco?: string | {
     logradouro?: string;
