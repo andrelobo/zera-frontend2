@@ -117,11 +117,11 @@ const TomadorFormPage = () => {
     setForm({
       cnpjCpf: formatDoc(existing.cpfCnpj),
       nomeEmpresarial: existing.razaoSocial,
-      nomeFantasia: '',
+      nomeFantasia: existing.nomeFantasia || '',
       inscricaoMunicipal: existing.inscricaoMunicipal || '',
       inscricaoEstadual: existing.inscricaoEstadual || '',
       suframa: existing.suframa || '',
-      substitutoTributario: false,
+      substitutoTributario: Boolean(existing.substitutoTributario),
       cep: formatCep(existing.endereco?.cep || ''),
       logradouro: existing.endereco?.logradouro || '',
       numero: existing.endereco?.numero || '',
@@ -129,7 +129,7 @@ const TomadorFormPage = () => {
       bairro: existing.endereco?.bairro || '',
       localidadeUf: municipio && uf ? `${municipio} - ${uf}` : municipio || '',
       email: existing.email || '',
-      whatsapp: '',
+      whatsapp: formatPhone(existing.whatsapp || ''),
     });
   }, [existing]);
 
@@ -140,10 +140,13 @@ const TomadorFormPage = () => {
         empresaCnpj: fallbackEmpresaCnpj.replace(/\D/g, ''),
         cpfCnpj: form.cnpjCpf.replace(/\D/g, ''),
         razaoSocial: form.nomeEmpresarial.trim(),
+        nomeFantasia: form.nomeFantasia || undefined,
         inscricaoMunicipal: form.inscricaoMunicipal || undefined,
         inscricaoEstadual: form.inscricaoEstadual || undefined,
         suframa: form.suframa || undefined,
+        substitutoTributario: form.substitutoTributario,
         email: form.email || undefined,
+        whatsapp: form.whatsapp || undefined,
         endereco: {
           logradouro: form.logradouro || undefined,
           numero: form.numero || undefined,
@@ -158,10 +161,13 @@ const TomadorFormPage = () => {
       if (isEdit) {
         return tomadoresApi.update(id!, {
           razaoSocial: payload.razaoSocial,
+          nomeFantasia: payload.nomeFantasia,
           inscricaoMunicipal: payload.inscricaoMunicipal,
           inscricaoEstadual: payload.inscricaoEstadual,
           suframa: payload.suframa,
+          substitutoTributario: payload.substitutoTributario,
           email: payload.email,
+          whatsapp: payload.whatsapp,
           endereco: payload.endereco,
         });
       }
@@ -183,6 +189,7 @@ const TomadorFormPage = () => {
       whatsapp: formatPhone(nextData.whatsapp || ''),
       logradouro: normalizeLogradouro(nextData.logradouro || ''),
       nomeEmpresarial: toUpperTrimmed(nextData.nomeEmpresarial),
+      nomeFantasia: toUpperTrimmed(nextData.nomeFantasia),
       inscricaoMunicipal: toUpperTrimmed(nextData.inscricaoMunicipal),
       inscricaoEstadual: toUpperTrimmed(nextData.inscricaoEstadual),
       suframa: toUpperTrimmed(nextData.suframa),

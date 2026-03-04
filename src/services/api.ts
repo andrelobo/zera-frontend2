@@ -356,10 +356,19 @@ const normalizeTomador = (raw: Tomador | Record<string, unknown>): Tomador => {
     empresaCnpj: pickString(legacy.empresaCnpj, legacy.empresa_cnpj) || '',
     cpfCnpj: pickString(legacy.cpfCnpj, legacy.cpf_cnpj) || '',
     razaoSocial: pickString(legacy.razaoSocial, legacy.razao_social) || '',
+    nomeFantasia: pickString(legacy.nomeFantasia, legacy.nome_fantasia),
     inscricaoMunicipal: pickString(legacy.inscricaoMunicipal, legacy.inscricao_municipal),
     inscricaoEstadual: pickString(legacy.inscricaoEstadual, legacy.inscricao_estadual, legacy.ie),
     suframa: pickString(legacy.suframa),
+    substitutoTributario: (() => {
+      const value = legacy.substitutoTributario ?? legacy.substituto_tributario;
+      if (typeof value === 'boolean') return value;
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+      return undefined;
+    })(),
     email: pickString(legacy.email),
+    whatsapp: pickString(legacy.whatsapp),
     endereco: {
       logradouro: pickString(endereco.logradouro),
       numero: pickString(endereco.numero),
@@ -491,9 +500,17 @@ export const tomadoresApi = {
       ...data,
       empresaCnpj: data.empresaCnpj.replace(/\D/g, ''),
       cpfCnpj: data.cpfCnpj.replace(/\D/g, ''),
+      nomeFantasia: data.nomeFantasia?.trim() || undefined,
+      whatsapp: data.whatsapp?.replace(/\D/g, '') || undefined,
+      substitutoTributario: typeof data.substitutoTributario === 'boolean' ? data.substitutoTributario : undefined,
     }).then(r => normalizeTomador(r.data)),
   update: (id: string, data: UpdateTomadorRequest) =>
-    api.patch<Tomador>(`/tomadores/${id}`, data).then(r => normalizeTomador(r.data)),
+    api.patch<Tomador>(`/tomadores/${id}`, {
+      ...data,
+      nomeFantasia: data.nomeFantasia?.trim() || undefined,
+      whatsapp: data.whatsapp?.replace(/\D/g, '') || undefined,
+      substitutoTributario: typeof data.substitutoTributario === 'boolean' ? data.substitutoTributario : undefined,
+    }).then(r => normalizeTomador(r.data)),
   delete: (id: string) =>
     api.delete(`/tomadores/${id}`).then(r => r.data),
 };

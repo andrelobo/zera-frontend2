@@ -186,10 +186,13 @@ export interface Tomador {
   empresaCnpj: string;
   cpfCnpj: string;
   razaoSocial: string;
+  nomeFantasia?: string;
   inscricaoMunicipal?: string;
   inscricaoEstadual?: string;
   suframa?: string;
+  substitutoTributario?: boolean;
   email?: string;
+  whatsapp?: string;
   endereco?: {
     logradouro?: string;
     numero?: string;
@@ -207,10 +210,13 @@ export interface CreateTomadorRequest {
   empresaCnpj: string;
   cpfCnpj: string;
   razaoSocial: string;
+  nomeFantasia?: string;
   inscricaoMunicipal?: string;
   inscricaoEstadual?: string;
   suframa?: string;
+  substitutoTributario?: boolean;
   email?: string;
+  whatsapp?: string;
   endereco?: {
     logradouro?: string;
     numero?: string;
