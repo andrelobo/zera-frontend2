@@ -5,6 +5,33 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-03)
+Fonte: `codigo local` + `execucao local`.
+
+- Prestador (cadastro/regime/parametros) alinhado visualmente ao `telasnovas` nas rotas de formulario (`/empresas/nova` e `/empresas/:id`).
+- Tomador (cadastro) alinhado ao `telasnovas` em `/tomadores/novo` e `/tomadores/:id`.
+- Emissao (DANFSE) recebeu clone de layout/regras solicitado, mantendo integracoes com backend.
+- Navegacao lateral corrigida:
+  - subabas de prestador agora abrem formulario com `?secao=cadastro|regime|parametros` (nao mais lista de empresas).
+- Cadastro do prestador recebeu cards adicionados:
+  - `Certificado CNPJ A1` (`Arquivo do Certificado`, `Senha do Certificado`);
+  - `Portal Nacional` (`NFS-e Nº`, `DPS Nº`, `Série DPS Nº`).
+
+Arquivos-chave alterados neste ciclo:
+- `src/pages/EmpresaFormPage.tsx`
+- `src/pages/TomadorFormPage.tsx`
+- `src/pages/NfseEmitPage.tsx`
+- `src/components/AppSidebar.tsx`
+- `src/components/PrestadorSection.tsx`
+- `src/components/CTNSection.tsx`
+- `src/components/CNAESection.tsx`
+- `src/components/ConfigOperacionaisSection.tsx`
+- `src/components/prestador/CertificadoDigitalCard.tsx` (novo)
+- `src/components/prestador/IdentificacaoDocumentoCard.tsx` (novo)
+
+Validacao local mais recente:
+- `yarn build` executado com sucesso em `2026-03-03` apos as alteracoes.
+
 ## 1. Identificacao do Projeto
 - Nome tecnico: `vite_react_shadcn_ts`
 - Dominio funcional: painel web para emissao e acompanhamento de NFSe (PlugNotas/NFS-e Nacional), com gestao de empresas e usuarios
