@@ -81,6 +81,14 @@ export interface Empresa {
   regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
   aliquotaSimplesNacional?: number | string;
   apuracaoSimplesNacional?: string;
+  cnaesLista?: Array<{
+    codigo?: number | string;
+    descricao?: string;
+    isPrincipal?: boolean;
+    isManual?: boolean;
+    anexo?: string | null;
+    anexoLoading?: boolean;
+  }>;
   endereco?: {
     logradouro?: string;
     numero?: string;
@@ -132,6 +140,14 @@ export interface CreateEmpresaRequest {
   regimeTributario?: 'simples_nacional' | 'lucro_presumido' | 'lucro_real' | string;
   aliquotaSimplesNacional?: number | string;
   apuracaoSimplesNacional?: string;
+  cnaesLista?: Array<{
+    codigo?: number | string;
+    descricao?: string;
+    isPrincipal?: boolean;
+    isManual?: boolean;
+    anexo?: string | null;
+    anexoLoading?: boolean;
+  }>;
   endereco?: string | {
     logradouro?: string;
     numero?: string;

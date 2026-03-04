@@ -42,6 +42,35 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     }
     return [] as string[];
   };
+  const pickCnaesLista = (...values: unknown[]) => {
+    for (const value of values) {
+      if (!Array.isArray(value)) continue;
+      const items = value
+        .map((item) => {
+          const raw = (item ?? {}) as Record<string, unknown>;
+          const codigo = pickString(raw.codigo);
+          const descricao = pickString(raw.descricao);
+          const isPrincipal = pickBoolean(raw.isPrincipal);
+          const isManual = pickBoolean(raw.isManual);
+          const anexo = pickString(raw.anexo);
+          const anexoLoading = pickBoolean(raw.anexoLoading);
+          if (!codigo && !descricao && isPrincipal === undefined && isManual === undefined && anexo === undefined && anexoLoading === undefined) {
+            return null;
+          }
+          return {
+            codigo,
+            descricao,
+            isPrincipal,
+            isManual,
+            anexo: anexo ?? null,
+            anexoLoading,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+      if (items.length > 0) return items;
+    }
+    return undefined;
+  };
   const endereco = {
     ...(enderecoRaw as Empresa['endereco']),
     logradouro: pickString(enderecoRaw.logradouro),
@@ -172,6 +201,7 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       legacy.apuracao_simples_nacional,
       providerData.apuracao_simples_nacional,
     ),
+    cnaesLista: pickCnaesLista(legacy.cnaesLista, legacy.cnaes_lista),
     email: pickString(legacy.email),
     whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
@@ -359,6 +389,7 @@ export const empresasApi = {
       regimeTributario: data.regimeTributario,
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
+      cnaesLista: data.cnaesLista,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,
@@ -388,6 +419,7 @@ export const empresasApi = {
       regimeTributario: data.regimeTributario,
       aliquotaSimplesNacional: data.aliquotaSimplesNacional,
       apuracaoSimplesNacional: data.apuracaoSimplesNacional,
+      cnaesLista: data.cnaesLista,
       email: data.email,
       fone: data.telefone,
       whatsapp: data.whatsapp,

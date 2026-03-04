@@ -323,6 +323,25 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
   };
 };
 
+const mapEmpresaCnaesListaToRegime = (empresa: Empresa): CNAEAtividade[] => {
+  if (!Array.isArray(empresa.cnaesLista)) return [];
+  return empresa.cnaesLista
+    .map((item) => {
+      const codigo = String(item?.codigo ?? '').replace(/\D/g, '');
+      if (!codigo) return null;
+      const descricao = String(item?.descricao ?? '').trim() || 'CNAE principal';
+      return {
+        codigo,
+        descricao,
+        isPrincipal: Boolean(item?.isPrincipal),
+        isManual: item?.isManual ?? true,
+        anexo: item?.anexo ?? null,
+        anexoLoading: Boolean(item?.anexoLoading),
+      } satisfies CNAEAtividade;
+    })
+    .filter((item): item is CNAEAtividade => item !== null);
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -371,6 +390,10 @@ const EmpresaFormPage = () => {
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
+      const cnaesFromBackend = mapEmpresaCnaesListaToRegime(existing);
+      if (cnaesFromBackend.length > 0) {
+        setCnaesRegime(cnaesFromBackend);
+      }
       setLastPreviewCnpj(existing.cnpj.replace(/\D/g, ''));
       setUltimoResumoCadastro({
         statusCadastro: existing.statusCadastro,
@@ -480,6 +503,16 @@ const EmpresaFormPage = () => {
         regimeTributario: form.regimeTributario || undefined,
         aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
         apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
+        cnaesLista: cnaesRegime
+          .map((item) => ({
+            codigo: String(item.codigo ?? '').replace(/\D/g, '') || undefined,
+            descricao: item.descricao || undefined,
+            isPrincipal: item.isPrincipal,
+            isManual: item.isManual,
+            anexo: item.anexo ?? undefined,
+            anexoLoading: item.anexoLoading,
+          }))
+          .filter((item) => Boolean(item.codigo)),
         email: form.email || undefined,
         telefone: form.telefone || form.whatsapp || undefined,
         whatsapp: form.whatsapp || form.telefone || undefined,
