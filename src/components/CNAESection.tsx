@@ -1,8 +1,26 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Briefcase, Loader2, Trash2, Plus, ChevronDown, Search, ShieldCheck, ShieldX } from 'lucide-react';
-import { CNAE_LIST, formatCNAECode as formatCNAECodeFromList } from '@/utils/cnae-lc116';
+import { Briefcase, Star, Loader2, AlertCircle, Trash2, CheckCircle2, Plus, X, ChevronDown, Search, ShieldCheck, ShieldX } from 'lucide-react';
+import { validateCNPJ } from '@/utils/validators';
+import { CNAE_LIST, formatCNAECode as formatCNAECodeFromList, getLC116Item } from '@/utils/cnae-lc116';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+
+// Faixas de alíquota efetiva mín/máx por anexo do Simples Nacional
+const ALIQUOTA_RANGE: Record<string, { min: string; max: string }> = {
+  'I':   { min: '4,00%',  max: '19,00%' },
+  'II':  { min: '4,50%',  max: '30,00%' },
+  'III': { min: '6,00%',  max: '33,00%' },
+  'IV':  { min: '4,50%',  max: '33,00%' },
+  'V':   { min: '15,50%', max: '30,50%' },
+};
+
+function getAliquotaRange(anexo: string | null | undefined): string | null {
+  if (!anexo) return null;
+  const key = anexo.replace(/[^IViv]/g, '').toUpperCase();
+  const range = ALIQUOTA_RANGE[key];
+  return range ? `${range.min} a ${range.max}` : null;
+}
 
 interface CNAEAtividade {
   codigo: number | string;
@@ -14,7 +32,7 @@ interface CNAEAtividade {
 }
 
 interface Props {
-  cnpj?: string;
+  cnpj: string;
   cnaeEscolhido: string | null;
   onCnaeEscolhidoChange: (codigo: string, descricao: string) => void;
   rbt12?: number;
@@ -30,7 +48,7 @@ function formatCNAECode(codigo: number | string): string {
   return str;
 }
 
-const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cnaesLista, onCnaesListaChange }) => {
+const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChange, rbt12 = 0, cnaesLista, onCnaesListaChange }) => {
   const [manualActivities, setManualActivitiesRaw] = useState<CNAEAtividade[]>(cnaesLista || []);
   const [manualCnae, setManualCnae] = useState('');
   const [manualCnaeDescricaoIBGE, setManualCnaeDescricaoIBGE] = useState('');
@@ -38,14 +56,15 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
   const [anexoCache, setAnexoCache] = useState<Record<string, string | null>>({});
   const cnaeDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sync from parent on load
   useEffect(() => {
     if (cnaesLista && cnaesLista.length > 0 && manualActivities.length === 0) {
       setManualActivitiesRaw(cnaesLista);
     }
-  }, [cnaesLista, manualActivities.length]);
+  }, [cnaesLista]);
 
   const setManualActivities = useCallback((updater: CNAEAtividade[] | ((prev: CNAEAtividade[]) => CNAEAtividade[])) => {
-    setManualActivitiesRaw((prev) => {
+    setManualActivitiesRaw(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       onCnaesListaChange?.(next);
       return next;
@@ -74,18 +93,53 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
     return matches;
   }, [manualCnae]);
 
+  // Fetch anexo info for dropdown results
   useEffect(() => {
     if (cnaeManualResults.length === 0) return;
-    const toFetch = cnaeManualResults.filter((e) => !(e.codigo in anexoCache)).map((e) => e.codigo);
+    const toFetch = cnaeManualResults.filter(e => !(e.codigo in anexoCache)).map(e => e.codigo);
     if (toFetch.length === 0) return;
 
-    // Sem integração externa aqui: mantém layout idêntico e marca cache com valor nulo.
-    const newCache: Record<string, string | null> = {};
-    for (const code of toFetch) {
-      newCache[code] = null;
-    }
-    setAnexoCache((prev) => ({ ...prev, ...newCache }));
-  }, [cnaeManualResults, anexoCache]);
+    const fetchAnexos = async () => {
+      // 1. Batch query from DB
+      const { data } = await supabase
+        .from('cnae_catalogo')
+        .select('codigo_cnae, anexo')
+        .in('codigo_cnae', toFetch);
+
+      const newCache: Record<string, string | null> = {};
+      const found = new Set<string>();
+      if (data) {
+        for (const row of data) {
+          newCache[row.codigo_cnae] = row.anexo;
+          found.add(row.codigo_cnae);
+        }
+      }
+
+      // 2. For codes not in DB, call AI fallback (limit to first 5 to avoid too many calls)
+      const notFound = toFetch.filter(c => !found.has(c)).slice(0, 5);
+      const aiPromises = notFound.map(async (code) => {
+        const entry = cnaeManualResults.find(e => e.codigo === code);
+        try {
+          const { data: aiData } = await supabase.functions.invoke('cnae-anexo-lookup', {
+            body: { codigo_cnae: code, descricao: entry?.descricao || '' },
+          });
+          newCache[code] = aiData?.success ? aiData.anexo : null;
+        } catch {
+          newCache[code] = null;
+        }
+      });
+      await Promise.all(aiPromises);
+
+      // Mark remaining not-fetched as null
+      for (const code of toFetch) {
+        if (!(code in newCache)) newCache[code] = null;
+      }
+
+      setAnexoCache(prev => ({ ...prev, ...newCache }));
+    };
+
+    fetchAnexos();
+  }, [cnaeManualResults]);
 
   const handleRemove = (e: React.MouseEvent, codigo: string) => {
     e.stopPropagation();
@@ -104,16 +158,47 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
     setManualCnae(value);
     setShowCnaeDropdown(value.trim().length > 0);
     const digits = value.replace(/\D/g, '');
-    const cnaeEntry = CNAE_LIST.find((e) => e.codigo === digits);
+    const cnaeEntry = CNAE_LIST.find(e => e.codigo === digits);
     setManualCnaeDescricaoIBGE(cnaeEntry?.descricao || '');
   };
 
-  const handleAddManual = () => {
+  const checkAnexo = async (codigoCnae: string, descricao?: string): Promise<string | null> => {
+    try {
+      // 1. Try local database first
+      const { data } = await supabase
+        .from('cnae_catalogo')
+        .select('anexo')
+        .eq('codigo_cnae', codigoCnae)
+        .maybeSingle();
+      if (data?.anexo) return data.anexo;
+
+      // 2. Fallback: AI lookup via edge function (also saves to DB)
+      const { data: aiData, error } = await supabase.functions.invoke('cnae-anexo-lookup', {
+        body: { codigo_cnae: codigoCnae, descricao: descricao || '' },
+      });
+      if (!error && aiData?.success) {
+        return aiData.anexo || null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleAddManual = async () => {
     const cleaned = manualCnae.replace(/\D/g, '');
     if (cleaned.length < 7) return;
     if (manualActivities.some((a) => String(a.codigo).replace(/\D/g, '') === cleaned)) return;
+    
+    // Use cache if available, otherwise fetch
+    let anexo: string | null = null;
+    if (cleaned in anexoCache) {
+      anexo = anexoCache[cleaned];
+    } else {
+      anexo = await checkAnexo(cleaned, manualCnaeDescricaoIBGE);
+      setAnexoCache(prev => ({ ...prev, [cleaned]: anexo }));
+    }
 
-    const anexo = cleaned in anexoCache ? anexoCache[cleaned] : null;
     const nova: CNAEAtividade = {
       codigo: cleaned,
       descricao: manualCnaeDescricaoIBGE || 'Inclusão manual',
@@ -128,6 +213,8 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
     if (!cnaeEscolhido) onCnaeEscolhidoChange(cleaned, nova.descricao);
   };
 
+  const selectedActivity = manualActivities.find((a) => String(a.codigo) === cnaeEscolhido);
+
   return (
     <div className="section-card p-3">
       <h2 className="section-title text-sm mb-2">
@@ -135,24 +222,19 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
         Código Cnae
       </h2>
 
+      {/* Campo de pesquisa CNAE — acima da lista */}
       <div className="space-y-2">
         <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start p-2 ${manualCnae ? 'radio-card-selected' : ''}`}>
           <div className="text-xs font-bold leading-tight flex items-center gap-1 mb-1 text-primary"><Search className="w-3.5 h-3.5" />Pesquise</div>
           <div className="w-full space-y-1">
             <div className="relative">
-              <Input
-                placeholder="Ex: 6201-5/00 ou 6201500"
-                value={manualCnae}
-                onChange={(e) => handleManualCnaeChange(e.target.value)}
-                onFocus={() => { if (manualCnae.trim()) setShowCnaeDropdown(true); }}
-                className="h-8 text-sm pr-8"
-              />
-              <button type="button" onClick={() => setShowCnaeDropdown((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <Input placeholder="Ex: 6201-5/00 ou 6201500" value={manualCnae} onChange={e => handleManualCnaeChange(e.target.value)} onFocus={() => { if (manualCnae.trim()) setShowCnaeDropdown(true); }} className="h-8 text-sm pr-8" />
+              <button type="button" onClick={() => setShowCnaeDropdown(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               {showCnaeDropdown && cnaeManualResults.length > 0 && (
                 <div className="absolute z-30 top-full mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
-                  {cnaeManualResults.map((entry) => (
+                  {cnaeManualResults.map(entry => (
                     <button key={entry.codigo} type="button" onClick={() => { handleManualCnaeChange(entry.codigo); setShowCnaeDropdown(false); }} className="w-full text-left px-3 py-1.5 border-b border-border/50 last:border-b-0 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-semibold text-primary shrink-0">{formatCNAECodeFromList(entry.codigo)}</span>
@@ -186,6 +268,7 @@ const CNAESection: React.FC<Props> = ({ cnaeEscolhido, onCnaeEscolhidoChange, cn
         )}
       </div>
 
+      {/* Lista de CNAEs adicionados */}
       {manualActivities.length > 0 && (
         <div className="mt-3">
           <p className="section-title text-sm mb-1.5"><Briefcase className="w-4 h-4 text-primary" />Lista Cnae</p>

@@ -34,6 +34,7 @@ const TabelaAnexoIII: React.FC<Props> = ({ faixaAtual }) => {
                 <th className="py-1 px-2 text-left font-medium">Receita Bruta (12m)</th>
                 <th className="py-1 px-2 text-center font-medium">Alíq. Nom.</th>
                 <th className="py-1 px-2 text-right font-medium">Deduzir</th>
+                <th className="py-1 px-2 text-center font-medium">% ISS</th>
               </tr>
             </thead>
             <tbody>
@@ -53,6 +54,7 @@ const TabelaAnexoIII: React.FC<Props> = ({ faixaAtual }) => {
                   </td>
                   <td className="py-1 px-2 text-center">{formatPercent(f.aliquotaNominal)}</td>
                   <td className="py-1 px-2 text-right">{formatCurrency(f.parcelaDeduzir)}</td>
+                  <td className="py-1 px-2 text-center">{formatPercent(f.percentualIss)}</td>
                 </tr>
               ))}
             </tbody>
