@@ -5,7 +5,7 @@ import { empresasApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AlertTriangle, Briefcase, Loader2, Save, Settings } from 'lucide-react';
+import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingState from '@/components/LoadingState';
@@ -689,18 +689,6 @@ const EmpresaFormPage = () => {
     }));
   };
 
-  const handleCnaesRegimeChange = (items: CNAEAtividade[]) => {
-    setCnaesRegime(items);
-    const principal = items.find((item) => item.isPrincipal) || items[0];
-    if (!principal) return;
-
-    setForm((prev) => ({
-      ...prev,
-      cnaeFiscal: String(principal.codigo),
-      cnaeFiscalDescricao: principal.descricao || prev.cnaeFiscalDescricao,
-    }));
-  };
-
   useEffect(() => {
     if (!simplesCalculo.valido || !simplesCalculo.faixa) return;
     if (typeof window === 'undefined') return;
@@ -859,11 +847,6 @@ const EmpresaFormPage = () => {
               onAutosave={() => undefined}
             />
 
-            <h2 className="section-title text-sm mb-0">
-              <Briefcase className="w-4 h-4 text-primary" />
-              Lista Cnae
-            </h2>
-
             <CNAESection
               cnpj={form.cnpj}
               cnaeEscolhido={form.cnaeFiscal || null}
@@ -876,23 +859,24 @@ const EmpresaFormPage = () => {
               }}
               rbt12={rbt12Number}
               cnaesLista={cnaesRegime}
-              onCnaesListaChange={handleCnaesRegimeChange}
+              onCnaesListaChange={(lista) => setCnaesRegime(lista)}
             />
 
             {regimeTela === 'simples' && (
-              <>
-                <SimplesNacionalSection
-                  cnaePrincipal={String(form.cnaeFiscal || '')}
-                  cnaeDescricao={form.cnaeFiscalDescricao}
-                  cnaeAnexo="III"
-                  rbt12={rbt12Number}
-                  onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
-                  calculo={simplesCalculo}
-                  alertas={simplesCalculo.alertas}
-                  permiteFatorR={false}
-                />
-                <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
-              </>
+              <SimplesNacionalSection
+                cnaePrincipal={String(form.cnaeFiscal || '')}
+                cnaeDescricao={form.cnaeFiscalDescricao}
+                cnaeAnexo="III"
+                rbt12={rbt12Number}
+                onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
+                calculo={simplesCalculo}
+                alertas={simplesCalculo.alertas}
+                permiteFatorR={false}
+              />
+            )}
+
+            {regimeTela === 'simples' && (
+              <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
             )}
 
             <div className="flex justify-end pt-2">
