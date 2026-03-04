@@ -953,7 +953,7 @@ const EmpresaFormPage = () => {
 
         {prestadorSubTab === 'parametros' && (
           <div className="space-y-2">
-            {regimeTela === 'simples' && (
+            {(regimeTela === 'simples' || !regimeTela) && (
               <div className="section-card p-3">
                 <h2 className="section-title text-sm mb-2">
                   <Settings className="w-4 h-4 text-primary" />
@@ -1012,12 +1012,6 @@ const EmpresaFormPage = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {!regimeTela && (
-              <div className="section-card flex items-center justify-center py-8 text-muted-foreground text-sm">
-                Selecione um regime tributário na aba "Regime Tributário" para configurar os parâmetros.
               </div>
             )}
 
