@@ -672,11 +672,6 @@ const EmpresaFormPage = () => {
   const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
   const certificadoPendente = camposEmissaoPendentes.includes('certificado.uploadedAt');
   const userInitials = getInitials(user?.name, user?.email);
-  const basePrestadorPath = isEdit ? `/empresas/${id}` : '/empresas/nova';
-
-  const goToPrestadorSecao = (secao: PrestadorSubTab) => {
-    navigate(`${basePrestadorPath}?secao=${secao}`);
-  };
 
   const handleCnaesChange = (items: CnaeAdicionado[]) => {
     setCnaesParam(items);
@@ -759,32 +754,6 @@ const EmpresaFormPage = () => {
 
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-2">
       <form className="space-y-4">
-        <div className="section-card p-2">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => goToPrestadorSecao('cadastro')}
-              className={prestadorSubTab === 'cadastro' ? 'btn-primary h-9 text-sm' : 'btn-secondary h-9 text-sm'}
-            >
-              1. Dados Cadastrais
-            </button>
-            <button
-              type="button"
-              onClick={() => goToPrestadorSecao('regime')}
-              className={prestadorSubTab === 'regime' ? 'btn-primary h-9 text-sm' : 'btn-secondary h-9 text-sm'}
-            >
-              2. Regime Tributário
-            </button>
-            <button
-              type="button"
-              onClick={() => goToPrestadorSecao('parametros')}
-              className={prestadorSubTab === 'parametros' ? 'btn-primary h-9 text-sm' : 'btn-secondary h-9 text-sm'}
-            >
-              3. Parâmetros Fiscais
-            </button>
-          </div>
-        </div>
-
         {cadastroPendente && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm">
             <div className="flex items-center gap-2 text-destructive font-medium">
