@@ -391,6 +391,9 @@ const EmpresaFormPage = () => {
         codigo,
         descricao: form.cnaeFiscalDescricao || 'CNAE principal',
         isPrincipal: true,
+        isManual: true,
+        anexo: 'III',
+        anexoLoading: false,
       },
     ]);
   }, [cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
@@ -859,7 +862,16 @@ const EmpresaFormPage = () => {
               }}
               rbt12={rbt12Number}
               cnaesLista={cnaesRegime}
-              onCnaesListaChange={(lista) => setCnaesRegime(lista)}
+              onCnaesListaChange={(lista) => {
+                setCnaesRegime(lista);
+                const principal = lista.find((item) => item.isPrincipal) || lista[0];
+                if (!principal) return;
+                setForm((prev) => ({
+                  ...prev,
+                  cnaeFiscal: String(principal.codigo),
+                  cnaeFiscalDescricao: principal.descricao || prev.cnaeFiscalDescricao,
+                }));
+              }}
             />
 
             {regimeTela === 'simples' && (
