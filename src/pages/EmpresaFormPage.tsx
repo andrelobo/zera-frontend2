@@ -17,6 +17,8 @@ import TabelaAnexoIII from '@/components/TabelaAnexoIII';
 import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
+import CertificadoDigitalCard from '@/components/prestador/CertificadoDigitalCard';
+import IdentificacaoDocumentoCard from '@/components/prestador/IdentificacaoDocumentoCard';
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
@@ -355,6 +357,9 @@ const EmpresaFormPage = () => {
   const [cnaesRegime, setCnaesRegime] = useState<CNAEAtividade[]>([]);
   const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
   const [configOperacionais, setConfigOperacionais] = useState<ConfigOperacionalItem[]>([]);
+  const [nfseNum, setNfseNum] = useState('');
+  const [dpsNum, setDpsNum] = useState('');
+  const [serieDpsNum, setSerieDpsNum] = useState('');
   const [ultimoResumoCadastro, setUltimoResumoCadastro] = useState<{
     statusCadastro?: Empresa['statusCadastro'];
     prontoParaEmitir?: boolean;
@@ -825,6 +830,17 @@ const EmpresaFormPage = () => {
               email={form.email}
               whatsapp={form.whatsapp}
               onFieldChange={(field, value) => handlePrestadorChange(field, value)}
+            />
+
+            <CertificadoDigitalCard />
+
+            <IdentificacaoDocumentoCard
+              nfseNum={nfseNum}
+              onNfseNumChange={setNfseNum}
+              dpsNum={dpsNum}
+              onDpsNumChange={setDpsNum}
+              serieDpsNum={serieDpsNum}
+              onSerieDpsNumChange={setSerieDpsNum}
             />
           </div>
         )}
