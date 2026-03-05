@@ -586,3 +586,48 @@ Fonte: `execucao local`
 - Ultima atualizacao: 2026-02-28T19:58:00-04:00
 - Responsavel: Codex (GPT-5)
 - Tipo de atualizacao: revalidacao tecnica completa (lint, testes e build) e consolidacao documental.
+
+## 24. Snapshot Canonico (2026-03-05)
+
+Fonte: `codigo local` + `git log` em `main` (sem alteracoes locais).
+
+### 24.1 Estado vigente para operacao
+
+- Branch `main` sincronizada com `origin/main`.
+- Ultimo commit no front: `514a0f8` (`feat(dashboard): homologar 1:1 e integrar dados analiticos do backend`).
+- Ciclo recente consolidado:
+  - clone 1:1 de formularios (cadastro/regime/parametros) com base em `novastelas`;
+  - ajustes de ordem/hierarquia de componentes no regime tributario;
+  - persistencia de `cnaesLista`, `parametroMunicipal` e lista de servicos do prestador;
+  - alinhamento visual/funcional do dashboard para consumo de dados do backend.
+
+### 24.2 Contrato operacional front-back atualmente assumido
+
+- Prestador:
+  - formulario em 3 blocos (`dados cadastrais`, `regime tributario`, `parametros fiscais`) com salvamento no backend.
+  - completude orientada por backend (`statusCadastro`, `prontoParaEmitir`, `camposFaltantes*`).
+- Tomadores:
+  - cadastro completo e uso em emissao via autocomplete por `empresaCnpj`.
+- Emissao:
+  - fluxo normal e rapido mantidos;
+  - pos-emissao redireciona para listagem para acompanhamento de status.
+- Dashboard:
+  - componente homologado 1:1 e alimentado por `nfseApi.biSummary`/dados de emissao.
+
+### 24.3 Gaps e riscos abertos (nao bloqueantes de build)
+
+- Warnings recorrentes de lint (`react-hooks/exhaustive-deps`, `react-refresh/only-export-components`).
+- Bundle principal ainda elevado (>500 kB apos minificacao) com warning de chunking.
+- Existem componentes legados com consultas externas diretas (fora do fluxo backend-first), devendo ser convergidos gradualmente para endpoints internos.
+
+### 24.4 Proximo passo recomendado
+
+1. Consolidar padrao backend-first para autocomplete/lookup em todos os forms.
+2. Reduzir bundle com code-splitting por rota pesada (dashboard/emissao).
+3. Revisar e reduzir warnings de hooks para diminuir risco de regressao de estado em formularios.
+
+### 24.5 Rastreabilidade
+
+- Ultima atualizacao: 2026-03-05T09:30:00-04:00
+- Responsavel: Codex (GPT-5)
+- Tipo de atualizacao: consolidacao canonica de estado apos ciclo de homologacao visual/UX e dashboard.
