@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, AlertCircle, Printer, Loader2, FileOutput } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -10,8 +10,8 @@ import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emi
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { validateCNPJ, validateEmail } from '@/utils/validators';
-import { nfseApi, tomadoresApi } from '@/services/api';
-import type { EmitirNfseRequest, Tomador } from '@/types/api';
+import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
+import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -86,7 +86,78 @@ const splitLocalidadeUf = (value: string) => {
 
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
-const TODAY_ISO = new Date().toISOString().slice(0, 10);
+
+const asObject = (value: unknown): Record<string, unknown> => (
+  value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+);
+
+const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
+  if (!empresa) return INITIAL_PRESTADOR;
+  const endereco = empresa.endereco || {};
+  const cidade = String(endereco.cidade || endereco.descricaoCidade || '').trim();
+  const uf = String(endereco.uf || endereco.estado || '').trim().toUpperCase();
+  return {
+    nomeEmpresarial: String(empresa.razaoSocial || '').trim(),
+    nomeFantasia: String(empresa.nomeFantasia || '').trim(),
+    cnpj: String(empresa.cnpj || '').trim(),
+    inscricaoMunicipal: String(empresa.inscricaoMunicipal || '').trim(),
+    inscricaoEstadual: String(empresa.inscricaoEstadual || '').trim(),
+    suframa: String(empresa.suframa || '').trim(),
+    cep: String(endereco.cep || '').trim(),
+    logradouro: String(endereco.logradouro || '').trim(),
+    numero: String(endereco.numero || '').trim(),
+    complemento: String(endereco.complemento || '').trim(),
+    bairro: String(endereco.bairro || '').trim(),
+    localidadeUf: [cidade, uf].filter(Boolean).join(' - '),
+    email: String(empresa.email || '').trim(),
+    whatsapp: String(empresa.whatsapp || empresa.fone || '').trim(),
+  };
+};
+
+const mapFavoritosFromParametroMunicipal = (empresa?: Empresa) => {
+  const rows = Array.isArray(empresa?.parametroMunicipal) ? empresa.parametroMunicipal : [];
+  return rows
+    .map((item) => {
+      const raw = asObject(item);
+      const codigo = String(raw.codigo ?? '').replace(/\D/g, '');
+      if (!codigo) return null;
+      const vinculosRaw = Array.isArray(raw.vinculos) ? raw.vinculos : [];
+      const vinculos = vinculosRaw
+        .map((v) => {
+          const row = asObject(v);
+          const ctn = String(row.ctn ?? '').trim() || undefined;
+          const ctnDescricao = String(row.ctnDescricao ?? '').trim() || undefined;
+          const nbs = String(row.nbs ?? '').trim() || undefined;
+          const nbsDescricao = String(row.nbsDescricao ?? '').trim() || undefined;
+          if (!ctn && !nbs) return null;
+          return { ctn, ctnDescricao, nbs, nbsDescricao };
+        })
+        .filter((v): v is { ctn?: string; ctnDescricao?: string; nbs?: string; nbsDescricao?: string } => Boolean(v));
+      return {
+        codigo,
+        cnaeDescricao: String(raw.cnaeDescricao ?? '').trim() || 'CNAE principal',
+        lc116Item: String(raw.lc116Item ?? '').trim(),
+        vinculos,
+      };
+    })
+    .filter((item): item is { codigo: string; cnaeDescricao: string; lc116Item: string; vinculos: { ctn?: string; ctnDescricao?: string; nbs?: string; nbsDescricao?: string }[] } => Boolean(item));
+};
+
+const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
+  const rows = Array.isArray(empresa?.configOperacionais) ? empresa.configOperacionais : [];
+  return rows
+    .map((item, index) => {
+      const natureza = String(item?.natureza ?? '').trim();
+      const descricao = String(item?.descricao ?? '').trim();
+      if (!natureza && !descricao) return null;
+      return {
+        id: String(item?.id ?? `cfg-${index + 1}`),
+        natureza,
+        descricao,
+      };
+    })
+    .filter((item): item is ListaServicoItem => Boolean(item));
+};
 
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
@@ -96,13 +167,30 @@ const NfseEmitPage: React.FC = () => {
   const [prestacao, setPrestacao] = useState<PrestacaoServicoData>(INITIAL_PRESTACAO);
   const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({ pais: 'Brasil', uf: 'AM', municipio: 'Manaus' });
   const [errors, setErrors] = useState<string[]>([]);
+  const [tomadorSubstituto, setTomadorSubstituto] = useState(false);
   const [referenciaExterna] = useState(buildReferencia());
-  const [competencia, setCompetencia] = useState('01/2026');
-  const [dataEmissao, setDataEmissao] = useState(TODAY_ISO);
-  const [nfseNumero, setNfseNumero] = useState('');
+  const prestadorHydratedRef = useRef(false);
   const prestadorCnpjDigits = prestador.cnpj.replace(/\D/g, '');
 
   const autosave = useCallback(() => {}, []);
+
+  const empresaQuery = useQuery({
+    queryKey: ['empresas', 'emit-normal'],
+    queryFn: async () => {
+      const list = await empresasApi.list({ limit: 1 });
+      return list[0] ?? null;
+    },
+    staleTime: 60_000,
+  });
+
+  const empresaAtual = empresaQuery.data ?? null;
+
+  useEffect(() => {
+    if (prestadorHydratedRef.current) return;
+    if (!empresaAtual) return;
+    setPrestador(mapPrestadorFromEmpresa(empresaAtual));
+    prestadorHydratedRef.current = true;
+  }, [empresaAtual]);
 
   const tomadoresQuery = useQuery({
     queryKey: ['tomadores', 'emit-normal', prestadorCnpjDigits],
@@ -120,6 +208,9 @@ const NfseEmitPage: React.FC = () => {
     staleTime: 60_000,
   });
 
+  const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
+  const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
+
   const servicosQuery = useQuery({
     queryKey: ['servicos', 'emit-normal', prestadorCnpjDigits],
     queryFn: async () => {
@@ -130,13 +221,14 @@ const NfseEmitPage: React.FC = () => {
   });
 
   const listaServico = useMemo<ListaServicoItem[]>(() => {
+    if (listaServicoConfig.length > 0) return listaServicoConfig;
     return (servicosQuery.data || []).map((item, index) => ({
       id: `${item.codigoServico}-${index}`,
       natureza: item.codigoServico,
       descricao: item.descricao,
       codigoServico: item.codigoServico,
     }));
-  }, [servicosQuery.data]);
+  }, [listaServicoConfig, servicosQuery.data]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
@@ -193,6 +285,13 @@ const NfseEmitPage: React.FC = () => {
   const handleTomadorSelecionado = useCallback((t: Tomador) => {
     const municipio = t.endereco?.municipio || '';
     const uf = (t.endereco?.uf || '').toUpperCase();
+    const substituto = Boolean(t.substitutoTributario);
+    setTomadorSubstituto(substituto);
+    setPrestacao((prev) => ({
+      ...prev,
+      issRetido: substituto ? true : false,
+      aliquota: substituto ? prev.aliquota : '',
+    }));
     setTomador((prev) => ({
       ...prev,
       cnpjCpf: t.cpfCnpj,
@@ -221,9 +320,6 @@ const NfseEmitPage: React.FC = () => {
     const tomadorLocal = splitLocalidadeUf(tomador.localidadeUf);
 
     const payload: EmitirNfseRequest = {
-      numeroNfse: nfseNumero || undefined,
-      competencia: competencia || undefined,
-      dataEmissao: dataEmissao || undefined,
       prestador: {
         cnpj: prestador.cnpj.replace(/\D/g, ''),
         inscricaoMunicipal: prestador.inscricaoMunicipal || undefined,
@@ -322,52 +418,11 @@ const NfseEmitPage: React.FC = () => {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
-        <div className="section-card p-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="field-label">Competência</label>
-              <input
-                className="field-input"
-                type="text"
-                placeholder="mm/aaaa"
-                maxLength={7}
-                value={competencia}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  const next = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-                  setCompetencia(next);
-                }}
-              />
-            </div>
-            <div>
-              <label className="field-label">Data de Emissão</label>
-              <input
-                className="field-input"
-                type="date"
-                value={dataEmissao}
-                onChange={(e) => setDataEmissao(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="field-label">NFS-e Nº</label>
-              <input
-                className="field-input"
-                type="text"
-                placeholder="Número"
-                inputMode="numeric"
-                value={nfseNumero}
-                onChange={(e) => setNfseNumero(e.target.value.replace(/\D/g, ''))}
-              />
-            </div>
-          </div>
-        </div>
-
         <PrestadorSection
           data={prestador}
           onChange={setPrestador}
           onAutosave={autosave}
-          compact
-          optanteSimples={null}
+          optanteSimples={empresaAtual?.opcaoPeloSimples ?? null}
         />
 
         <TomadorEmissao
@@ -384,14 +439,9 @@ const NfseEmitPage: React.FC = () => {
           data={prestacao}
           onChange={handlePrestacaoChange}
           mostrarRetencoesFederais={true}
-          optanteSimples={false}
-          tomadorSubstituto={false}
-          favoritos={(servicosQuery.data || []).map((item) => ({
-            codigo: item.codigoServico,
-            cnaeDescricao: item.descricao,
-            lc116Item: item.itemLc116 || '',
-            vinculos: [{ ctn: item.codigoServico, ctnDescricao: item.descricao }],
-          }))}
+          optanteSimples={Boolean(empresaAtual?.opcaoPeloSimples)}
+          tomadorSubstituto={tomadorSubstituto}
+          favoritos={favoritos}
           listaServico={listaServico}
         />
 
