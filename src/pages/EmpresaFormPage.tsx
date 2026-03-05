@@ -580,6 +580,19 @@ const EmpresaFormPage = () => {
     });
   }, [cnaesRegime, form.ctnCodigo, form.nbsCodigo]);
 
+  const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
+  const cnaePrincipalRegime =
+    cnaesRegime.find((item) => item.isPrincipal)
+    || cnaesRegime.find((item) => String(item.codigo).replace(/\D/g, '') === String(form.cnaeFiscal || '').replace(/\D/g, ''))
+    || cnaesRegime[0];
+  const simplesAnexo = String(cnaePrincipalRegime?.anexo || 'III')
+    .replace(/anexo\s*/i, '')
+    .replace(/[^IViv]/g, '')
+    .toUpperCase()
+    || 'III';
+  const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, simplesAnexo);
+  const regimeTela = toTelaRegime(form.regimeTributario);
+
   useEffect(() => {
     if (regimeTela !== 'simples') return;
 
@@ -886,19 +899,6 @@ const EmpresaFormPage = () => {
     setLastPreviewAttemptCnpj(cnpj);
     previewMutation.mutate(cnpj);
   }, [form.cnpj, isEdit, lastPreviewAttemptCnpj, lastPreviewCnpj, previewMutation]);
-
-  const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
-  const cnaePrincipalRegime =
-    cnaesRegime.find((item) => item.isPrincipal)
-    || cnaesRegime.find((item) => String(item.codigo).replace(/\D/g, '') === String(form.cnaeFiscal || '').replace(/\D/g, ''))
-    || cnaesRegime[0];
-  const simplesAnexo = String(cnaePrincipalRegime?.anexo || 'III')
-    .replace(/anexo\s*/i, '')
-    .replace(/[^IViv]/g, '')
-    .toUpperCase()
-    || 'III';
-  const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, simplesAnexo);
-  const regimeTela = toTelaRegime(form.regimeTributario);
   const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
   const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
   const camposEmissaoPendentes = ultimoResumoCadastro?.camposFaltantesEmissao || [];
