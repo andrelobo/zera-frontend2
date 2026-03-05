@@ -7,7 +7,7 @@ import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSec
 import { formatCep, normalizeCep } from '@/services/cep';
 import { empresasApi, tomadoresApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
-import { validateCNPJ, validateEmail } from '@/utils/validators';
+import { formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 
 const INITIAL_FORM: TomadorSectionData = {
   cnpjCpf: '',
@@ -69,18 +69,6 @@ const parseLocalidadeUf = (value: string) => {
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
 const toUpperTrimmed = (value?: string) => (value || '').trim().toUpperCase();
-const normalizeLogradouro = (value?: string) =>
-  toUpperTrimmed(value).replace(/^RUA\b\.?\s*/u, 'R ');
-const formatPhone = (value: string) => {
-  const digits = value.replace(/\D/g, '');
-  const normalized = digits.length === 10
-    ? `${digits.slice(0, 2)}9${digits.slice(2)}`
-    : digits;
-  const cleaned = normalized.slice(0, 11);
-  return cleaned
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d)(\d{4})$/, '$1-$2');
-};
 
 const TomadorFormPage = () => {
   const { id } = useParams();
@@ -123,7 +111,7 @@ const TomadorFormPage = () => {
       suframa: existing.suframa || '',
       substitutoTributario: Boolean(existing.substitutoTributario),
       cep: formatCep(existing.endereco?.cep || ''),
-      logradouro: existing.endereco?.logradouro || '',
+      logradouro: normalizeLogradouro(existing.endereco?.logradouro || ''),
       numero: existing.endereco?.numero || '',
       complemento: existing.endereco?.complemento || '',
       bairro: existing.endereco?.bairro || '',

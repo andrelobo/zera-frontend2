@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Building2, Loader2, FileText, MapPin } from 'lucide-react';
-import { formatCNPJ, formatCEP, formatPhone, validateCNPJ } from '@/utils/validators';
+import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
 
 export interface PrestadorSectionData {
@@ -120,7 +120,8 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
   }, [optanteSimples, simplesChecked]);
 
   const update = (field: keyof PrestadorSectionData, value: string) => {
-    onChange({ ...data, [field]: value });
+    const normalizedValue = field === 'logradouro' ? normalizeLogradouro(value) : value;
+    onChange({ ...data, [field]: normalizedValue });
     onAutosave();
   };
 
@@ -138,7 +139,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
         nomeEmpresarial: result.razao_social || current.nomeEmpresarial,
         nomeFantasia: result.nome_fantasia || current.nomeFantasia,
         cep: result.cep ? formatCEP(result.cep) : current.cep,
-        logradouro: result.logradouro || current.logradouro,
+        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
         numero: result.numero || current.numero,
         complemento: result.complemento || current.complemento,
         bairro: result.bairro || current.bairro,
@@ -179,7 +180,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
       const current = dataRef.current;
       const updated: PrestadorSectionData = {
         ...current,
-        logradouro: result.logradouro || current.logradouro,
+        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
         bairro: result.bairro || current.bairro,
         localidadeUf: result.municipio && result.uf
           ? `${result.municipio} - ${result.uf}`

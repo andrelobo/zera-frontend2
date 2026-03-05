@@ -9,7 +9,7 @@ import PrestacaoServicoSection, { type PrestacaoServicoData, type ListaServicoIt
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
-import { validateCNPJ, validateEmail } from '@/utils/validators';
+import { formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 
@@ -104,13 +104,13 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
     inscricaoEstadual: String(empresa.inscricaoEstadual || '').trim(),
     suframa: String(empresa.suframa || '').trim(),
     cep: String(endereco.cep || '').trim(),
-    logradouro: String(endereco.logradouro || '').trim(),
+    logradouro: normalizeLogradouro(String(endereco.logradouro || '').trim()),
     numero: String(endereco.numero || '').trim(),
     complemento: String(endereco.complemento || '').trim(),
     bairro: String(endereco.bairro || '').trim(),
     localidadeUf: [cidade, uf].filter(Boolean).join(' - '),
     email: String(empresa.email || '').trim(),
-    whatsapp: String(empresa.whatsapp || empresa.fone || '').trim(),
+    whatsapp: formatPhone(String(empresa.whatsapp || empresa.fone || '').trim()),
   };
 };
 
@@ -299,7 +299,7 @@ const NfseEmitPage: React.FC = () => {
       inscricaoMunicipal: t.inscricaoMunicipal || '',
       email: t.email || '',
       cep: t.endereco?.cep || '',
-      logradouro: t.endereco?.logradouro || '',
+      logradouro: normalizeLogradouro(t.endereco?.logradouro || ''),
       numero: t.endereco?.numero || '',
       complemento: t.endereco?.complemento || '',
       bairro: t.endereco?.bairro || '',

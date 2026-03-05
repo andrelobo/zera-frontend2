@@ -65,3 +65,12 @@ export function formatPhone(value: string): string {
     .replace(/^(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3')
     .replace(/-$/, '');
 }
+
+export function normalizeLogradouro(value: string): string {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/^RUA\b\.?\s*/u, 'R ')
+    .replace(/^AVENIDA\b\.?\s*/u, 'AV ')
+    .replace(/^AV\b\.?\s*/u, 'AV ');
+}

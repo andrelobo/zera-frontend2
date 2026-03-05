@@ -22,7 +22,7 @@ import IdentificacaoDocumentoCard from '@/components/prestador/IdentificacaoDocu
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
-import { formatPhone } from '@/utils/validators';
+import { formatPhone, normalizeLogradouro } from '@/utils/validators';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -168,8 +168,6 @@ const formatCnpj = (value: string) => {
 };
 
 const toUpperTrimmed = (value: unknown): string => String(value ?? '').toUpperCase();
-const normalizeLogradouro = (value: unknown): string =>
-  toUpperTrimmed(value).replace(/^RUA\b\.?\s*/u, 'R ');
 const clearAutofillCadastroFields = (prev: EmpresaFormData): EmpresaFormData => ({
   ...prev,
   razaoSocial: '',
@@ -854,7 +852,7 @@ const EmpresaFormPage = () => {
       'uf',
     ]);
     const normalizedValue = key === 'endereco'
-      ? normalizeLogradouro(value)
+      ? normalizeLogradouro(String(value ?? ''))
       : (uppercaseFields.has(key) ? value.toUpperCase() : value);
     setForm(prev => ({ ...prev, [key]: normalizedValue }));
   };

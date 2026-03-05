@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Building2, MapPin, Mail, Loader2, FileText } from 'lucide-react';
-import { formatCNPJ, formatCEP, formatPhone, validateCNPJ } from '@/utils/validators';
+import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
 import { empresasApi } from '@/services/api';
 import { lookupCep } from '@/services/cep';
@@ -127,7 +127,12 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   dataRef.current = data;
 
   const update = (field: keyof TomadorSectionData, value: string) => {
-    onChange({ ...data, [field]: value });
+    const normalizedValue = field === 'logradouro'
+      ? normalizeLogradouro(value)
+      : field === 'whatsapp'
+        ? formatPhone(value)
+        : value;
+    onChange({ ...data, [field]: normalizedValue });
     onAutosave();
   };
 
@@ -150,7 +155,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         inscricaoEstadual: result.inscricao_estadual || current.inscricaoEstadual,
         suframa: result.suframa || current.suframa,
         cep: result.cep ? formatCEP(result.cep) : current.cep,
-        logradouro: result.logradouro || current.logradouro,
+        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
         numero: result.numero || current.numero,
         complemento: result.complemento || current.complemento,
         bairro: result.bairro || current.bairro,
@@ -191,7 +196,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
       const current = dataRef.current;
       const updated: TomadorSectionData = {
         ...current,
-        logradouro: result.logradouro || current.logradouro,
+        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
         bairro: result.bairro || current.bairro,
         localidadeUf: result.municipio && result.uf
           ? `${result.municipio} - ${result.uf}`
