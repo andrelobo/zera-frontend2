@@ -2,6 +2,8 @@ import React, { useState, useCallback, useRef } from 'react';
 import { Building2, MapPin, Mail, Loader2, FileText } from 'lucide-react';
 import { formatCNPJ, formatCEP, formatPhone, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
+import { empresasApi } from '@/services/api';
+import { lookupCep } from '@/services/cep';
 
 export interface TomadorSectionData {
   nomeEmpresarial: string;
@@ -55,74 +57,72 @@ function isCPF(value: string): boolean {
   return value.replace(/\D/g, '').length <= 11;
 }
 
+const formatSourceLabel = (source?: string) => {
+  const normalized = String(source || '').trim().toLowerCase();
+  if (!normalized) return 'Não informada';
+  if (normalized === 'cnpja') return 'CNPJá';
+  if (normalized === 'brasilapi') return 'BrasilAPI';
+  if (normalized === 'receitaws') return 'ReceitaWS';
+  if (normalized === 'brasilapi+receitaws') return 'BrasilAPI + ReceitaWS';
+  if (normalized === 'plugnotas') return 'PlugNotas';
+  return source as string;
+};
+
+const clearAutofillFields = (current: TomadorSectionData): TomadorSectionData => ({
+  ...current,
+  nomeEmpresarial: '',
+  nomeFantasia: '',
+  inscricaoEstadual: '',
+  suframa: '',
+  cep: '',
+  logradouro: '',
+  numero: '',
+  complemento: '',
+  bairro: '',
+  localidadeUf: '',
+  email: '',
+  whatsapp: '',
+});
+
 async function fetchCNPJData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
-  try {
-    const res = await fetch(`https://receitaws.com.br/v1/cnpj/${cleaned}`, {
-      headers: { Accept: 'application/json' },
-    });
-    if (res.ok) {
-      const d = await res.json();
-      if (d.status !== 'ERROR') {
-        return {
-          razao_social: d.nome || '',
-          nome_fantasia: d.fantasia || '',
-          cep: d.cep?.replace(/[.\-]/g, '') || '',
-          logradouro: d.logradouro || '',
-          numero: d.numero || '',
-          complemento: d.complemento || '',
-          bairro: d.bairro || '',
-          municipio: d.municipio || '',
-          uf: d.uf || '',
-          email: d.email || '',
-          telefone: d.telefone?.replace(/\D/g, '') || '',
-        };
-      }
-    }
-  } catch {
-    // fallback
-  }
-  const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleaned}`);
-  if (!res.ok) throw new Error('CNPJ não encontrado');
-  const data = await res.json();
-  const tipoLogradouro = data.descricao_tipo_de_logradouro || '';
-  const logradouroBase = data.logradouro || '';
-  const logradouroCompleto = tipoLogradouro && logradouroBase
-    ? `${tipoLogradouro} ${logradouroBase}`
-    : logradouroBase;
+  const empresa = await empresasApi.previewByCnpj(cleaned);
   return {
-    razao_social: data.razao_social || '',
-    nome_fantasia: data.nome_fantasia || '',
-    cep: data.cep || '',
-    logradouro: logradouroCompleto,
-    numero: data.numero || '',
-    complemento: data.complemento || '',
-    bairro: data.bairro || '',
-    municipio: data.municipio || '',
-    uf: data.uf || '',
-    email: data.email || '',
-    telefone: data.ddd_telefone_1?.replace(/\D/g, '') || '',
+    razao_social: empresa.razaoSocial || '',
+    nome_fantasia: empresa.nomeFantasia || '',
+    inscricao_estadual: empresa.inscricaoEstadual || '',
+    suframa: empresa.suframa || '',
+    cep: empresa.endereco?.cep || '',
+    logradouro: empresa.endereco?.logradouro || '',
+    numero: empresa.endereco?.numero || '',
+    complemento: empresa.endereco?.complemento || '',
+    bairro: empresa.endereco?.bairro || '',
+    municipio: empresa.endereco?.cidade || empresa.endereco?.descricaoCidade || '',
+    uf: empresa.endereco?.uf || empresa.endereco?.estado || '',
+    email: empresa.email || '',
+    telefone: empresa.whatsapp || empresa.fone || '',
+    source: empresa.fonteConsulta || '',
   };
 }
 
 async function fetchCEPData(cep: string) {
-  const cleaned = cep.replace(/\D/g, '');
-  const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleaned}`);
-  if (!res.ok) throw new Error('CEP não encontrado');
-  const data = await res.json();
+  const data = await lookupCep(cep);
   return {
-    logradouro: data.street || '',
-    bairro: data.neighborhood || '',
-    municipio: data.city || '',
-    uf: data.state || '',
+    logradouro: data.logradouro || '',
+    bairro: data.bairro || '',
+    municipio: data.cidade || '',
+    uf: data.uf || '',
   };
 }
 
 const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
+  const [lookupSource, setLookupSource] = useState<string>('');
   const lastFetchedCNPJ = useRef('');
   const lastFetchedCEP = useRef('');
+  const cnpjRequestSeq = useRef(0);
+  const cepRequestSeq = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -136,14 +136,19 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     if (cleaned.length !== 14 || !validateCNPJ(cleaned)) return;
     if (lastFetchedCNPJ.current === cleaned) return;
     lastFetchedCNPJ.current = cleaned;
+    const requestId = ++cnpjRequestSeq.current;
     setLoadingCNPJ(true);
     try {
       const result = await fetchCNPJData(cleaned);
+      if (requestId !== cnpjRequestSeq.current) return;
+      if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
       const current = dataRef.current;
       const updated: TomadorSectionData = {
         ...current,
         nomeEmpresarial: result.razao_social || current.nomeEmpresarial,
         nomeFantasia: result.nome_fantasia || current.nomeFantasia,
+        inscricaoEstadual: result.inscricao_estadual || current.inscricaoEstadual,
+        suframa: result.suframa || current.suframa,
         cep: result.cep ? formatCEP(result.cep) : current.cep,
         logradouro: result.logradouro || current.logradouro,
         numero: result.numero || current.numero,
@@ -156,6 +161,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         whatsapp: result.telefone ? formatPhone(result.telefone) : current.whatsapp,
       };
       onChange(updated);
+      setLookupSource(result.source || '');
       onAutosave();
       toast.success('Dados do CNPJ preenchidos automaticamente!');
 
@@ -176,9 +182,12 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     if (cleaned.length !== 8) return;
     if (lastFetchedCEP.current === cleaned) return;
     lastFetchedCEP.current = cleaned;
+    const requestId = ++cepRequestSeq.current;
     setLoadingCEP(true);
     try {
       const result = await fetchCEPData(cleaned);
+      if (requestId !== cepRequestSeq.current) return;
+      if (dataRef.current.cep.replace(/\D/g, '') !== cleaned) return;
       const current = dataRef.current;
       const updated: TomadorSectionData = {
         ...current,
@@ -201,7 +210,15 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   const handleCNPJCPFChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const formatted = cleaned.length <= 11 ? formatCPF(value) : formatCNPJ(value);
-    onChange({ ...data, cnpjCpf: formatted });
+    const previousDigits = data.cnpjCpf.replace(/\D/g, '');
+    const docChanged = previousDigits !== cleaned;
+    if (docChanged) {
+      lastFetchedCNPJ.current = '';
+      cnpjRequestSeq.current += 1;
+      setLookupSource('');
+    }
+    const base = docChanged ? clearAutofillFields(data) : data;
+    onChange({ ...base, cnpjCpf: formatted });
     onAutosave();
     if (cleaned.length === 14) buscarCNPJ(formatted);
   };
@@ -229,6 +246,11 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
             <input className="field-input" placeholder="00.000.000/0000-00" value={data.cnpjCpf} onChange={(e) => handleCNPJCPFChange(e.target.value)} maxLength={18} />
             {loadingCNPJ && <div className="flex items-center px-2"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>}
           </div>
+          {lookupSource && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Fonte do autocomplete: {formatSourceLabel(lookupSource)}
+            </p>
+          )}
         </div>
 
         <div>

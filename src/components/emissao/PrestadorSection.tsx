@@ -31,10 +31,21 @@ interface Props {
   optanteSimples?: boolean | null;
 }
 
+const formatSourceLabel = (source?: string) => {
+  const normalized = String(source || '').trim().toLowerCase();
+  if (!normalized) return 'Não informada';
+  if (normalized === 'cnpja') return 'CNPJá';
+  if (normalized === 'brasilapi') return 'BrasilAPI';
+  if (normalized === 'receitaws') return 'ReceitaWS';
+  if (normalized === 'brasilapi+receitaws') return 'BrasilAPI + ReceitaWS';
+  if (normalized === 'plugnotas') return 'PlugNotas';
+  return source as string;
+};
+
 async function fetchCNPJData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
   const empresa = await empresasApi.previewByCnpj(cleaned);
-  let logradouroCompleto = empresa.endereco?.logradouro || '';
+  const logradouroCompleto = empresa.endereco?.logradouro || '';
   return {
     razao_social: empresa.razaoSocial || '',
     nome_fantasia: empresa.nomeFantasia || '',
@@ -48,6 +59,7 @@ async function fetchCNPJData(cnpj: string) {
     email: empresa.email || '',
     telefone: empresa.whatsapp || empresa.fone || '',
     opcao_pelo_simples: empresa.opcaoPeloSimples ?? null,
+    source: empresa.fonteConsulta || '',
   };
 }
 
@@ -64,6 +76,7 @@ async function fetchCEPData(cep: string) {
 const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimplesDetected, compact = false, optanteSimples }) => {
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
+  const [lookupSource, setLookupSource] = useState<string>('');
   const [simplesStatus, setSimplesStatus] = useState<{ simples: boolean | null; mei: boolean | null }>({ simples: optanteSimples ?? null, mei: null });
   const [simplesChecked, setSimplesChecked] = useState(optanteSimples != null);
   const lastFetchedCNPJ = useRef('');
@@ -111,6 +124,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
           : current.whatsapp,
       };
       onChange(updated);
+      setLookupSource(result.source || '');
       onAutosave();
       setSimplesStatus({ simples: result.opcao_pelo_simples === true ? true : false, mei: null });
       setSimplesChecked(true);
@@ -157,6 +171,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
 
   const handleCNPJChange = (value: string) => {
     const formatted = formatCNPJ(value);
+    setLookupSource('');
     onChange({ ...data, cnpj: formatted });
     onAutosave();
     buscarCNPJ(formatted);
@@ -194,6 +209,11 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
               </div>
             )}
           </div>
+          {lookupSource && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Fonte do autocomplete: {formatSourceLabel(lookupSource)}
+            </p>
+          )}
         </div>
 
         <div>

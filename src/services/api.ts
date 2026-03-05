@@ -240,6 +240,12 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     endereco: hasEndereco ? endereco : undefined,
     statusCadastro: pickString(legacy.statusCadastro) as Empresa['statusCadastro'],
     prontoParaEmitir: pickBoolean(legacy.prontoParaEmitir),
+    fonteConsulta: pickString(
+      legacy.fonteConsulta,
+      legacy.fonte_consulta,
+      legacy.sourceUsed,
+      providerData.sourceUsed,
+    ),
     percentualCompletude: (() => {
       const value = legacy.percentualCompletude;
       if (value === null || value === undefined || value === '') return undefined;

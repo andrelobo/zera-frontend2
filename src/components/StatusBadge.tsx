@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const statusConfig: Record<NfseStatus, { label: string; className: string }> = {
-  PENDING: { label: 'Pendente', className: 'bg-warning/15 text-warning border-warning/30' },
+  PENDING: { label: 'Processando', className: 'bg-warning/15 text-warning border-warning/30' },
   PROCESSING: { label: 'Processando', className: 'bg-info/15 text-info border-info/30' },
   AUTHORIZED: { label: 'Autorizada', className: 'bg-success/15 text-success border-success/30' },
   REJECTED: { label: 'Rejeitada', className: 'bg-destructive/15 text-destructive border-destructive/30' },

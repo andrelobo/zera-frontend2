@@ -96,8 +96,8 @@ const NfseListPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Status</SelectItem>
-            <SelectItem value="PENDING">Pendente</SelectItem>
-            <SelectItem value="PROCESSING">Processando</SelectItem>
+            <SelectItem value="PENDING">Processando</SelectItem>
+            <SelectItem value="PROCESSING">Processando (legado)</SelectItem>
             <SelectItem value="AUTHORIZED">Autorizada</SelectItem>
             <SelectItem value="REJECTED">Rejeitada</SelectItem>
             <SelectItem value="ERROR">Erro</SelectItem>

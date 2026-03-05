@@ -15,6 +15,16 @@ import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 
 const CERT_REQUIRED_CODES = new Set(['CERTIFICADO_REQUIRED', 'QUICK_PRESTADOR_NO_CERT']);
 const QUICK_SERVICE_ERROR_CODES = new Set(['INVALID_CODIGO_SERVICO', 'QUICK_CODIGO_SERVICO_INVALIDO']);
+const STATUS_PROCESSING_SET = new Set(['PENDING', 'PROCESSING']);
+
+const formatNfseStatus = (status?: string) => {
+  if (status === 'PENDING' || status === 'PROCESSING') return 'Processando';
+  if (status === 'AUTHORIZED') return 'Autorizada';
+  if (status === 'REJECTED') return 'Rejeitada';
+  if (status === 'CANCELLED') return 'Cancelada';
+  if (status === 'ERROR') return 'Erro';
+  return status || '-';
+};
 
 const formatCnpj = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 14);
@@ -318,8 +328,8 @@ const NfseQuickEmitPage = () => {
                 <AlertTitle>Emissão registrada</AlertTitle>
                 <AlertDescription>
                   <p><strong>Emission ID:</strong> {success.emissionId}</p>
-                  <p><strong>Status:</strong> {success.result.status}</p>
-                  {success.result.status === 'PENDING' && <p>Nota enviada para processamento.</p>}
+                  <p><strong>Status:</strong> {formatNfseStatus(success.result.status)}</p>
+                  {STATUS_PROCESSING_SET.has(success.result.status) && <p>Nota enviada para processamento.</p>}
                   {success.idempotentReplay && <p>Reaproveitada por idempotência.</p>}
                 </AlertDescription>
               </Alert>

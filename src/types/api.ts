@@ -122,6 +122,7 @@ export interface Empresa {
   percentualCompletude?: number;
   camposFaltantes?: string[];
   camposFaltantesEmissao?: string[];
+  fonteConsulta?: string;
   createdAt: string;
   updatedAt: string;
 }
