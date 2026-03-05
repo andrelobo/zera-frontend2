@@ -80,7 +80,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
     setCnaes(prev => {
       // Remove items that came from regime (vinculadoSN) but are no longer in regimeCnaes
-      let updated = prev.filter(c => !c.vinculadoSN || regimeCodes.has(c.codigo));
+      const updated = prev.filter(c => !c.vinculadoSN || regimeCodes.has(c.codigo));
 
       // Add new items from regime not yet present
       const existingCodes = new Set(updated.map(c => c.codigo));

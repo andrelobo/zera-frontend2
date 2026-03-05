@@ -188,6 +188,15 @@ export interface CreateEmpresaRequest {
 
 export type UpdateEmpresaRequest = Partial<CreateEmpresaRequest>;
 
+export interface CnaeCatalogLookupItem {
+  codigoCnae: string;
+  descricao?: string;
+  anexo: string;
+  permiteFatorR: boolean;
+  found: boolean;
+  source: 'catalog' | 'fallback_default' | string;
+}
+
 // Tomadores
 export interface Tomador {
   id: string;

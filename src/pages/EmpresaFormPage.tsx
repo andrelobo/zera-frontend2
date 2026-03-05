@@ -22,6 +22,7 @@ import IdentificacaoDocumentoCard from '@/components/prestador/IdentificacaoDocu
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
+import { formatPhone } from '@/utils/validators';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -153,6 +154,9 @@ const fromTelaRegime = (regime: RegimeTributarioTela): EmpresaFormData['regimeTr
   if (regime === 'real') return 'lucro_real';
   return '';
 };
+
+const formatPercentValue = (value: number): string =>
+  (value * 100).toFixed(2).replace('.', ',');
 
 const formatCnpj = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 14);
@@ -317,8 +321,8 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     ),
     uf: toUpperTrimmed(empresa.uf || empresa.endereco?.uf || empresa.endereco?.estado || previous.uf),
     cep: formatCep(empresa.cep || empresa.endereco?.cep || String(endereco.cep || previous.cep)),
-    telefone: empresa.telefone || empresa.fone || empresa.whatsapp || String(legacy.ddd_telefone_1 || previous.telefone),
-    whatsapp: empresa.whatsapp || empresa.telefone || empresa.fone || String(legacy.ddd_telefone_1 || previous.whatsapp),
+    telefone: formatPhone(String(empresa.telefone || empresa.fone || empresa.whatsapp || legacy.ddd_telefone_1 || previous.telefone || '')),
+    whatsapp: formatPhone(String(empresa.whatsapp || empresa.telefone || empresa.fone || legacy.ddd_telefone_1 || previous.whatsapp || '')),
     email: empresa.email || String(legacy.email || previous.email),
   };
 };
@@ -515,6 +519,92 @@ const EmpresaFormPage = () => {
       },
     ]);
   }, [cnaesParam.length, form.cnaeFiscal, form.cnaeFiscalDescricao, form.ctnCodigo, form.nbsCodigo]);
+
+  useEffect(() => {
+    const regimeItems = cnaesRegime
+      .map((item) => ({
+        codigo: String(item.codigo ?? '').replace(/\D/g, ''),
+        descricao: item.descricao,
+        isPrincipal: Boolean(item.isPrincipal),
+      }))
+      .filter((item) => Boolean(item.codigo));
+
+    if (regimeItems.length === 0) return;
+
+    setCnaesParam((prev) => {
+      const prevByCode = new Map(prev.map((item) => [item.codigo, item]));
+      const regimeCodes = new Set(regimeItems.map((item) => item.codigo));
+      const next: CnaeAdicionado[] = [];
+
+      for (const regimeItem of regimeItems) {
+        const lc = getLC116Item(regimeItem.codigo);
+        const existing = prevByCode.get(regimeItem.codigo);
+
+        if (existing) {
+          next.push({
+            ...existing,
+            codigo: regimeItem.codigo,
+            cnaeDescricao: regimeItem.descricao || existing.cnaeDescricao,
+            lc116Descricao: existing.lc116Descricao || lc?.descricao || '',
+            lc116Item: existing.lc116Item || lc?.item || '',
+            isPrincipal: regimeItem.isPrincipal,
+            vinculadoSN: true,
+          });
+          continue;
+        }
+
+        next.push({
+          codigo: regimeItem.codigo,
+          cnaeDescricao: regimeItem.descricao || lc?.cnaeDescricao || 'CNAE principal',
+          lc116Descricao: lc?.descricao || '',
+          lc116Item: lc?.item || '',
+          vinculos: [
+            {
+              id: `sync_${regimeItem.codigo}`,
+              ctn: regimeItem.isPrincipal ? (form.ctnCodigo || undefined) : undefined,
+              nbs: regimeItem.isPrincipal ? (form.nbsCodigo || undefined) : undefined,
+            },
+          ],
+          isPrincipal: regimeItem.isPrincipal,
+          vinculadoSN: true,
+        });
+      }
+
+      for (const item of prev) {
+        if (!item.vinculadoSN && !regimeCodes.has(item.codigo)) {
+          next.push(item);
+        }
+      }
+
+      return next;
+    });
+  }, [cnaesRegime, form.ctnCodigo, form.nbsCodigo]);
+
+  useEffect(() => {
+    if (regimeTela !== 'simples') return;
+
+    if (!form.apuracaoSimplesNacional.trim()) {
+      update('apuracaoSimplesNacional', 'MENSAL');
+    }
+
+    if (!simplesCalculo.valido) return;
+
+    const aliquotaAuto = formatPercentValue(simplesCalculo.aliquotaEfetiva);
+    setRegimeApuracaoSNParametro(true);
+    setInformarAliquotaSN(true);
+    setLastAliquotaSimples(aliquotaAuto);
+
+    setForm((prev) => {
+      const atual = prev.aliquotaSimplesNacional.trim();
+      if (atual === aliquotaAuto) return prev;
+      return { ...prev, aliquotaSimplesNacional: aliquotaAuto };
+    });
+  }, [
+    regimeTela,
+    form.apuracaoSimplesNacional,
+    simplesCalculo.valido,
+    simplesCalculo.aliquotaEfetiva,
+  ]);
 
   useEffect(() => {
     const secao = searchParams.get('secao');
@@ -758,6 +848,10 @@ const EmpresaFormPage = () => {
 
   const handlePrestadorChange = (field: string, value: string) => {
     if (field !== 'cnpj') {
+      if (field === 'whatsapp' || field === 'telefone') {
+        update(field as keyof EmpresaFormData, formatPhone(value));
+        return;
+      }
       if (field === 'nomeEmpresarial') {
         update('razaoSocial', value);
         return;
@@ -794,7 +888,16 @@ const EmpresaFormPage = () => {
   }, [form.cnpj, isEdit, lastPreviewAttemptCnpj, lastPreviewCnpj, previewMutation]);
 
   const rbt12Number = Number(form.rbt12.replace(/\./g, '').replace(',', '.')) || 0;
-  const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, 'III');
+  const cnaePrincipalRegime =
+    cnaesRegime.find((item) => item.isPrincipal)
+    || cnaesRegime.find((item) => String(item.codigo).replace(/\D/g, '') === String(form.cnaeFiscal || '').replace(/\D/g, ''))
+    || cnaesRegime[0];
+  const simplesAnexo = String(cnaePrincipalRegime?.anexo || 'III')
+    .replace(/anexo\s*/i, '')
+    .replace(/[^IViv]/g, '')
+    .toUpperCase()
+    || 'III';
+  const simplesCalculo = calcularSimplesAnexoIII(rbt12Number, simplesAnexo);
   const regimeTela = toTelaRegime(form.regimeTributario);
   const cadastroPendente = ultimoResumoCadastro?.statusCadastro === 'PENDENTE';
   const camposPendentes = ultimoResumoCadastro?.camposFaltantes || [];
@@ -823,7 +926,7 @@ const EmpresaFormPage = () => {
     if (typeof window === 'undefined') return;
 
     const snapshot = {
-      cnaeAnexo: 'III',
+      cnaeAnexo: simplesAnexo,
       faixa: simplesCalculo.faixa.faixa,
       rbt12: rbt12Number,
       issReferencia: simplesCalculo.issReferencia,
@@ -832,7 +935,7 @@ const EmpresaFormPage = () => {
 
     window.localStorage.setItem(TICKER_STORAGE_KEY, JSON.stringify(snapshot));
     window.dispatchEvent(new Event('zera:ticker:update'));
-  }, [rbt12Number, simplesCalculo]);
+  }, [rbt12Number, simplesCalculo, simplesAnexo]);
 
   if (isEdit && isLoading) return <LoadingState />;
 
@@ -980,7 +1083,7 @@ const EmpresaFormPage = () => {
               <SimplesNacionalSection
                 cnaePrincipal={String(form.cnaeFiscal || '')}
                 cnaeDescricao={form.cnaeFiscalDescricao}
-                cnaeAnexo="III"
+                cnaeAnexo={simplesAnexo}
                 rbt12={rbt12Number}
                 onRbt12Change={(value) => update('rbt12', value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
                 calculo={simplesCalculo}

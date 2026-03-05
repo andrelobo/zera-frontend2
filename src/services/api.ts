@@ -4,7 +4,7 @@ import type {
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
   NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem, NfseBiSummary,
-  Tomador, CreateTomadorRequest, UpdateTomadorRequest,
+  Tomador, CreateTomadorRequest, UpdateTomadorRequest, CnaeCatalogLookupItem,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
@@ -504,6 +504,16 @@ export const empresasApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data);
   },
+  lookupCnaeAnexo: (codigo: string) =>
+    api.get<CnaeCatalogLookupItem>('/empresas/lookup/cnae-anexo', {
+      params: { codigo: codigo.replace(/\D/g, '') || undefined },
+    }).then((r) => r.data),
+  lookupCnaeAnexos: (codes: string[]) =>
+    api.get<CnaeCatalogLookupItem[]>('/empresas/lookup/cnae-anexo', {
+      params: {
+        codes: Array.from(new Set(codes.map((code) => code.replace(/\D/g, '')).filter((code) => code.length === 7))).join(',') || undefined,
+      },
+    }).then((r) => r.data || []),
 };
 
 // Tomadores

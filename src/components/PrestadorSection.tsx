@@ -76,7 +76,7 @@ async function fetchCNPJData(cnpj: string) {
   return {
     razao_social: d.nome || '',
     nome_fantasia: d.fantasia || '',
-    cep: d.cep?.replace(/[.\-]/g, '') || '',
+    cep: d.cep?.replace(/[.-]/g, '') || '',
     logradouro: logradouroCompleto,
     numero: d.numero || '',
     complemento: d.complemento || '',
