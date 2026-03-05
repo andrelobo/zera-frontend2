@@ -43,10 +43,25 @@ export function formatCEP(value: string): string {
 }
 
 export function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  const normalized = digits.length === 10
-    ? `${digits.slice(0, 2)}9${digits.slice(2)}`
-    : digits;
+  const raw = String(value || '');
+  const parts = raw.split(/[/,;|]+/).map((part) => part.trim()).filter(Boolean);
+  const firstCandidate = parts
+    .map((part) => part.replace(/\D/g, ''))
+    .find((digits) => digits.length >= 10);
+
+  const baseDigits = (firstCandidate || raw.replace(/\D/g, '')).slice(0, 11);
+  const normalized = baseDigits.length === 10
+    ? `${baseDigits.slice(0, 2)}9${baseDigits.slice(2)}`
+    : baseDigits;
   const cleaned = normalized.slice(0, 11);
-  return cleaned.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+
+  if (!cleaned) return '';
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 6) {
+    return cleaned.replace(/^(\d{2})(\d+)/, '($1) $2');
+  }
+
+  return cleaned
+    .replace(/^(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3')
+    .replace(/-$/, '');
 }
