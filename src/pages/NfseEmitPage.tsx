@@ -12,7 +12,7 @@ import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
-import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
+import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig } from './nfseEmit.mappers';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -130,8 +130,7 @@ const NfseEmitPage: React.FC = () => {
     queryKey: ['empresas', 'emit-normal'],
     queryFn: async () => {
       const list = await empresasApi.list();
-      const selected = pickEmpresaForEmissao(list);
-      return selected ?? null;
+      return list[0] ?? null;
     },
     staleTime: 60_000,
   });
@@ -164,24 +163,9 @@ const NfseEmitPage: React.FC = () => {
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
 
-  const servicosQuery = useQuery({
-    queryKey: ['servicos', 'emit-normal', prestadorCnpjDigits],
-    queryFn: async () => {
-      const result = await nfseApi.servicosList({ limit: 200, page: 1 }, { skipGlobalErrorToast: true });
-      return result.items || [];
-    },
-    staleTime: 60_000,
-  });
-
   const listaServico = useMemo<ListaServicoItem[]>(() => {
-    if (listaServicoConfig.length > 0) return listaServicoConfig;
-    return (servicosQuery.data || []).map((item, index) => ({
-      id: `${item.codigoServico}-${index}`,
-      natureza: item.codigoServico,
-      descricao: item.descricao,
-      codigoServico: item.codigoServico,
-    }));
-  }, [listaServicoConfig, servicosQuery.data]);
+    return listaServicoConfig;
+  }, [listaServicoConfig]);
 
   useEffect(() => {
     if (!empresaAtual) return;
