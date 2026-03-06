@@ -1059,6 +1059,7 @@ const EmpresaFormPage = () => {
               onDpsNumChange={setDpsNum}
               serieDpsNum={serieDpsNum}
               onSerieDpsNumChange={setSerieDpsNum}
+              certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string } | undefined) ?? null}
             />
           </div>
         )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCNPJ } from '@/utils/validators';
 
 interface PrintData {
   prestador: {
@@ -57,6 +58,12 @@ const Cell: React.FC<{ label: string; value: string; className?: string }> = ({ 
 );
 
 const DANFSePrint: React.FC<{ data: PrintData }> = ({ data }) => {
+  const formatCpfCnpj = (value: string) => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (digits.length === 14) return formatCNPJ(digits);
+    return value;
+  };
+
   const totalRetencoes =
     (data.servico.issRetido ? data.valores.issValor : 0) +
     data.valores.retPis + data.valores.retCofins +
@@ -107,7 +114,7 @@ const DANFSePrint: React.FC<{ data: PrintData }> = ({ data }) => {
         </thead>
         <tbody>
           <tr>
-            <Cell label="CNPJ" value={data.prestador.cnpj} />
+            <Cell label="CNPJ" value={formatCNPJ(data.prestador.cnpj)} />
             <Cell label="Inscrição Municipal" value={data.prestador.inscricaoMunicipal} />
             <Cell label="Nome/Razão Social" value={data.prestador.nomeEmpresarial} className="danfse-cell-wide" />
             <Cell label="Nome Fantasia" value={data.prestador.nomeFantasia} />
@@ -124,7 +131,7 @@ const DANFSePrint: React.FC<{ data: PrintData }> = ({ data }) => {
         </thead>
         <tbody>
           <tr>
-            <Cell label="CPF/CNPJ" value={data.tomador.cnpjCpf} />
+            <Cell label="CPF/CNPJ" value={formatCpfCnpj(data.tomador.cnpjCpf)} />
             <Cell label="Inscrição Municipal" value={data.tomador.inscricaoMunicipal} />
             <Cell label="Nome/Razão Social" value={data.tomador.nomeRazaoSocial} className="danfse-cell-wide" />
             <Cell label="E-mail" value={data.tomador.email} />

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Loader2, ShieldCheck, Upload } from 'lucide-react';
+import { formatCNPJ } from '@/utils/validators';
 
 const CERT_EXTENSIONS = ['.pfx', '.p12'];
 
@@ -23,14 +24,6 @@ const formatFileSize = (size: number) => {
   if (!Number.isFinite(size) || size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-};
-const formatCnpj = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 14);
-  return digits
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2');
 };
 
 const getApiError = (error: unknown): ApiError => {
@@ -65,7 +58,7 @@ const CertificadoDigitalPage = () => {
   useEffect(() => {
     if (!cnpjFromQuery) return;
     if (cnpjClean.length > 0) return;
-    setCnpj(cnpjFromQuery);
+    setCnpj(formatCNPJ(cnpjFromQuery));
   }, [cnpjClean.length, cnpjFromQuery]);
 
   const mutation = useMutation({
@@ -136,7 +129,7 @@ const CertificadoDigitalPage = () => {
               <Input
                 id="cnpj"
                 value={cnpj}
-                onChange={(e) => setCnpj(formatCnpj(e.target.value))}
+                onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
                 placeholder="00.000.000/0000-00"
                 required
               />

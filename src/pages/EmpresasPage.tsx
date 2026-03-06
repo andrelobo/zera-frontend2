@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { formatCNPJ } from '@/utils/validators';
 
 const EmpresasPage = () => {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ const EmpresasPage = () => {
               {empresas.map(e => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.razaoSocial}</TableCell>
-                  <TableCell className="font-mono text-sm">{e.cnpj}</TableCell>
+                  <TableCell className="font-mono text-sm">{formatCNPJ(e.cnpj || '')}</TableCell>
                   <TableCell>{(e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade) ? `${e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade}/${e.uf || e.endereco?.uf || e.endereco?.estado || '—'}` : '—'}</TableCell>
                   <TableCell>{e.email || '—'}</TableCell>
                   <TableCell>

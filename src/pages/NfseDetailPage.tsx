@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+import { formatCNPJ } from '@/utils/validators';
 
 const first = (value: unknown): Record<string, unknown> | null => {
   if (Array.isArray(value)) {
@@ -171,7 +172,9 @@ const NfseDetailPage = () => {
   const valor = getNfseValor(nfse) > 0 ? getNfseValor(nfse) : rawInferred.valor || inferred.valor || 0;
   const codigoServico = getNfseCodigoServico(nfse) !== '—' ? getNfseCodigoServico(nfse) : rawInferred.codigoServico || inferred.codigoServico || '—';
   const tomador = getNfseTomadorNome(nfse) !== '—' ? getNfseTomadorNome(nfse) : rawInferred.tomadorRazaoSocial || inferred.tomadorRazaoSocial || '—';
-  const tomadorDoc = getNfseTomadorDocumento(nfse) !== '—' ? getNfseTomadorDocumento(nfse) : rawInferred.tomadorCpfCnpj || inferred.tomadorCpfCnpj || '—';
+  const tomadorDocRaw = getNfseTomadorDocumento(nfse) !== '—' ? getNfseTomadorDocumento(nfse) : rawInferred.tomadorCpfCnpj || inferred.tomadorCpfCnpj || '—';
+  const tomadorDocDigits = tomadorDocRaw.replace(/\D/g, '');
+  const tomadorDoc = tomadorDocDigits.length === 14 ? formatCNPJ(tomadorDocDigits) : tomadorDocRaw;
 
   return (
     <div className="space-y-6 animate-fade-in">

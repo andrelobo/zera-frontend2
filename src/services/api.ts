@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { formatCNPJ } from '@/utils/validators';
 import type {
   LoginRequest, LoginResponse, User, CreateUserRequest, UpdateUserRequest,
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
@@ -23,6 +24,11 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       return String(value);
     }
     return undefined;
+  };
+  const formatCnpjIfValid = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 14) return formatCNPJ(digits);
+    return value;
   };
   const pickBoolean = (...values: unknown[]) => {
     for (const value of values) {
@@ -144,7 +150,7 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
   return {
     ...(raw as Empresa),
     id: pickString(legacy.id, legacy._id) || '',
-    cnpj: pickString(legacy.cnpj, legacy.cpf_cnpj) || '',
+    cnpj: formatCnpjIfValid(pickString(legacy.cnpj, legacy.cpf_cnpj) || ''),
     razaoSocial: pickString(legacy.razaoSocial, legacy.nome_razao_social) || '',
     nomeFantasia: pickString(
       legacy.nomeFantasia,

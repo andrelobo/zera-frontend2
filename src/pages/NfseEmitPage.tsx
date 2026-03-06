@@ -9,7 +9,7 @@ import PrestacaoServicoSection, { type PrestacaoServicoData, type ListaServicoIt
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
-import { formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
+import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
@@ -96,7 +96,7 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   return {
     nomeEmpresarial: String(empresa.razaoSocial || '').trim(),
     nomeFantasia: String(empresa.nomeFantasia || '').trim(),
-    cnpj: String(empresa.cnpj || '').trim(),
+    cnpj: formatCNPJ(String(empresa.cnpj || '').trim()),
     inscricaoMunicipal: String(empresa.inscricaoMunicipal || '').trim(),
     inscricaoEstadual: String(empresa.inscricaoEstadual || '').trim(),
     suframa: String(empresa.suframa || '').trim(),
