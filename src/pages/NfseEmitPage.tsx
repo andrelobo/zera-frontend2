@@ -12,6 +12,7 @@ import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
+import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -87,10 +88,6 @@ const splitLocalidadeUf = (value: string) => {
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
-const asObject = (value: unknown): Record<string, unknown> => (
-  value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-);
-
 const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   if (!empresa) return INITIAL_PRESTADOR;
   const endereco = empresa.endereco || {};
@@ -114,51 +111,6 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   };
 };
 
-const mapFavoritosFromParametroMunicipal = (empresa?: Empresa) => {
-  const rows = Array.isArray(empresa?.parametroMunicipal) ? empresa.parametroMunicipal : [];
-  return rows
-    .map((item) => {
-      const raw = asObject(item);
-      const codigo = String(raw.codigo ?? '').replace(/\D/g, '');
-      if (!codigo) return null;
-      const vinculosRaw = Array.isArray(raw.vinculos) ? raw.vinculos : [];
-      const vinculos = vinculosRaw
-        .map((v) => {
-          const row = asObject(v);
-          const ctn = String(row.ctn ?? '').trim() || undefined;
-          const ctnDescricao = String(row.ctnDescricao ?? '').trim() || undefined;
-          const nbs = String(row.nbs ?? '').trim() || undefined;
-          const nbsDescricao = String(row.nbsDescricao ?? '').trim() || undefined;
-          if (!ctn && !nbs) return null;
-          return { ctn, ctnDescricao, nbs, nbsDescricao };
-        })
-        .filter((v): v is { ctn?: string; ctnDescricao?: string; nbs?: string; nbsDescricao?: string } => Boolean(v));
-      return {
-        codigo,
-        cnaeDescricao: String(raw.cnaeDescricao ?? '').trim() || 'CNAE principal',
-        lc116Item: String(raw.lc116Item ?? '').trim(),
-        vinculos,
-      };
-    })
-    .filter((item): item is { codigo: string; cnaeDescricao: string; lc116Item: string; vinculos: { ctn?: string; ctnDescricao?: string; nbs?: string; nbsDescricao?: string }[] } => Boolean(item));
-};
-
-const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
-  const rows = Array.isArray(empresa?.configOperacionais) ? empresa.configOperacionais : [];
-  return rows
-    .map((item, index) => {
-      const natureza = String(item?.natureza ?? '').trim();
-      const descricao = String(item?.descricao ?? '').trim();
-      if (!natureza && !descricao) return null;
-      return {
-        id: String(item?.id ?? `cfg-${index + 1}`),
-        natureza,
-        descricao,
-      };
-    })
-    .filter((item): item is ListaServicoItem => Boolean(item));
-};
-
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -177,8 +129,9 @@ const NfseEmitPage: React.FC = () => {
   const empresaQuery = useQuery({
     queryKey: ['empresas', 'emit-normal'],
     queryFn: async () => {
-      const list = await empresasApi.list({ limit: 1 });
-      return list[0] ?? null;
+      const list = await empresasApi.list();
+      const selected = pickEmpresaForEmissao(list);
+      return selected ?? null;
     },
     staleTime: 60_000,
   });
@@ -229,6 +182,17 @@ const NfseEmitPage: React.FC = () => {
       codigoServico: item.codigoServico,
     }));
   }, [listaServicoConfig, servicosQuery.data]);
+
+  useEffect(() => {
+    if (!empresaAtual) return;
+    if (hasFavoriteConfig(empresaAtual)) return;
+    if (empresaQuery.isSuccess) {
+      toast({
+        title: 'Prestador sem parâmetros municipais',
+        description: 'Cadastre em Prestador > Parâmetros Municipais para habilitar Serviços Favoritos/Lista Serviço.',
+      });
+    }
+  }, [empresaAtual, empresaQuery.isSuccess]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
