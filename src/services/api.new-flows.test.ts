@@ -304,6 +304,54 @@ describe('new API flows', () => {
     }));
   });
 
+  it('normalizes parametroMunicipal/configOperacionais when backend returns JSON string', async () => {
+    const { empresasApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 'empresa-1',
+          cnpj: '43521115000134',
+          razaoSocial: 'BURGUS LTDA',
+          parametro_municipal: '[{"codigo":"6201500","cnaeDescricao":"DESENVOLVIMENTO"}]',
+          config_operacionais: '[{"id":"svc-1","natureza":"Contabilidade","descricao":"Servico contabil"}]',
+        },
+      ],
+    });
+
+    const result = await empresasApi.list();
+    expect(result).toHaveLength(1);
+    expect(result[0].parametroMunicipal).toEqual([
+      { codigo: '6201500', cnaeDescricao: 'DESENVOLVIMENTO' },
+    ]);
+    expect(result[0].configOperacionais).toEqual([
+      { id: 'svc-1', natureza: 'Contabilidade', descricao: 'Servico contabil' },
+    ]);
+  });
+
+  it('normalizes parametroMunicipal/configOperacionais when backend returns object wrapper', async () => {
+    const { empresasApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 'empresa-1',
+          cnpj: '43521115000134',
+          razaoSocial: 'BURGUS LTDA',
+          parametroMunicipal: { items: [{ codigo: '8650003', vinculos: [{ ctn: '041601' }] }] },
+          configOperacionais: { rows: [{ id: 'svc-2', natureza: 'Psicologia', descricao: 'Atendimento' }] },
+        },
+      ],
+    });
+
+    const result = await empresasApi.list();
+    expect(result).toHaveLength(1);
+    expect(result[0].parametroMunicipal).toEqual([
+      { codigo: '8650003', vinculos: [{ ctn: '041601' }] },
+    ]);
+    expect(result[0].configOperacionais).toEqual([
+      { id: 'svc-2', natureza: 'Psicologia', descricao: 'Atendimento' },
+    ]);
+  });
+
   it('propagates backend error on quick emission', async () => {
     const { nfseApi } = await import('@/services/api');
     const backendError = {

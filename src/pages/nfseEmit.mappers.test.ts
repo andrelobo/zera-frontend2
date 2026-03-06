@@ -57,6 +57,24 @@ describe('nfseEmit mappers', () => {
     });
   });
 
+  it('fills favoritos from prestador fallback when parametroMunicipal is empty', () => {
+    const empresa = baseEmpresa({
+      cnaeFiscal: '8630503',
+      cnaeFiscalDescricao: 'Atividade médica ambulatorial restrita a consultas',
+      ctnCodigo: '041501',
+      nbsCodigo: '1.2301.13.00',
+      parametroMunicipal: [],
+    });
+
+    const favoritos = mapFavoritosFromParametroMunicipal(empresa);
+    expect(favoritos).toHaveLength(1);
+    expect(favoritos[0]).toMatchObject({
+      codigo: '8630503',
+      cnaeDescricao: 'Atividade médica ambulatorial restrita a consultas',
+      vinculos: [{ ctn: '041501', nbs: '1.2301.13.00' }],
+    });
+  });
+
   it('maps lista servico from formatos atual e legado', () => {
     const empresa = baseEmpresa({
       configOperacionais: [

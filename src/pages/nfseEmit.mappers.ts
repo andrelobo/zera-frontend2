@@ -37,7 +37,7 @@ const parseDateMs = (value: unknown) => {
 
 export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoMapeado[] => {
   const rows = asArray(empresa?.parametroMunicipal);
-  return rows
+  const favoritos = rows
     .map((item) => {
       const raw = asObject(item);
       const codigo = pickFirstString(raw, ['codigo', 'codigoCnae', 'cnaeCodigo', 'cnae']).replace(/\D/g, '');
@@ -74,6 +74,30 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
       };
     })
     .filter((item): item is FavoritoMapeado => Boolean(item));
+
+  if (favoritos.length > 0) return favoritos;
+
+  const fallbackCtn = String(empresa?.ctnCodigo ?? '').trim();
+  const fallbackNbs = String(empresa?.nbsCodigo ?? '').trim();
+  const fallbackCnae = String(empresa?.cnaeFiscal ?? '').replace(/\D/g, '');
+
+  if (!fallbackCtn && !fallbackNbs) return favoritos;
+
+  return [
+    {
+      codigo: fallbackCnae || '0000000',
+      cnaeDescricao: String(empresa?.cnaeFiscalDescricao ?? '').trim() || 'CNAE principal',
+      lc116Item: '',
+      vinculos: [
+        {
+          ctn: fallbackCtn || undefined,
+          ctnDescricao: fallbackCtn ? 'CTN do cadastro do prestador' : undefined,
+          nbs: fallbackNbs || undefined,
+          nbsDescricao: fallbackNbs ? 'NBS do cadastro do prestador' : undefined,
+        },
+      ],
+    },
+  ];
 };
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {

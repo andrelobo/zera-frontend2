@@ -42,6 +42,42 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     }
     return [] as string[];
   };
+  const parseJsonIfString = (value: unknown): unknown => {
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (!trimmed) return value;
+    try {
+      return JSON.parse(trimmed) as unknown;
+    } catch {
+      return value;
+    }
+  };
+  const toObjectArray = (value: unknown): Record<string, unknown>[] | null => {
+    const parsed = parseJsonIfString(value);
+    if (Array.isArray(parsed)) {
+      const items = parsed
+        .map((item) => ((item && typeof item === 'object') ? (item as Record<string, unknown>) : null))
+        .filter((item): item is Record<string, unknown> => item !== null);
+      return items.length > 0 ? items : null;
+    }
+    if (parsed && typeof parsed === 'object') {
+      const row = parsed as Record<string, unknown>;
+      const nestedCandidates = [
+        row.items,
+        row.rows,
+        row.data,
+        row.value,
+        row.values,
+        row.result,
+      ];
+      for (const candidate of nestedCandidates) {
+        const nested = toObjectArray(candidate);
+        if (nested && nested.length > 0) return nested;
+      }
+      return [row];
+    }
+    return null;
+  };
   const pickCnaesLista = (...values: unknown[]) => {
     for (const value of values) {
       if (!Array.isArray(value)) continue;
@@ -73,11 +109,8 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
   };
   const pickObjectArray = (...values: unknown[]) => {
     for (const value of values) {
-      if (!Array.isArray(value)) continue;
-      const items = value
-        .map((item) => ((item && typeof item === 'object') ? (item as Record<string, unknown>) : null))
-        .filter((item): item is Record<string, unknown> => item !== null);
-      if (items.length > 0) return items;
+      const items = toObjectArray(value);
+      if (items && items.length > 0) return items;
     }
     return undefined;
   };
