@@ -631,3 +631,70 @@ Fonte: `codigo local` + `git log` em `main` (sem alteracoes locais).
 - Ultima atualizacao: 2026-03-05T09:30:00-04:00
 - Responsavel: Codex (GPT-5)
 - Tipo de atualizacao: consolidacao canonica de estado apos ciclo de homologacao visual/UX e dashboard.
+
+## 25. Atualizacao Operacional (2026-03-06) - DANFSE, CNPJ e Portal Nacional
+
+### 25.1 Escopo
+Fonte: `codigo local` + `validacao local`
+
+- Corrigir preenchimento de `Servicos Favoritos`/`Lista Servico` na DANFSE com contrato real de producao.
+- Padronizar exibicao de CNPJ no frontend (mascara `00.000.000/0000-00`) em telas chave.
+- Melhorar a sinalizacao visual no cadastro de prestador sobre certificado digital ja importado.
+
+### 25.2 Ajustes DANFSE (emissao)
+Fonte: `src/pages/NfseEmitPage.tsx`, `src/pages/nfseEmit.mappers.ts`
+
+- Mapeamentos de DANFSE extraidos para modulo dedicado testavel:
+  - `mapFavoritosFromParametroMunicipal`
+  - `mapListaServicoFromConfig`
+  - `pickEmpresaForEmissao`
+  - `hasFavoriteConfig`
+- Parser de favoritos/lista servico endurecido para variacoes de chave (formato atual e legado).
+- `Servicos Favoritos` passou a ter fallback operacional quando `parametroMunicipal` vier vazio:
+  - usa `cnaeFiscal + ctnCodigo + nbsCodigo` do prestador para nao deixar fluxo travado.
+- Se nao houver parametros municipais/config operacional, front exibe aviso orientativo.
+
+### 25.3 Testes especificos adicionados
+Fonte: `src/pages/nfseEmit.mappers.test.ts`, `src/services/api.new-flows.test.ts`
+
+- Cobertura dedicada para relacao entre dados de prestador e campos da DANFSE:
+  - favoritos com formato atual;
+  - favoritos com formato legado;
+  - fallback de favoritos quando `parametroMunicipal=[]`;
+  - lista de servico com formatos atual/legado;
+  - selecao de empresa para emissao por completude.
+- Cobertura de normalizacao de resposta da API quando `parametroMunicipal/configOperacionais` vierem como:
+  - JSON string;
+  - objeto wrapper (`items/rows/data/value/result`).
+
+### 25.4 Padronizacao CNPJ no frontend
+Fonte: `src/services/api.ts` + telas de exibicao/entrada
+
+- CNPJ normalizado para mascara `00.000.000/0000-00` em pontos principais:
+  - listagem de empresas;
+  - emissao rapida;
+  - certificado digital;
+  - DANFSE print/detalhe;
+  - hidratacao de prestador na emissao.
+- Normalizacao evita mascarar valores invalidos/parciais (aplica mascara completa apenas com 14 digitos).
+
+### 25.5 Cadastro de prestador - Portal Nacional
+Fonte: `src/components/prestador/IdentificacaoDocumentoCard.tsx`, `src/pages/EmpresaFormPage.tsx`
+
+- Card `Portal Nacional` na tela de update passou a sinalizar certificado importado:
+  - nome do arquivo;
+  - data/hora de upload.
+- Objetivo: reduzir ambiguidade operacional quando existe certificado salvo no cadastro.
+
+### 25.6 Validacao local desta rodada
+Fonte: `execucao local`
+
+- `yarn eslint` (arquivos impactados) -> sem erros bloqueantes.
+- `yarn test` -> `26/26` testes passando.
+- `yarn build` -> ok.
+
+### 25.7 Rastreabilidade
+
+- Ultima atualizacao: 2026-03-06T18:20:00-04:00
+- Responsavel: Codex (GPT-5)
+- Tipo de atualizacao: hardening de DANFSE (favoritos/lista servico), padronizacao de CNPJ e melhoria operacional do card Portal Nacional.
