@@ -29,6 +29,8 @@ export interface ListaServicoItem {
   id: string;
   natureza: string;
   descricao: string;
+  codigoServico?: string;
+  aliquota?: string;
 }
 
 interface Props {
@@ -85,6 +87,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
   const [showFavoritosDropdown, setShowFavoritosDropdown] = useState(false);
   const [favoritosQuery, setFavoritosQuery] = useState('');
   const [favoritoSelecionado, setFavoritoSelecionado] = useState<FavoritoItem | null>(null);
+  const [listaServicoSelecionada, setListaServicoSelecionada] = useState('');
   const favoritosDropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredFavoritos = useMemo(() => {
@@ -344,11 +347,21 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
           <label className="field-label flex items-center gap-1.5"><List className="w-4 h-4 text-primary" />Lista Serviço</label>
           <select
             className="field-input"
-            value=""
+            value={listaServicoSelecionada}
             onChange={(e) => {
+              setListaServicoSelecionada(e.target.value);
               const item = listaServico.find(i => i.id === e.target.value);
               if (item) {
-                onChange({ ...data, descricaoServico: data.descricaoServico ? `${data.descricaoServico}\n${item.descricao}` : item.descricao });
+                const codigoServico = String(item.codigoServico || '').replace(/\D/g, '').slice(0, 6);
+                const aliquota = String(item.aliquota || '').trim();
+                onChange({
+                  ...data,
+                  codigoServico: codigoServico || data.codigoServico,
+                  descricaoServico: item.descricao || data.descricaoServico,
+                  aliquota: !optanteSimples && !tomadorSubstituto && aliquota
+                    ? formatPercent(aliquota)
+                    : data.aliquota,
+                });
               }
             }}
           >

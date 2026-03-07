@@ -12,7 +12,7 @@ import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
-import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig } from './nfseEmit.mappers';
+import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -140,7 +140,7 @@ const NfseEmitPage: React.FC = () => {
     queryKey: ['empresas', 'emit-normal'],
     queryFn: async () => {
       const list = await empresasApi.list();
-      return list[0] ?? null;
+      return pickEmpresaForEmissao(list) ?? null;
     },
     staleTime: 60_000,
   });
