@@ -368,7 +368,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
         </div>
         <div>
           <label className="field-label flex items-center gap-1.5"><BadgePercent className="w-4 h-4 text-primary" />Alíquota %{optanteSimples && !tomadorSubstituto ? '' : '*'}</label>
-          <div className="relative w-[80px]">
+          <div className="relative w-[55px]">
             <input
               className={`field-input pr-7 border-primary ${optanteSimples && !tomadorSubstituto ? 'bg-muted/30 text-muted-foreground' : ''}`}
               placeholder="00,00"
