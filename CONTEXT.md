@@ -5,6 +5,70 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-07)
+Fonte: `codigo local` + `validacao funcional em producao`.
+
+### Prestador -> Parametros Fiscais -> Emissao
+
+Diagnostico consolidado:
+- A tela de `Parâmetros Municipais` podia aparentar estar correta por fallback local do frontend.
+- A prova canonica passou a ser o retorno real de `GET /empresas`.
+- Em producao foi validado um caso em que a API retornava:
+  - `cnaeFiscal: "8650003"`
+  - `parametroMunicipal: []`
+  - `ctnCodigo: "040101"`
+  - `nbsCodigo: "1.2301.22.00"`
+- Consequencia direta:
+  - DANFSE/emissao preenchia `04.01.01` + `Medicina`.
+
+Correcao aplicada no frontend:
+- `src/pages/EmpresaFormPage.tsx`
+  - ao salvar, o payload passa a enviar `parametroMunicipal` canonico;
+  - `ctnCodigo` e `nbsCodigo` enviados no `PATCH` passam a derivar do primeiro vinculo real do CNAE principal, e nao de estado legado solto.
+
+Regra operacional atual:
+- frontend continua sendo consumidor/apresentador;
+- mas o payload de save foi endurecido para nao mandar estado inconsistente quando a UI estiver montada por fallback local.
+
+### Ticker global
+
+Arquivos:
+- `src/components/GlobalTicker.tsx`
+- `src/index.css`
+
+Ajuste aplicado:
+- o ticker foi reconectado ao motor real de animacao do projeto;
+- o loop continuo deixou de gerar buraco visual no final;
+- estrategia atual:
+  - faixa duplicada
+  - animacao unica do conjunto
+  - deslocamento ate `-50%`
+
+### Prestador -> Parametros Federais
+
+Arquivo:
+- `src/pages/EmpresaFormPage.tsx`
+
+Ajuste aplicado:
+- campo `Simples Nacional` (aliquota) ampliado para comportar corretamente valores com 2 casas decimais + `%`.
+
+### Dashboard
+
+Arquivos:
+- `src/components/Dashboard.tsx`
+- `src/hooks/useDashboardData.ts`
+
+Ajustes recentes:
+- rotulo `Cliente sem nome` substituido por `Emissão expressa` quando a nota vier sem razao social do tomador;
+- secoes fracas/zeradas foram condicionadas:
+  - `Split Payment` so aparece com dado real;
+  - `ISS Retido por Mês` so aparece com retencao real;
+  - `Faturamento por Cliente` so aparece quando houver distribuicao real;
+- dashboard recebeu reforco visual executivo:
+  - hero superior institucional;
+  - KPIs principais destacados;
+  - melhor hierarquia para apresentacao externa.
+
 ## 0. Atualizacao de Contexto (2026-03-05)
 Fonte: `codigo local` + validacao funcional em ambiente de producao.
 
