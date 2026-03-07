@@ -10,6 +10,7 @@ import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emi
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
+import { getCTNByCode } from '@/utils/ctn-data';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
@@ -88,9 +89,10 @@ const splitLocalidadeUf = (value: string) => {
 const pickServicoFromFavorito = (favorito?: { vinculos?: Array<{ ctn?: string; ctnDescricao?: string }> }) => {
   const vinculo = favorito?.vinculos?.find((item) => Boolean(item?.ctn));
   if (!vinculo?.ctn) return null;
+  const entry = getCTNByCode(vinculo.ctn);
   return {
     codigoServico: vinculo.ctn.replace(/\D/g, '').slice(0, 6),
-    descricaoServico: String(vinculo.ctnDescricao || '').trim(),
+    descricaoServico: String(entry?.descricao || vinculo.ctnDescricao || '').trim(),
   };
 };
 
@@ -194,7 +196,10 @@ const NfseEmitPage: React.FC = () => {
       codigo: item.codigoServico,
       cnaeDescricao: `[Tomador] ${item.descricaoServico}`,
       lc116Item: '',
-      vinculos: [{ ctn: item.codigoServico, ctnDescricao: item.descricaoServico }],
+      vinculos: [{
+        ctn: item.codigoServico,
+        ctnDescricao: String(getCTNByCode(item.codigoServico)?.descricao || item.descricaoServico || '').trim(),
+      }],
     }));
   }, [tomadorServicos]);
 

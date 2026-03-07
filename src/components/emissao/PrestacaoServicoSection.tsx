@@ -105,7 +105,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     const v = vinculo || fav.vinculos[0];
     if (v?.ctn) {
       const entry = getCTNByCode(v.ctn);
-      const descricaoAtual = String(v.ctnDescricao || entry?.descricao || '').trim();
+      const descricaoAtual = String(entry?.descricao || v.ctnDescricao || '').trim();
       onChange({
         ...data,
         codigoServico: v.ctn,
