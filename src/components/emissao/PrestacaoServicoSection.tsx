@@ -200,11 +200,16 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
 
   // If codigoServico is set externally, resolve description
   useEffect(() => {
-    if (data.codigoServico && !ctnDescricaoSelecionada) {
-      const entry = getCTNByCode(data.codigoServico);
-      if (entry) setCtnDescricaoSelecionada(entry.descricao);
+    if (!data.codigoServico) {
+      setCtnDescricaoSelecionada('');
+      return;
     }
-  }, [data.codigoServico]);
+    const entry = getCTNByCode(data.codigoServico);
+    const descricao = String(entry?.descricao || '').trim();
+    if (descricao !== ctnDescricaoSelecionada) {
+      setCtnDescricaoSelecionada(descricao);
+    }
+  }, [data.codigoServico, ctnDescricaoSelecionada]);
 
   const handleSelectCTN = (codigo: string, descricao: string) => {
     onChange({

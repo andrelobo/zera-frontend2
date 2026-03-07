@@ -32,6 +32,27 @@ describe('nfseEmit mappers', () => {
     expect(favoritos[0].vinculos[0].ctn).toBe('041601');
   });
 
+  it('repairs legacy incorrect psicologia vinculo from persisted data', () => {
+    const empresa = baseEmpresa({
+      parametroMunicipal: [
+        {
+          codigo: '8650-0/03',
+          cnaeDescricao: 'Atividades de psicologia e psicanálise',
+          lc116Item: '04.16',
+          vinculos: [
+            { ctn: '040101', ctnDescricao: 'Medicina.', nbs: '1.2301.22.00', nbsDescricao: 'Serviços médicos especializados' },
+          ],
+        },
+      ],
+    });
+
+    const favoritos = mapFavoritosFromParametroMunicipal(empresa);
+    expect(favoritos).toHaveLength(1);
+    expect(favoritos[0].vinculos).toHaveLength(2);
+    expect(favoritos[0].vinculos[0].ctn).toBe('041601');
+    expect(favoritos[0].vinculos[1].ctn).toBe('041501');
+  });
+
   it('maps favoritos from chaves legadas e fallback sem vinculos', () => {
     const empresa = baseEmpresa({
       parametroMunicipal: [
@@ -74,6 +95,31 @@ describe('nfseEmit mappers', () => {
     });
     expect(favoritos[0].vinculos[0].ctnDescricao).toBeTruthy();
     expect(favoritos[0].vinculos[0].nbsDescricao).toBeTruthy();
+  });
+
+  it('creates correct fallback favoritos for psicologia e psicanalise from CNAE defaults', () => {
+    const empresa = baseEmpresa({
+      cnaeFiscal: '8650-0/03',
+      cnaeFiscalDescricao: 'Atividades de psicologia e psicanálise',
+      parametroMunicipal: [],
+    });
+
+    const favoritos = mapFavoritosFromParametroMunicipal(empresa);
+    expect(favoritos).toHaveLength(1);
+    expect(favoritos[0].codigo).toBe('8650003');
+    expect(favoritos[0].vinculos).toHaveLength(2);
+    expect(favoritos[0].vinculos[0]).toMatchObject({
+      ctn: '041601',
+      ctnDescricao: 'Psicologia.',
+      nbs: '1.2301.98.00',
+      nbsDescricao: 'Serviços de psicologia',
+    });
+    expect(favoritos[0].vinculos[1]).toMatchObject({
+      ctn: '041501',
+      ctnDescricao: 'Psicanálise.',
+      nbs: '1.2301.13.00',
+      nbsDescricao: 'Serviços psiquiátricos',
+    });
   });
 
   it('maps lista servico from formatos atual e legado', () => {

@@ -1,5 +1,6 @@
 import type { ListaServicoItem } from '@/components/emissao/PrestacaoServicoSection';
 import type { Empresa } from '@/types/api';
+import { getDefaultVinculosForCnae, shouldRepairLegacyVinculos } from '@/utils/cnae-lc116';
 import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
 
@@ -76,11 +77,19 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
           return { ctn, ctnDescricao, nbs, nbsDescricao };
         })
         .filter((v): v is FavoritoVinculo => Boolean(v));
-      if (vinculos.length === 0) {
+      const vinculosCorrigidos = shouldRepairLegacyVinculos(codigo, vinculos)
+        ? getDefaultVinculosForCnae(codigo).map((item) => ({
+            ctn: item.ctn,
+            ctnDescricao: item.ctnDescricao || resolveCtnDescricao(item.ctn),
+            nbs: item.nbs,
+            nbsDescricao: item.nbsDescricao || resolveNbsDescricao(item.nbs),
+          }))
+        : vinculos;
+      if (vinculosCorrigidos.length === 0) {
         const fallbackCtn = pickFirstString(raw, ['ctn', 'ctnCodigo']);
         const fallbackNbs = pickFirstString(raw, ['nbs', 'nbsCodigo']);
         if (fallbackCtn || fallbackNbs) {
-          vinculos.push({
+          vinculosCorrigidos.push({
             ctn: fallbackCtn || undefined,
             ctnDescricao: pickFirstString(raw, ['ctnDescricao', 'descricaoCtn']) || undefined,
             nbs: fallbackNbs || undefined,
@@ -92,7 +101,7 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
         codigo,
         cnaeDescricao: pickFirstString(raw, ['cnaeDescricao', 'descricao', 'cnaeFiscalDescricao']) || 'CNAE principal',
         lc116Item: pickFirstString(raw, ['lc116Item', 'itemLc116', 'lc116']),
-        vinculos,
+        vinculos: vinculosCorrigidos,
       };
     })
     .filter((item): item is FavoritoMapeado => Boolean(item));
@@ -103,24 +112,34 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
   const fallbackNbs = String(empresa?.nbsCodigo ?? '').trim();
   const fallbackCnae = String(empresa?.cnaeFiscal ?? '').replace(/\D/g, '');
 
-  if (!fallbackCtn && !fallbackNbs) return favoritos;
+  const usarExplicito = Boolean(fallbackCtn || fallbackNbs);
+  const vinculosPadrao = !usarExplicito && fallbackCnae ? getDefaultVinculosForCnae(fallbackCnae) : [];
+  if (!usarExplicito && vinculosPadrao.length === 0) return favoritos;
 
   return [
     {
       codigo: fallbackCnae || '0000000',
       cnaeDescricao: String(empresa?.cnaeFiscalDescricao ?? '').trim() || 'CNAE principal',
       lc116Item: '',
-      vinculos: [
-        {
-          ctn: fallbackCtn || undefined,
-          ctnDescricao: resolveCtnDescricao(fallbackCtn || undefined),
-          nbs: fallbackNbs || undefined,
-          nbsDescricao: resolveNbsDescricao(fallbackNbs || undefined),
-        },
-      ],
+      vinculos: usarExplicito
+        ? [
+            {
+              ctn: fallbackCtn || undefined,
+              ctnDescricao: resolveCtnDescricao(fallbackCtn || undefined),
+              nbs: fallbackNbs || undefined,
+              nbsDescricao: resolveNbsDescricao(fallbackNbs || undefined),
+            },
+          ]
+        : vinculosPadrao.length > 0
+        ? vinculosPadrao.map((item) => ({
+            ctn: item.ctn,
+            ctnDescricao: item.ctnDescricao || resolveCtnDescricao(item.ctn),
+            nbs: item.nbs,
+            nbsDescricao: item.nbsDescricao || resolveNbsDescricao(item.nbs),
+          }))
+        : [],
     },
   ];
-
 };
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {

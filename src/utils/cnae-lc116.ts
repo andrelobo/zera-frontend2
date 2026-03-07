@@ -1,3 +1,6 @@
+import { getCTNByCode } from '@/utils/ctn-data';
+import { getNBSDescricao } from '@/utils/nbs-data';
+
 /**
  * Mapeamento entre códigos CNAE e itens da Lista de Serviços
  * anexa à Lei Complementar nº 116, de 31 de julho de 2003.
@@ -18,6 +21,19 @@ export interface LC116Item {
   /** Descrição oficial do CNAE conforme IBGE (CNAE 2.3 Subclasses) */
   cnaeDescricao?: string;
 }
+
+export interface DefaultCnaeVinculo {
+  ctn?: string;
+  ctnDescricao?: string;
+  nbs?: string;
+  nbsDescricao?: string;
+}
+
+const LEGACY_INCORRECT_VINCULOS: Record<string, Array<{ ctn?: string; nbs?: string }>> = {
+  '8650003': [
+    { ctn: '040101', nbs: '1.2301.22.00' },
+  ],
+};
 
 // Mapeamento item LC 116 → CTN (6 dígitos — fonte: TabCtneNbs.xlsx do governo federal)
 // O CTN de 6 dígitos segue o padrão: IISSDD (item, subitem, desdobro nacional)
@@ -430,7 +446,7 @@ const CNAE_LC116_MAP: Record<string, LC116Item> = {
   '8640205': { item: '4.02', descricao: 'Análises clínicas, patologia, radiologia, tomografia e congêneres.', cnaeDescricao: 'Serviços de diagnóstico por imagem com uso de radiação ionizante, exceto tomografia', ...getCtn('4.02') },
   '8650001': { item: '4.06', descricao: 'Enfermagem, inclusive serviços auxiliares.', cnaeDescricao: 'Atividades de enfermagem', ...getCtn('4.06') },
   '8650002': { item: '4.01', descricao: 'Medicina e biomedicina.', cnaeDescricao: 'Atividades de profissionais da nutrição', ...getCtn('4.01') },
-  '8650003': { item: '4.01', descricao: 'Medicina e biomedicina.', cnaeDescricao: 'Atividades de psicologia e psicanálise', ...getCtn('4.01') },
+  '8650003': { item: '4.16', descricao: 'Psicologia.', cnaeDescricao: 'Atividades de psicologia e psicanálise', ctn: '041601', nbs: '1.2301.98.00' },
   '8650004': { item: '4.08', descricao: 'Terapia ocupacional, fisioterapia e fonoaudiologia.', cnaeDescricao: 'Atividades de fisioterapia', ...getCtn('4.08') },
   '8650005': { item: '4.10', descricao: 'Nutrição.', cnaeDescricao: 'Atividades de terapia ocupacional', ...getCtn('4.10') },
   '8650006': { item: '4.08', descricao: 'Terapia ocupacional, fisioterapia e fonoaudiologia.', cnaeDescricao: 'Atividades de fonoaudiologia', ...getCtn('4.08') },
@@ -681,6 +697,23 @@ export const CNAE_LIST: CNAEEntry[] = Object.entries(CNAE_LC116_MAP).map(([codig
   lc116: lc,
 }));
 
+const CNAE_DEFAULT_VINCULOS: Record<string, Array<{ ctn: string; nbs?: string }>> = {
+  '8650003': [
+    { ctn: '041601', nbs: '1.2301.98.00' },
+    { ctn: '041501', nbs: '1.2301.13.00' },
+  ],
+};
+
+const buildDefaultVinculo = (ctn?: string, nbs?: string, fallbackDescricao?: string): DefaultCnaeVinculo => {
+  const entry = ctn ? getCTNByCode(ctn) : null;
+  return {
+    ctn: ctn || undefined,
+    ctnDescricao: String(entry?.descricao || fallbackDescricao || '').trim() || undefined,
+    nbs: nbs || entry?.nbs || undefined,
+    nbsDescricao: String(getNBSDescricao(nbs || entry?.nbs || '') || '').trim() || undefined,
+  };
+};
+
 /**
  * Retorna o item da LC 116/2003 correspondente ao código CNAE informado.
  * Remove pontuação do código antes de buscar.
@@ -690,6 +723,30 @@ export function getLC116Item(codigoCnae: string | number): LC116Item | null {
   return CNAE_LC116_MAP[cleaned] ?? null;
 }
 
+export function getDefaultVinculosForCnae(codigoCnae: string | number): DefaultCnaeVinculo[] {
+  const cleaned = String(codigoCnae).replace(/\D/g, '');
+  const especiais = CNAE_DEFAULT_VINCULOS[cleaned];
+  if (especiais?.length) {
+    return especiais.map((item) => buildDefaultVinculo(item.ctn, item.nbs));
+  }
+
+  const lc = getLC116Item(cleaned);
+  if (!lc?.ctn && !lc?.nbs) return [];
+  return [buildDefaultVinculo(lc.ctn, lc.nbs, lc.descricao)];
+}
+
+export function shouldRepairLegacyVinculos(
+  codigoCnae: string | number,
+  vinculos: Array<{ ctn?: string; nbs?: string }>,
+): boolean {
+  const cleaned = String(codigoCnae).replace(/\D/g, '');
+  const legacy = LEGACY_INCORRECT_VINCULOS[cleaned];
+  if (!legacy?.length || vinculos.length === 0) return false;
+  return vinculos.every((vinculo) =>
+    legacy.some((item) => (item.ctn || '') === (vinculo.ctn || '') && (item.nbs || '') === (vinculo.nbs || '')),
+  );
+}
+
 export function formatCNAECode(codigo: string): string {
   const str = codigo.replace(/\D/g, '').padStart(7, '0');
   if (str.length >= 7) {
@@ -697,4 +754,3 @@ export function formatCNAECode(codigo: string): string {
   }
   return str;
 }
-

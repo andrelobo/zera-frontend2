@@ -20,7 +20,7 @@ import ContatoCard from '@/components/prestador/ContatoCard';
 import CertificadoDigitalCard from '@/components/prestador/CertificadoDigitalCard';
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
-import { getLC116Item } from '@/utils/cnae-lc116';
+import { getDefaultVinculosForCnae, getLC116Item, shouldRepairLegacyVinculos } from '@/utils/cnae-lc116';
 import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
 import { formatPhone, normalizeLogradouro } from '@/utils/validators';
@@ -375,13 +375,22 @@ const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
           };
         })
         .filter((vinculo): vinculo is NonNullable<typeof vinculo> => Boolean(vinculo && (vinculo.ctn || vinculo.nbs)));
+      const vinculosSanitizados = shouldRepairLegacyVinculos(codigo, vinculos)
+        ? getDefaultVinculosForCnae(codigo).map((item, index) => ({
+            id: `repaired_${codigo}_${index + 1}`,
+            ctn: item.ctn,
+            ctnDescricao: item.ctnDescricao,
+            nbs: item.nbs,
+            nbsDescricao: item.nbsDescricao,
+          }))
+        : vinculos;
 
       return {
         codigo,
         cnaeDescricao: String(raw.cnaeDescricao ?? '').trim() || 'CNAE principal',
         lc116Descricao: String(raw.lc116Descricao ?? '').trim(),
         lc116Item: String(raw.lc116Item ?? '').trim(),
-        vinculos,
+        vinculos: vinculosSanitizados,
         isManual: Boolean(raw.isManual),
         isPrincipal: Boolean(raw.isPrincipal),
         vinculadoSN: Boolean(raw.vinculadoSN),
@@ -511,21 +520,30 @@ const EmpresaFormPage = () => {
     const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
     if (!codigo) return;
     const lc = getLC116Item(codigo);
+    const vinculosPadrao = getDefaultVinculosForCnae(codigo);
     setCnaesParam([
       {
         codigo,
         cnaeDescricao: form.cnaeFiscalDescricao || lc?.cnaeDescricao || 'CNAE principal',
         lc116Descricao: lc?.descricao || '',
         lc116Item: lc?.item || '',
-        vinculos: [
-          {
-            id: 'initial',
-            ctn: form.ctnCodigo || undefined,
-            ctnDescricao: form.ctnCodigo ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined) : undefined,
-            nbs: form.nbsCodigo || undefined,
-            nbsDescricao: form.nbsCodigo ? (getNBSDescricao(form.nbsCodigo) || undefined) : undefined,
-          },
-        ],
+        vinculos: vinculosPadrao.length > 0
+          ? vinculosPadrao.map((item, index) => ({
+              id: `initial_${index + 1}`,
+              ctn: item.ctn,
+              ctnDescricao: item.ctnDescricao,
+              nbs: item.nbs,
+              nbsDescricao: item.nbsDescricao,
+            }))
+          : [
+              {
+                id: 'initial',
+                ctn: form.ctnCodigo || undefined,
+                ctnDescricao: form.ctnCodigo ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined) : undefined,
+                nbs: form.nbsCodigo || undefined,
+                nbsDescricao: form.nbsCodigo ? (getNBSDescricao(form.nbsCodigo) || undefined) : undefined,
+              },
+            ],
         isPrincipal: true,
       },
     ]);
@@ -564,24 +582,33 @@ const EmpresaFormPage = () => {
           continue;
         }
 
+        const vinculosPadrao = getDefaultVinculosForCnae(regimeItem.codigo);
         next.push({
           codigo: regimeItem.codigo,
           cnaeDescricao: regimeItem.descricao || lc?.cnaeDescricao || 'CNAE principal',
           lc116Descricao: lc?.descricao || '',
           lc116Item: lc?.item || '',
-          vinculos: [
-            {
-              id: `sync_${regimeItem.codigo}`,
-              ctn: regimeItem.isPrincipal ? (form.ctnCodigo || undefined) : undefined,
-              ctnDescricao: regimeItem.isPrincipal && form.ctnCodigo
-                ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined)
-                : undefined,
-              nbs: regimeItem.isPrincipal ? (form.nbsCodigo || undefined) : undefined,
-              nbsDescricao: regimeItem.isPrincipal && form.nbsCodigo
-                ? (getNBSDescricao(form.nbsCodigo) || undefined)
-                : undefined,
-            },
-          ],
+          vinculos: vinculosPadrao.length > 0
+            ? vinculosPadrao.map((item, index) => ({
+                id: `sync_${regimeItem.codigo}_${index + 1}`,
+                ctn: item.ctn,
+                ctnDescricao: item.ctnDescricao,
+                nbs: item.nbs,
+                nbsDescricao: item.nbsDescricao,
+              }))
+            : [
+                {
+                  id: `sync_${regimeItem.codigo}`,
+                  ctn: regimeItem.isPrincipal ? (form.ctnCodigo || undefined) : undefined,
+                  ctnDescricao: regimeItem.isPrincipal && form.ctnCodigo
+                    ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined)
+                    : undefined,
+                  nbs: regimeItem.isPrincipal ? (form.nbsCodigo || undefined) : undefined,
+                  nbsDescricao: regimeItem.isPrincipal && form.nbsCodigo
+                    ? (getNBSDescricao(form.nbsCodigo) || undefined)
+                    : undefined,
+                },
+              ],
           isPrincipal: regimeItem.isPrincipal,
           vinculadoSN: true,
         });

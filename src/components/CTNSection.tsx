@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Receipt, Search, CheckCircle2, AlertCircle, X, Plus, Trash2, PenLine, ChevronDown, Star } from 'lucide-react';
 import { getCTNByCode, isValidCTN, searchCTN, searchCTNByItem } from '@/utils/ctn-data';
-import { CNAE_LIST, formatCNAECode, getLC116Item, type CNAEEntry } from '@/utils/cnae-lc116';
+import { CNAE_LIST, formatCNAECode, getDefaultVinculosForCnae, getLC116Item, type CNAEEntry } from '@/utils/cnae-lc116';
 import { getNBSDescricao, searchNBS, searchNBSByPrefix, type NBSEntry } from '@/utils/nbs-data';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,24 @@ function createVinculo(ctn?: string, ctnDescricao?: string, nbs?: string, nbsDes
   return { id: nextVinculoId(), ctn: ctn || undefined, ctnDescricao, nbs: nbs || undefined, nbsDescricao };
 }
 
+function createDefaultVinculos(codigo: string, fallbackDescricao?: string): CtnNbsVinculo[] {
+  const defaults = getDefaultVinculosForCnae(codigo);
+  if (defaults.length > 0) {
+    return defaults.map((item) => createVinculo(item.ctn, item.ctnDescricao, item.nbs, item.nbsDescricao));
+  }
+
+  const lc = getLC116Item(codigo);
+  const ctnEntry = lc?.ctn ? getCTNByCode(lc.ctn) : null;
+  return [
+    createVinculo(
+      lc?.ctn,
+      ctnEntry?.descricao || fallbackDescricao,
+      lc?.nbs || ctnEntry?.nbs,
+      getNBSDescricao(lc?.nbs || ctnEntry?.nbs || '') || undefined,
+    ),
+  ].filter((item) => item.ctn || item.nbs);
+}
+
 const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, onCnaesChange, regimeCnaes }) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -88,20 +106,13 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
         const codigo = String(rc.codigo).replace(/\D/g, '');
         if (!codigo || existingCodes.has(codigo)) continue;
         const lc = getLC116Item(codigo);
-        const ctnCode = lc?.ctn;
-        const ctnEntry = ctnCode ? getCTNByCode(ctnCode) : null;
-        const vinculo = createVinculo(
-          ctnCode,
-          ctnEntry?.descricao || lc?.descricao,
-          lc?.nbs || ctnEntry?.nbs,
-          lc?.nbs ? (getNBSDescricao(lc.nbs) || lc.nbs) : ctnEntry?.nbs ? (getNBSDescricao(ctnEntry.nbs) || ctnEntry.nbs) : undefined,
-        );
+        const vinculos = createDefaultVinculos(codigo, lc?.descricao);
         updated.push({
           codigo,
           cnaeDescricao: rc.descricao || 'Importado do Regime',
           lc116Descricao: lc?.descricao || '',
           lc116Item: lc?.item || '',
-          vinculos: [vinculo],
+          vinculos,
           isPrincipal: !!rc.isPrincipal,
           vinculadoSN: true,
         });
@@ -213,17 +224,19 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     if (digits.length >= 7) {
       const lc = getLC116Item(digits);
       if (lc) {
+        const [defaultVinculo] = getDefaultVinculosForCnae(digits);
         const itemParts = lc.item.split('.');
         const itemNum = itemParts[0].padStart(2, '0');
         setDetectedItem(itemNum);
-        if (lc.ctn) {
-          setManualCtn(lc.ctn);
+        if (defaultVinculo?.ctn || lc.ctn) {
+          setManualCtn(defaultVinculo?.ctn || lc.ctn || '');
           setCtnQuery('');
         }
-        if (lc.nbs) {
-          setManualNbs(lc.nbs);
+        if (defaultVinculo?.nbs || lc.nbs) {
+          const nbs = defaultVinculo?.nbs || lc.nbs || '';
+          setManualNbs(nbs);
           setNbsQuery('');
-          const nbsPrefix = lc.nbs.substring(0, 4);
+          const nbsPrefix = nbs.substring(0, 4);
           setDetectedNbsPrefix(nbsPrefix);
         } else {
           setDetectedNbsPrefix(null);
@@ -250,19 +263,13 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
   const handleConfirmPending = () => {
     if (!pendingEntry) return;
     const entry = pendingEntry;
-    const ctnEntry = entry.lc116.ctn ? getCTNByCode(entry.lc116.ctn) : null;
-    const vinculo = createVinculo(
-      entry.lc116.ctn,
-      ctnEntry?.descricao || entry.lc116.descricao,
-      entry.lc116.nbs || ctnEntry?.nbs,
-      getNBSDescricao(entry.lc116.nbs || ctnEntry?.nbs || '') || undefined,
-    );
+    const vinculos = createDefaultVinculos(entry.codigo, entry.lc116.descricao);
     const novo: CnaeAdicionado = {
       codigo: entry.codigo,
       cnaeDescricao: entry.descricao,
       lc116Descricao: entry.descricaoLC116,
       lc116Item: entry.lc116.item,
-      vinculos: [vinculo],
+      vinculos,
       isPrincipal: pendingPrincipal,
       vinculadoSN: pendingVincularSN,
     };
