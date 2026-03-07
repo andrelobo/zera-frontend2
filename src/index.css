@@ -331,7 +331,11 @@
 /* Ticker animation - stock-style scrolling */
 @keyframes ticker-scroll {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-viewport {
+  overflow: hidden;
 }
 
 .ticker-track {
@@ -341,9 +345,12 @@
 
 .animate-ticker {
   animation: ticker-scroll 20s linear infinite;
-  flex-shrink: 0;
 }
 
 .ticker-track:hover .animate-ticker {
   animation-play-state: paused;
+}
+
+.ticker-content {
+  flex-shrink: 0;
 }
