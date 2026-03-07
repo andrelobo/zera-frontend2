@@ -85,6 +85,15 @@ const splitLocalidadeUf = (value: string) => {
   return { municipio: municipio || '', uf: (uf || '').toUpperCase() };
 };
 
+const pickServicoFromFavorito = (favorito?: { vinculos?: Array<{ ctn?: string; ctnDescricao?: string }> }) => {
+  const vinculo = favorito?.vinculos?.find((item) => Boolean(item?.ctn));
+  if (!vinculo?.ctn) return null;
+  return {
+    codigoServico: vinculo.ctn.replace(/\D/g, '').slice(0, 6),
+    descricaoServico: String(vinculo.ctnDescricao || '').trim(),
+  };
+};
+
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
@@ -199,6 +208,23 @@ const NfseEmitPage: React.FC = () => {
     });
     return combined;
   }, [favoritosTomador, favoritos]);
+
+  const servicoFavoritoPadrao = useMemo(() => {
+    // Regra UX: priorizar favorito definido no cadastro do prestador.
+    return pickServicoFromFavorito(favoritos[0]) || pickServicoFromFavorito(favoritosCombinados[0]);
+  }, [favoritos, favoritosCombinados]);
+
+  useEffect(() => {
+    if (!servicoFavoritoPadrao) return;
+    setPrestacao((prev) => {
+      if (String(prev.codigoServico || '').trim()) return prev;
+      return {
+        ...prev,
+        codigoServico: servicoFavoritoPadrao.codigoServico,
+        descricaoServico: prev.descricaoServico || servicoFavoritoPadrao.descricaoServico,
+      };
+    });
+  }, [servicoFavoritoPadrao]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
