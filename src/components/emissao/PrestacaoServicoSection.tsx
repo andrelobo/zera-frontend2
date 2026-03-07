@@ -105,12 +105,13 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     const v = vinculo || fav.vinculos[0];
     if (v?.ctn) {
       const entry = getCTNByCode(v.ctn);
+      const descricaoAtual = String(v.ctnDescricao || entry?.descricao || '').trim();
       onChange({
         ...data,
         codigoServico: v.ctn,
-        descricaoServico: '',
+        descricaoServico: descricaoAtual,
       });
-      setCtnDescricaoSelecionada(v.ctnDescricao || entry?.descricao || '');
+      setCtnDescricaoSelecionada(descricaoAtual);
     }
     setShowFavoritosDropdown(false);
     setFavoritosQuery('');
@@ -206,7 +207,11 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
   }, [data.codigoServico]);
 
   const handleSelectCTN = (codigo: string, descricao: string) => {
-    update('codigoServico', codigo);
+    onChange({
+      ...data,
+      codigoServico: codigo,
+      descricaoServico: descricao,
+    });
     setCtnDescricaoSelecionada(descricao);
     setCtnQuery('');
     setShowCtnDropdown(false);
