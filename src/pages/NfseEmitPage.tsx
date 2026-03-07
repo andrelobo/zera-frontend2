@@ -171,6 +171,11 @@ const NfseEmitPage: React.FC = () => {
   });
 
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
+  const favoritosCadastro = useMemo(() => {
+    const rows = Array.isArray(empresaAtual?.parametroMunicipal) ? empresaAtual.parametroMunicipal : [];
+    if (rows.length === 0) return [];
+    return mapFavoritosFromParametroMunicipal(empresaAtual || undefined);
+  }, [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
 
   const listaServico = useMemo<ListaServicoItem[]>(() => {
@@ -210,9 +215,9 @@ const NfseEmitPage: React.FC = () => {
   }, [favoritosTomador, favoritos]);
 
   const servicoFavoritoPadrao = useMemo(() => {
-    // Regra UX: priorizar favorito definido no cadastro do prestador.
-    return pickServicoFromFavorito(favoritos[0]) || pickServicoFromFavorito(favoritosCombinados[0]);
-  }, [favoritos, favoritosCombinados]);
+    // Regra UX: autopreencher apenas com favorito REAL salvo em Parametros Municipais.
+    return pickServicoFromFavorito(favoritosCadastro[0]);
+  }, [favoritosCadastro]);
 
   useEffect(() => {
     if (!servicoFavoritoPadrao) return;

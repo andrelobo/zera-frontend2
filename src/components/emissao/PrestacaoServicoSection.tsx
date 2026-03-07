@@ -113,6 +113,22 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     setFavoritosQuery('');
   };
 
+  useEffect(() => {
+    const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
+    if (!codigoAtual) {
+      setFavoritoSelecionado(null);
+      return;
+    }
+
+    const favoritoCorrespondente = favoritos.find((fav) =>
+      fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
+    );
+
+    if (!favoritoCorrespondente) return;
+    if (favoritoSelecionado?.codigo === favoritoCorrespondente.codigo) return;
+    setFavoritoSelecionado(favoritoCorrespondente);
+  }, [data.codigoServico, favoritos, favoritoSelecionado?.codigo]);
+
   // Local prestação state
   const [ufSelecionada, setUfSelecionada] = useState('');
   const [municipios, setMunicipios] = useState<Municipio[]>([]);

@@ -75,29 +75,7 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
     })
     .filter((item): item is FavoritoMapeado => Boolean(item));
 
-  if (favoritos.length > 0) return favoritos;
-
-  const fallbackCtn = String(empresa?.ctnCodigo ?? '').trim();
-  const fallbackNbs = String(empresa?.nbsCodigo ?? '').trim();
-  const fallbackCnae = String(empresa?.cnaeFiscal ?? '').replace(/\D/g, '');
-
-  if (!fallbackCtn && !fallbackNbs) return favoritos;
-
-  return [
-    {
-      codigo: fallbackCnae || '0000000',
-      cnaeDescricao: String(empresa?.cnaeFiscalDescricao ?? '').trim() || 'CNAE principal',
-      lc116Item: '',
-      vinculos: [
-        {
-          ctn: fallbackCtn || undefined,
-          ctnDescricao: fallbackCtn ? 'CTN do cadastro do prestador' : undefined,
-          nbs: fallbackNbs || undefined,
-          nbsDescricao: fallbackNbs ? 'NBS do cadastro do prestador' : undefined,
-        },
-      ],
-    },
-  ];
+  return favoritos;
 };
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
