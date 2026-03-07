@@ -368,18 +368,15 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
         </div>
         <div>
           <label className="field-label flex items-center gap-1.5"><BadgePercent className="w-4 h-4 text-primary" />Alíquota %{optanteSimples && !tomadorSubstituto ? '' : '*'}</label>
-          <div className="relative w-[55px]">
-            <input
-              className={`field-input pr-7 border-primary ${optanteSimples && !tomadorSubstituto ? 'bg-muted/30 text-muted-foreground' : ''}`}
-              placeholder="00,00"
-              value={optanteSimples && !tomadorSubstituto ? '' : data.aliquota}
-              onChange={(e) => update('aliquota', formatPercent(e.target.value))}
-              maxLength={5}
-              disabled={optanteSimples && !tomadorSubstituto}
-              title={optanteSimples && !tomadorSubstituto ? 'Optante do Simples Nacional - alíquota paga na guia única' : ''}
-            />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
-          </div>
+          <input
+            className={`field-input text-right ${optanteSimples && !tomadorSubstituto ? 'bg-muted/30 text-muted-foreground' : ''}`}
+            placeholder={optanteSimples && !tomadorSubstituto ? '0,00' : '0,00'}
+            value={optanteSimples && !tomadorSubstituto ? '' : data.aliquota}
+            onChange={(e) => update('aliquota', formatPercent(e.target.value))}
+            maxLength={5}
+            disabled={optanteSimples && !tomadorSubstituto}
+            title={optanteSimples && !tomadorSubstituto ? 'Optante do Simples Nacional - alíquota paga na guia única' : ''}
+          />
         </div>
         <div>
           <label className="field-label flex items-center gap-1.5"><Calculator className="w-4 h-4 text-primary" />Base de Cálculo (R$)</label>
