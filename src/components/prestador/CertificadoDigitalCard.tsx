@@ -1,12 +1,23 @@
 import React, { useRef, useState } from 'react';
-import { ShieldCheck, Upload, X, Eye, EyeOff, FileKey2 } from 'lucide-react';
+import { ShieldCheck, Upload, X, Eye, EyeOff, FileKey2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const CertificadoDigitalCard: React.FC = () => {
+interface Props {
+  certificado?: {
+    filename?: string;
+    uploadedAt?: string;
+  } | null;
+}
+
+const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const certificadoImportado = Boolean(certificado?.filename || certificado?.uploadedAt);
+  const uploadedAtLabel = certificado?.uploadedAt
+    ? new Date(certificado.uploadedAt).toLocaleString('pt-BR')
+    : '';
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,6 +44,18 @@ const CertificadoDigitalCard: React.FC = () => {
         <ShieldCheck className="w-5 h-5 text-primary" />
         Certificado CNPJ A1
       </h2>
+      {certificadoImportado && (
+        <div className="mb-3 rounded-md border border-emerald-600/25 bg-emerald-600/10 px-3 py-2">
+          <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>
+              Certificado digital já importado
+              {certificado?.filename ? `: ${certificado.filename}` : ''}
+              {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
+            </span>
+          </p>
+        </div>
+      )}
       <input
         ref={inputRef}
         type="file"
