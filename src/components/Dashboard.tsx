@@ -34,17 +34,17 @@ const PIE_COLORS = [
 
 const KPICard: React.FC<{
   title: string; value: string; subtitle?: string;
-  icon: React.ReactNode; trend?: 'up' | 'down' | null; accent?: string;
-}> = ({ title, value, subtitle, icon, trend, accent }) => (
-  <Card className="relative overflow-hidden">
-    <CardContent className="p-3">
+  icon: React.ReactNode; trend?: 'up' | 'down' | null; accent?: string; featured?: boolean;
+}> = ({ title, value, subtitle, icon, trend, accent, featured }) => (
+  <Card className={`relative overflow-hidden ${featured ? 'border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 shadow-md' : ''}`}>
+    <CardContent className={featured ? 'p-4' : 'p-3'}>
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{title}</p>
-          <p className={`text-sm font-bold ${accent || 'text-foreground'}`}>{value}</p>
+          <p className={`${featured ? 'text-2xl' : 'text-sm'} font-bold ${accent || 'text-foreground'}`}>{value}</p>
           {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
         </div>
-        <div className="p-1.5 rounded-md bg-primary/10 text-primary shrink-0">{icon}</div>
+        <div className={`shrink-0 text-primary ${featured ? 'p-2 rounded-xl bg-primary/15' : 'p-1.5 rounded-md bg-primary/10'}`}>{icon}</div>
       </div>
       {trend && (
         <div className="absolute bottom-2 right-3">
@@ -95,10 +95,28 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{nomeEmpresa || 'Dashboard Financeiro'}</h1>
-        
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-card via-card to-primary/10 p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">Fiscal IA</Badge>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{nomeEmpresa || 'Dashboard Financeiro'}</h1>
+              <p className="text-sm text-muted-foreground">
+                Inteligência tributária e financeira consolidada para operação e apresentação executiva.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:w-[460px]">
+            <div className="rounded-xl border border-border bg-background/80 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Receita 12m</p>
+              <p className="mt-1 text-lg font-bold text-foreground">{formatCurrency(rbt12)}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-background/80 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Faixa Atual</p>
+              <p className="mt-1 text-lg font-bold text-primary">{calculo.faixa ? `${calculo.faixa.faixa}ª faixa` : 'Sem faixa'}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ALERTAS */}
@@ -124,9 +142,15 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
       <section>
         <SectionTitle icon={<BarChart3 className="w-4 h-4" />} title="Fiscal IA" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <KPICard title={`Receita ${kpis.competenciaLabel || ''}`} value={formatCurrency(kpis.faturamentoMes)} icon={<DollarSign className="w-4 h-4" />} />
-          <KPICard title="DAS a Pagar" value={formatCurrency(kpis.dasAPagar)} icon={<Wallet className="w-4 h-4" />} accent="text-destructive" />
-          <KPICard title="Alíq. Efetiva" value={formatPercent(kpis.aliquotaEfetiva)} icon={<Percent className="w-4 h-4" />} />
+          <KPICard
+            title={`Receita ${kpis.competenciaLabel || ''}`}
+            value={formatCurrency(kpis.faturamentoMes)}
+            subtitle={`${kpis.totalNotasMes} nota(s) no período`}
+            icon={<DollarSign className="w-5 h-5" />}
+            featured
+          />
+          <KPICard title="DAS a Pagar" value={formatCurrency(kpis.dasAPagar)} subtitle="Projeção tributária do período" icon={<Wallet className="w-4 h-4" />} accent="text-destructive" />
+          <KPICard title="Alíq. Efetiva" value={formatPercent(kpis.aliquotaEfetiva)} subtitle="Calculada automaticamente" icon={<Percent className="w-4 h-4" />} accent="text-primary" />
         </div>
       </section>
 
@@ -178,9 +202,9 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
       <section>
         <SectionTitle icon={<TrendingUp className="w-4 h-4" />} title="Fluxo de Caixa" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <KPICard title="Caixa Operacional" value={formatCurrency(fluxoCaixa.operacional)} icon={<TrendingUp className="w-4 h-4" />} accent="text-green-600" />
+          <KPICard title="Caixa Operacional" value={formatCurrency(fluxoCaixa.operacional)} subtitle="Entrada líquida operacional" icon={<TrendingUp className="w-4 h-4" />} accent="text-green-600" />
           <KPICard title="Caixa Tributário" value={formatCurrency(-fluxoCaixa.tributario)} subtitle="DAS + ISS retido" icon={<TrendingDown className="w-4 h-4" />} accent="text-destructive" />
-          <KPICard title="Saldo Disponível" value={formatCurrency(fluxoCaixa.saldo)} icon={<DollarSign className="w-4 h-4" />} accent={fluxoCaixa.saldo >= 0 ? 'text-green-600' : 'text-destructive'} />
+          <KPICard title="Saldo Disponível" value={formatCurrency(fluxoCaixa.saldo)} subtitle="Após provisão tributária" icon={<DollarSign className="w-4 h-4" />} accent={fluxoCaixa.saldo >= 0 ? 'text-green-600' : 'text-destructive'} featured />
         </div>
       </section>
 
