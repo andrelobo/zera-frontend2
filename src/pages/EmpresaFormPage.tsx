@@ -361,8 +361,8 @@ const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
           const ctnDescricaoRaw = String(row.ctnDescricao ?? '').trim() || undefined;
           const nbs = String(row.nbs ?? '').trim() || undefined;
           const nbsDescricaoRaw = String(row.nbsDescricao ?? '').trim() || undefined;
-          const ctnDescricao = ctnDescricaoRaw || (ctn ? getCTNByCode(ctn)?.descricao : undefined);
-          const nbsDescricao = nbsDescricaoRaw || (nbs ? (getNBSDescricao(nbs) || undefined) : undefined);
+          const ctnDescricao = ctn ? (getCTNByCode(ctn)?.descricao || ctnDescricaoRaw) : undefined;
+          const nbsDescricao = nbs ? ((getNBSDescricao(nbs) || undefined) || nbsDescricaoRaw) : undefined;
           const dedupeKey = `${ctn || ''}|${nbs || ''}`;
           if (seen.has(dedupeKey)) return null;
           seen.add(dedupeKey);

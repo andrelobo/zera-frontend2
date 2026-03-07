@@ -39,19 +39,23 @@ const parseDateMs = (value: unknown) => {
 };
 
 const resolveCtnDescricao = (ctn?: string, explicit?: string) => {
-  const texto = String(explicit || '').trim();
-  if (texto) return texto;
   if (!ctn) return '';
   const codigo = ctn.replace(/\D/g, '').slice(0, 6);
   if (!codigo) return '';
-  return getCTNByCode(codigo)?.descricao || codigo;
+  const oficial = String(getCTNByCode(codigo)?.descricao || '').trim();
+  if (oficial) return oficial;
+  const texto = String(explicit || '').trim();
+  if (texto) return texto;
+  return codigo;
 };
 
 const resolveNbsDescricao = (nbs?: string, explicit?: string) => {
+  if (!nbs) return '';
+  const oficial = String(getNBSDescricao(nbs) || '').trim();
+  if (oficial) return oficial;
   const texto = String(explicit || '').trim();
   if (texto) return texto;
-  if (!nbs) return '';
-  return getNBSDescricao(nbs) || nbs;
+  return nbs;
 };
 
 export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoMapeado[] => {
