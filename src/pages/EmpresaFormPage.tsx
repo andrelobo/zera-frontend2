@@ -1257,7 +1257,7 @@ const EmpresaFormPage = () => {
                   {informarAliquotaSN && (
                     <div>
                       <label className="field-label whitespace-nowrap">Simples Nacional</label>
-                      <div className="relative w-[55px]">
+                      <div className="relative w-[74px]">
                         <input
                           className="field-input pr-7 border-primary"
                           type="text"
