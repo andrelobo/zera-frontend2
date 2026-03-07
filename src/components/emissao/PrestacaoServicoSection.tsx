@@ -138,6 +138,27 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     setFavoritoSelecionado(favoritoCorrespondente);
   }, [data.codigoServico, favoritos, favoritoSelecionado?.codigo]);
 
+  useEffect(() => {
+    if (!favoritoSelecionado) return;
+    const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
+    const vinculoAtual = favoritoSelecionado.vinculos.find(
+      (vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual,
+    );
+    if (vinculoAtual) return;
+
+    const primeiroVinculo = favoritoSelecionado.vinculos.find((vinculo) => Boolean(vinculo.ctn));
+    if (!primeiroVinculo?.ctn) return;
+
+    const entry = getCTNByCode(primeiroVinculo.ctn);
+    const descricaoAtual = String(entry?.descricao || primeiroVinculo.ctnDescricao || '').trim();
+    onChange({
+      ...data,
+      codigoServico: primeiroVinculo.ctn,
+      descricaoServico: descricaoAtual,
+    });
+    setCtnDescricaoSelecionada(descricaoAtual);
+  }, [data, favoritoSelecionado, onChange]);
+
   // Local prestação state
   const [ufSelecionada, setUfSelecionada] = useState('');
   const [municipios, setMunicipios] = useState<Municipio[]>([]);

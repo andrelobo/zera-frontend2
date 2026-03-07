@@ -740,6 +740,14 @@ export function shouldRepairLegacyVinculos(
   vinculos: Array<{ ctn?: string; nbs?: string }>,
 ): boolean {
   const cleaned = String(codigoCnae).replace(/\D/g, '');
+  const defaults = CNAE_DEFAULT_VINCULOS[cleaned];
+  if (defaults?.length) {
+    if (vinculos.length === 0) return true;
+    return vinculos.some((vinculo) =>
+      !defaults.some((item) => (item.ctn || '') === (vinculo.ctn || '') && (item.nbs || '') === (vinculo.nbs || '')),
+    );
+  }
+
   const legacy = LEGACY_INCORRECT_VINCULOS[cleaned];
   if (!legacy?.length || vinculos.length === 0) return false;
   return vinculos.every((vinculo) =>

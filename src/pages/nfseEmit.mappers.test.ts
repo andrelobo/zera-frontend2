@@ -53,6 +53,27 @@ describe('nfseEmit mappers', () => {
     expect(favoritos[0].vinculos[1].ctn).toBe('041501');
   });
 
+  it('repairs mixed incoherent psicologia vinculos from persisted data', () => {
+    const empresa = baseEmpresa({
+      parametroMunicipal: [
+        {
+          codigo: '8650-0/03',
+          cnaeDescricao: 'Atividades de psicologia e psicanálise',
+          vinculos: [
+            { ctn: '040101', ctnDescricao: 'Medicina.', nbs: '1.2301.22.00', nbsDescricao: 'Serviços médicos especializados' },
+            { ctn: '041601', ctnDescricao: 'Psicologia.', nbs: '1.2301.98.00', nbsDescricao: 'Serviços de psicologia' },
+          ],
+        },
+      ],
+    });
+
+    const favoritos = mapFavoritosFromParametroMunicipal(empresa);
+    expect(favoritos).toHaveLength(1);
+    expect(favoritos[0].vinculos).toHaveLength(2);
+    expect(favoritos[0].vinculos[0].ctn).toBe('041601');
+    expect(favoritos[0].vinculos[1].ctn).toBe('041501');
+  });
+
   it('maps favoritos from chaves legadas e fallback sem vinculos', () => {
     const empresa = baseEmpresa({
       parametroMunicipal: [
