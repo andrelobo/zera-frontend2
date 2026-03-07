@@ -102,16 +102,16 @@
 
 @layer components {
   .section-card {
-    @apply bg-card rounded-xl border border-border p-4 shadow-sm;
+    @apply bg-card rounded-xl border border-border p-3 shadow-sm;
   }
 
   .section-title {
-    @apply text-base font-semibold flex items-center gap-2 mb-3;
+    @apply text-sm font-semibold flex items-center gap-1.5 mb-2;
     color: hsl(var(--field-label));
   }
 
   .field-label {
-    @apply text-sm font-bold mb-1.5 block;
+    @apply text-xs font-bold mb-1 block;
     color: hsl(var(--field-label));
   }
 
