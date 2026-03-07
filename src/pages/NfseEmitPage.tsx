@@ -225,7 +225,6 @@ const NfseEmitPage: React.FC = () => {
     setPrestacao((prev) => {
       const codigoAtual = String(prev.codigoServico || '').replace(/\D/g, '').slice(0, 6);
       const codigoFavorito = String(servicoFavoritoPadrao.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-      if (codigoAtual && codigoAtual !== codigoFavorito) return prev;
       if (codigoAtual === codigoFavorito && String(prev.descricaoServico || '').trim() === String(servicoFavoritoPadrao.descricaoServico || '').trim()) {
         return prev;
       }
