@@ -29,11 +29,13 @@ interface Props {
   onSimplesDetected?: (isOptante: boolean) => void;
   compact?: boolean;
   optanteSimples?: boolean | null;
+  lockCnpj?: boolean;
 }
 
 const formatSourceLabel = (source?: string) => {
   const normalized = String(source || '').trim().toLowerCase();
   if (!normalized) return 'Não informada';
+  if (normalized === 'banco') return 'Banco (ZERA)';
   if (normalized === 'cnpja') return 'CNPJá';
   if (normalized === 'brasilapi') return 'BrasilAPI';
   if (normalized === 'receitaws') return 'ReceitaWS';
@@ -44,11 +46,27 @@ const formatSourceLabel = (source?: string) => {
 
 async function fetchCNPJData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
-  const empresa = await empresasApi.previewByCnpj(cleaned);
+  const settled = await Promise.allSettled([
+    empresasApi.getByCnpj(cleaned),
+    empresasApi.previewByCnpj(cleaned),
+  ]);
+
+  const fromDb = settled[0].status === 'fulfilled' ? settled[0].value : null;
+  const fromPreview = settled[1].status === 'fulfilled' ? settled[1].value : null;
+  const empresa = fromDb || fromPreview;
+  if (!empresa) {
+    throw new Error('CNPJ não encontrado');
+  }
   const logradouroCompleto = empresa.endereco?.logradouro || '';
+  const source = fromDb
+    ? 'banco'
+    : (fromPreview?.fonteConsulta || '');
   return {
     razao_social: empresa.razaoSocial || '',
     nome_fantasia: empresa.nomeFantasia || '',
+    inscricao_municipal: empresa.inscricaoMunicipal || '',
+    inscricao_estadual: empresa.inscricaoEstadual || '',
+    suframa: empresa.suframa || '',
     cep: empresa.endereco?.cep || '',
     logradouro: logradouroCompleto,
     numero: empresa.endereco?.numero || '',
@@ -59,7 +77,7 @@ async function fetchCNPJData(cnpj: string) {
     email: empresa.email || '',
     telefone: empresa.whatsapp || empresa.fone || '',
     opcao_pelo_simples: empresa.opcaoPeloSimples ?? null,
-    source: empresa.fonteConsulta || '',
+    source,
   };
 }
 
@@ -73,7 +91,15 @@ async function fetchCEPData(cep: string) {
   };
 }
 
-const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimplesDetected, compact = false, optanteSimples }) => {
+const PrestadorSection: React.FC<Props> = ({
+  data,
+  onChange,
+  onAutosave,
+  onSimplesDetected,
+  compact = false,
+  optanteSimples,
+  lockCnpj = false,
+}) => {
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
   const [lookupSource, setLookupSource] = useState<string>('');
@@ -111,6 +137,9 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
         ...current,
         nomeEmpresarial: result.razao_social || current.nomeEmpresarial,
         nomeFantasia: result.nome_fantasia || current.nomeFantasia,
+        inscricaoMunicipal: result.inscricao_municipal || current.inscricaoMunicipal,
+        inscricaoEstadual: result.inscricao_estadual || current.inscricaoEstadual,
+        suframa: result.suframa || current.suframa,
         cep: result.cep ? formatCEP(result.cep) : current.cep,
         logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
         numero: result.numero || current.numero,
@@ -171,6 +200,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
   }, [onChange, onAutosave]);
 
   const handleCNPJChange = (value: string) => {
+    if (lockCnpj) return;
     const formatted = formatCNPJ(value);
     setLookupSource('');
     onChange({ ...data, cnpj: formatted });
@@ -203,6 +233,8 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
               value={data.cnpj}
               onChange={(e) => handleCNPJChange(e.target.value)}
               maxLength={18}
+              readOnly={lockCnpj}
+              disabled={lockCnpj}
             />
             {loadingCNPJ && (
               <div className="flex items-center px-2">

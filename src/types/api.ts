@@ -220,6 +220,11 @@ export interface Tomador {
     uf?: string;
     cep?: string;
   };
+  servicos?: Array<{
+    codigoServico: string;
+    descricaoServico: string;
+    updatedAt?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -244,6 +249,10 @@ export interface CreateTomadorRequest {
     uf?: string;
     cep?: string;
   };
+  servicos?: Array<{
+    codigoServico: string;
+    descricaoServico: string;
+  }>;
 }
 
 export type UpdateTomadorRequest = Partial<Omit<CreateTomadorRequest, 'empresaCnpj' | 'cpfCnpj'>>;

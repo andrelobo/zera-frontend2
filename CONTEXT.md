@@ -5,6 +5,23 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-05)
+Fonte: `codigo local` + validacao funcional em ambiente de producao.
+
+- Fluxo de emissao:
+  - apos emitir, UX direciona para listagem de emissoes (`/nfse`) para acompanhamento.
+  - status visual de notas pendentes foi ajustado para linguagem de usuario (`Processando`).
+- Autocomplete de CNPJ:
+  - front exibe `Fonte do autocomplete` de forma discreta quando backend retorna `fonteConsulta`.
+  - rotulos suportados: `CNPJa`, `ReceitaWS`, `BrasilAPI`, `BrasilAPI + ReceitaWS`, `PlugNotas`.
+- Prestador em emissao:
+  - secao do prestador passou a mesclar dados de cadastro local + preview por CNPJ para melhorar preenchimento.
+  - CNPJ pode ficar bloqueado no fluxo de emissao para evitar trocas acidentais durante o preenchimento.
+
+Observacao operacional:
+- Se a UI mostrar `Fonte do autocomplete: ReceitaWS`, o fallback veio do backend.
+- A correcao definitiva desse ponto depende de runtime do backend com CNPJA efetivamente ativo em producao.
+
 ## 0. Atualizacao de Contexto (2026-03-03)
 Fonte: `codigo local` + `execucao local`.
 

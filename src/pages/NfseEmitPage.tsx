@@ -118,6 +118,7 @@ const NfseEmitPage: React.FC = () => {
   const [tomador, setTomador] = useState<TomadorEmissaoData>(INITIAL_TOMADOR);
   const [prestacao, setPrestacao] = useState<PrestacaoServicoData>(INITIAL_PRESTACAO);
   const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({ pais: 'Brasil', uf: 'AM', municipio: 'Manaus' });
+  const [tomadorServicos, setTomadorServicos] = useState<Array<{ codigoServico: string; descricaoServico: string }>>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [tomadorSubstituto, setTomadorSubstituto] = useState(false);
   const [referenciaExterna] = useState(buildReferencia());
@@ -177,6 +178,27 @@ const NfseEmitPage: React.FC = () => {
       });
     }
   }, [empresaAtual, empresaQuery.isSuccess]);
+
+  const favoritosTomador = useMemo(() => {
+    return tomadorServicos.map((item) => ({
+      codigo: item.codigoServico,
+      cnaeDescricao: `[Tomador] ${item.descricaoServico}`,
+      lc116Item: '',
+      vinculos: [{ ctn: item.codigoServico, ctnDescricao: item.descricaoServico }],
+    }));
+  }, [tomadorServicos]);
+
+  const favoritosCombinados = useMemo(() => {
+    const seen = new Set<string>();
+    const combined = [...favoritosTomador, ...favoritos].filter((item) => {
+      const key = item.codigo.replace(/\D/g, '').slice(0, 6);
+      if (!key) return false;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return combined;
+  }, [favoritosTomador, favoritos]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
@@ -254,6 +276,14 @@ const NfseEmitPage: React.FC = () => {
       localidadeUf: [municipio, uf].filter(Boolean).join(' - '),
       pais: 'Brasil',
     }));
+    setTomadorServicos(
+      (t.servicos || [])
+        .map((item) => ({
+          codigoServico: item.codigoServico?.replace(/\D/g, '').slice(0, 6) || '',
+          descricaoServico: item.descricaoServico || '',
+        }))
+        .filter((item) => item.codigoServico && item.descricaoServico),
+    );
   }, []);
 
   const handleEmitir = async () => {
@@ -370,12 +400,21 @@ const NfseEmitPage: React.FC = () => {
           data={prestador}
           onChange={setPrestador}
           onAutosave={autosave}
+          compact
           optanteSimples={empresaAtual?.opcaoPeloSimples ?? null}
+          lockCnpj
         />
 
         <TomadorEmissao
           data={tomador}
-          onChange={setTomador}
+          onChange={(next) => {
+            const previousDoc = tomador.cnpjCpf.replace(/\D/g, '');
+            const nextDoc = next.cnpjCpf.replace(/\D/g, '');
+            if (previousDoc !== nextDoc) {
+              setTomadorServicos([]);
+            }
+            setTomador(next);
+          }}
           onTomadorSelecionado={handleTomadorSelecionado}
           tomadores={tomadoresQuery.data || []}
           loadingTomadores={tomadoresQuery.isLoading}
@@ -389,7 +428,7 @@ const NfseEmitPage: React.FC = () => {
           mostrarRetencoesFederais={true}
           optanteSimples={Boolean(empresaAtual?.opcaoPeloSimples)}
           tomadorSubstituto={tomadorSubstituto}
-          favoritos={favoritos}
+          favoritos={favoritosCombinados}
           listaServico={listaServico}
         />
 

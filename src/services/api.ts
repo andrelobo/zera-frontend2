@@ -439,6 +439,21 @@ const normalizeTomador = (raw: Tomador | Record<string, unknown>): Tomador => {
       uf: pickString(endereco.uf),
       cep: pickString(endereco.cep),
     },
+    servicos: Array.isArray(legacy.servicos)
+      ? legacy.servicos
+          .map((item) => {
+            const row = (item ?? {}) as Record<string, unknown>;
+            const codigoServico = pickString(row.codigoServico, row.codigo_servico);
+            const descricaoServico = pickString(row.descricaoServico, row.descricao_servico);
+            if (!codigoServico || !descricaoServico) return null;
+            return {
+              codigoServico,
+              descricaoServico,
+              updatedAt: pickString(row.updatedAt, row.updated_at),
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null)
+      : undefined,
     createdAt: pickString(legacy.createdAt, legacy.created_at) || new Date().toISOString(),
     updatedAt: pickString(legacy.updatedAt, legacy.updated_at) || new Date().toISOString(),
   };
