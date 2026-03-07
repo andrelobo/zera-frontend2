@@ -61,10 +61,23 @@ function monthLabelFromCompetencia(competencia: string): string {
   return cleaned || 'Sem comp.';
 }
 
+function resolveTomadorNome(
+  item: {
+    tomadorRazaoSocial?: string;
+    tomador?: { razaoSocial?: string };
+  },
+): string {
+  const nome = (item.tomadorRazaoSocial || item.tomador?.razaoSocial || '').trim();
+  return nome || 'Emissão expressa';
+}
+
 export function useDashboardData(prestadorId: string | null, rbt12: number, cnaeAnexo: string) {
-  const now = new Date();
-  const oneYearAgo = new Date(now);
-  oneYearAgo.setFullYear(now.getFullYear() - 1);
+  const now = useMemo(() => new Date(), []);
+  const oneYearAgo = useMemo(() => {
+    const date = new Date(now);
+    date.setFullYear(now.getFullYear() - 1);
+    return date;
+  }, [now]);
   const dateFrom = oneYearAgo.toISOString().slice(0, 10);
   const dateTo = now.toISOString().slice(0, 10);
 
@@ -80,9 +93,8 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     staleTime: 60_000,
   });
 
-  const baseItems = nfseQuery.data?.data || [];
-
   const notas = useMemo<NotaDashboard[]>(() => {
+    const baseItems = nfseQuery.data?.data || [];
     return baseItems.map((item) => {
       const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
       const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
@@ -91,7 +103,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
         : Math.max(0, valorServico - desconto);
       const issValor = typeof item.valorIss === 'number' ? item.valorIss : 0;
       const aliquota = baseCalculo > 0 ? ((issValor / baseCalculo) * 100) : 0;
-      const tomadorNome = item.tomadorRazaoSocial || item.tomador?.razaoSocial || 'Cliente sem nome';
+      const tomadorNome = resolveTomadorNome(item);
       const tomadorDoc = item.tomadorCnpjCpf || item.tomador?.cpfCnpj || '';
 
       return {
@@ -123,7 +135,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
         status: item.status,
       };
     });
-  }, [baseItems]);
+  }, [nfseQuery.data?.data]);
 
   const splits = useMemo<SplitPaymentRow[]>(() => [], []);
 
@@ -184,7 +196,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     notas.forEach((n) => {
       const tid = n.tomador_id || 'sem-tomador';
       if (!map.has(tid)) {
-        map.set(tid, { faturamento: 0, qtd: 0, nome: n.tomador_nome || 'Cliente sem nome' });
+        map.set(tid, { faturamento: 0, qtd: 0, nome: n.tomador_nome || 'Emissão expressa' });
       }
       const c = map.get(tid)!;
       c.faturamento += n.valor_servico;

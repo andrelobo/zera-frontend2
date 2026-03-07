@@ -65,6 +65,9 @@ const SectionTitle: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon
 const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, cnaeAnexo, regime }) => {
   const { loading, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa, splits } = useDashboardData(prestadorId, rbt12, cnaeAnexo);
   const [simulacaoExtra, setSimulacaoExtra] = useState<string>('');
+  const hasSplitData = splits.some((item) => item.valor_bruto > 0 || item.valor_reservado > 0 || item.valor_liberado > 0);
+  const hasIssRetido = dadosMensais.some((item) => item.issRetido > 0);
+  const hasPieData = analiseClientes.some((item) => item.faturamento > 0);
 
   const formatCurrencyInput = (value: string) => {
     const digits = value.replace(/\D/g, '');
@@ -128,46 +131,48 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
       </section>
 
       {/* SPLIT PAYMENT */}
-      <section>
-        <SectionTitle icon={<Wallet className="w-4 h-4" />} title="Split Payment" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <KPICard title="Total Reservado" value={formatCurrency(kpis.totalReservado)} icon={<ShieldCheck className="w-4 h-4" />} />
-          <KPICard title="% Protegido" value={`${kpis.faturamentoMes > 0 ? ((kpis.totalReservado / kpis.faturamentoMes) * 100).toFixed(1) : '0'}%`} icon={<Percent className="w-4 h-4" />} />
-          <KPICard title="Saldo Tributário" value={formatCurrency(kpis.totalReservado - kpis.dasAPagar)} icon={<Wallet className="w-4 h-4" />} />
-        </div>
-        {splits.length > 0 && (
-          <Card className="mt-3">
-            <CardContent className="p-3">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-1.5 px-2">NF</th>
-                      <th className="text-right py-1.5 px-2">Bruto</th>
-                      <th className="text-right py-1.5 px-2">Reservado</th>
-                      <th className="text-right py-1.5 px-2">Liberado</th>
-                      <th className="text-center py-1.5 px-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {splits.slice(0, 10).map(s => (
-                      <tr key={s.id} className="border-b border-border/50">
-                        <td className="py-1.5 px-2 font-mono">{s.nota_fiscal_id?.substring(0, 8)}...</td>
-                        <td className="text-right py-1.5 px-2">{formatCurrency(s.valor_bruto)}</td>
-                        <td className="text-right py-1.5 px-2 text-destructive">{formatCurrency(s.valor_reservado)}</td>
-                        <td className="text-right py-1.5 px-2 text-green-600">{formatCurrency(s.valor_liberado)}</td>
-                        <td className="text-center py-1.5 px-2">
-                          <Badge variant={s.status === 'pago' ? 'default' : 'outline'} className="text-[9px]">{s.status}</Badge>
-                        </td>
+      {hasSplitData && (
+        <section>
+          <SectionTitle icon={<Wallet className="w-4 h-4" />} title="Split Payment" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <KPICard title="Total Reservado" value={formatCurrency(kpis.totalReservado)} icon={<ShieldCheck className="w-4 h-4" />} />
+            <KPICard title="% Protegido" value={`${kpis.faturamentoMes > 0 ? ((kpis.totalReservado / kpis.faturamentoMes) * 100).toFixed(1) : '0'}%`} icon={<Percent className="w-4 h-4" />} />
+            <KPICard title="Saldo Tributário" value={formatCurrency(kpis.totalReservado - kpis.dasAPagar)} icon={<Wallet className="w-4 h-4" />} />
+          </div>
+          {splits.length > 0 && (
+            <Card className="mt-3">
+              <CardContent className="p-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="text-left py-1.5 px-2">NF</th>
+                        <th className="text-right py-1.5 px-2">Bruto</th>
+                        <th className="text-right py-1.5 px-2">Reservado</th>
+                        <th className="text-right py-1.5 px-2">Liberado</th>
+                        <th className="text-center py-1.5 px-2">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+                    </thead>
+                    <tbody>
+                      {splits.slice(0, 10).map(s => (
+                        <tr key={s.id} className="border-b border-border/50">
+                          <td className="py-1.5 px-2 font-mono">{s.nota_fiscal_id?.substring(0, 8)}...</td>
+                          <td className="text-right py-1.5 px-2">{formatCurrency(s.valor_bruto)}</td>
+                          <td className="text-right py-1.5 px-2 text-destructive">{formatCurrency(s.valor_reservado)}</td>
+                          <td className="text-right py-1.5 px-2 text-green-600">{formatCurrency(s.valor_liberado)}</td>
+                          <td className="text-center py-1.5 px-2">
+                            <Badge variant={s.status === 'pago' ? 'default' : 'outline'} className="text-[9px]">{s.status}</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      )}
 
       {/* FLUXO DE CAIXA */}
       <section>
@@ -332,31 +337,32 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
             </CardContent>
           </Card>
 
-          {/* ISS Retido */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ISS Retido por Mês</CardTitle>
-            </CardHeader>
-            <CardContent className="h-56 p-3">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dadosMensais}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                  <Bar dataKey="issRetido" fill="hsl(160, 60%, 45%)" name="ISS Retido" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {hasIssRetido && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ISS Retido por Mês</CardTitle>
+              </CardHeader>
+              <CardContent className="h-56 p-3">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dadosMensais}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                    <Bar dataKey="issRetido" fill="hsl(160, 60%, 45%)" name="ISS Retido" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Pizza por cliente */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Faturamento por Cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="h-56 p-3">
-              {pieData.length > 0 ? (
+          {hasPieData && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Faturamento por Cliente</CardTitle>
+              </CardHeader>
+              <CardContent className="h-56 p-3">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsPie>
                     <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: 9 }}>
@@ -365,11 +371,9 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
                   </RechartsPie>
                 </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem dados</div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
 
