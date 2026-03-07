@@ -430,10 +430,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
   return (
     <div>
-      <h3 className="text-xs font-bold flex items-center gap-1.5 mb-2" style={{ color: 'hsl(144, 72%, 28%)' }}>
-        Parâmetro Municipal
-      </h3>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-stretch">
         {/* CNAE Card */}
         <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start ${manualCnae ? 'radio-card-selected' : ''}`}>
@@ -740,21 +736,21 @@ const CnaeListItem: React.FC<CnaeListItemProps> = ({
             )}
           </div>
           {cnae.vinculos.length > 0 && (
-            <div className="mt-1 pl-0">
+            <div className="mt-0.5 pl-0">
               {cnae.vinculos.map((vinculo, idx) => (
                 <div
                   key={vinculo.id}
-                  className="flex items-start gap-2 py-0.5 text-xs text-foreground/80"
+                  className="flex items-start gap-2 py-px text-xs text-foreground/80"
                 >
-                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                  <div className="flex-1 min-w-0 flex flex-col gap-px">
                     {vinculo.ctn && (
-                      <p className="leading-relaxed text-justify">
+                      <p className="leading-snug text-justify">
                         <span className="font-mono font-semibold text-primary whitespace-nowrap">|{vinculo.ctn}|</span>
                         {' '}{(vinculo.ctnDescricao || '').replace(/[.\s]+$/, '')}.
                       </p>
                     )}
                     {vinculo.nbs && (
-                      <p className="leading-relaxed text-justify">
+                      <p className="leading-snug text-justify">
                         <span className="font-mono font-semibold text-primary whitespace-nowrap">|{vinculo.nbs}|</span>
                         {' '}{(vinculo.nbsDescricao || '').replace(/[.\s]+$/, '')}.
                       </p>
