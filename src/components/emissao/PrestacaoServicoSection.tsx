@@ -118,16 +118,21 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
 
   useEffect(() => {
     const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-    if (!codigoAtual) {
+    if (!favoritos.length) {
       setFavoritoSelecionado(null);
       return;
     }
 
-    const favoritoCorrespondente = favoritos.find((fav) =>
-      fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
-    );
+    const favoritoCorrespondente = codigoAtual
+      ? favoritos.find((fav) =>
+          fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
+        )
+      : favoritos[0];
 
-    if (!favoritoCorrespondente) return;
+    if (!favoritoCorrespondente) {
+      setFavoritoSelecionado(favoritos[0] ?? null);
+      return;
+    }
     if (favoritoSelecionado?.codigo === favoritoCorrespondente.codigo) return;
     setFavoritoSelecionado(favoritoCorrespondente);
   }, [data.codigoServico, favoritos, favoritoSelecionado?.codigo]);

@@ -171,11 +171,7 @@ const NfseEmitPage: React.FC = () => {
   });
 
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
-  const favoritosCadastro = useMemo(() => {
-    const rows = Array.isArray(empresaAtual?.parametroMunicipal) ? empresaAtual.parametroMunicipal : [];
-    if (rows.length === 0) return [];
-    return mapFavoritosFromParametroMunicipal(empresaAtual || undefined);
-  }, [empresaAtual]);
+  const favoritosCadastro = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
 
   const listaServico = useMemo<ListaServicoItem[]>(() => {

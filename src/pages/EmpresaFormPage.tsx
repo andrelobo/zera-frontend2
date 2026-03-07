@@ -21,6 +21,8 @@ import CertificadoDigitalCard from '@/components/prestador/CertificadoDigitalCar
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getLC116Item } from '@/utils/cnae-lc116';
+import { getCTNByCode } from '@/utils/ctn-data';
+import { getNBSDescricao } from '@/utils/nbs-data';
 import { formatPhone, normalizeLogradouro } from '@/utils/validators';
 import type { Empresa } from '@/types/api';
 
@@ -351,18 +353,28 @@ const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
       const codigo = String(raw.codigo ?? '').replace(/\D/g, '');
       if (!codigo) return null;
       const vinculosRaw = Array.isArray(raw.vinculos) ? raw.vinculos : [];
+      const seen = new Set<string>();
       const vinculos = vinculosRaw
         .map((vinculo, idx) => {
           const row = (vinculo ?? {}) as Record<string, unknown>;
+          const ctn = String(row.ctn ?? '').trim() || undefined;
+          const ctnDescricaoRaw = String(row.ctnDescricao ?? '').trim() || undefined;
+          const nbs = String(row.nbs ?? '').trim() || undefined;
+          const nbsDescricaoRaw = String(row.nbsDescricao ?? '').trim() || undefined;
+          const ctnDescricao = ctnDescricaoRaw || (ctn ? getCTNByCode(ctn)?.descricao : undefined);
+          const nbsDescricao = nbsDescricaoRaw || (nbs ? (getNBSDescricao(nbs) || undefined) : undefined);
+          const dedupeKey = `${ctn || ''}|${nbs || ''}`;
+          if (seen.has(dedupeKey)) return null;
+          seen.add(dedupeKey);
           return {
             id: String(row.id ?? `imported_${codigo}_${idx + 1}`),
-            ctn: String(row.ctn ?? '').trim() || undefined,
-            ctnDescricao: String(row.ctnDescricao ?? '').trim() || undefined,
-            nbs: String(row.nbs ?? '').trim() || undefined,
-            nbsDescricao: String(row.nbsDescricao ?? '').trim() || undefined,
+            ctn,
+            ctnDescricao,
+            nbs,
+            nbsDescricao,
           };
         })
-        .filter((vinculo) => Boolean(vinculo.ctn || vinculo.nbs));
+        .filter((vinculo): vinculo is NonNullable<typeof vinculo> => Boolean(vinculo && (vinculo.ctn || vinculo.nbs)));
 
       return {
         codigo,
@@ -509,7 +521,9 @@ const EmpresaFormPage = () => {
           {
             id: 'initial',
             ctn: form.ctnCodigo || undefined,
+            ctnDescricao: form.ctnCodigo ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined) : undefined,
             nbs: form.nbsCodigo || undefined,
+            nbsDescricao: form.nbsCodigo ? (getNBSDescricao(form.nbsCodigo) || undefined) : undefined,
           },
         ],
         isPrincipal: true,
@@ -559,7 +573,13 @@ const EmpresaFormPage = () => {
             {
               id: `sync_${regimeItem.codigo}`,
               ctn: regimeItem.isPrincipal ? (form.ctnCodigo || undefined) : undefined,
+              ctnDescricao: regimeItem.isPrincipal && form.ctnCodigo
+                ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined)
+                : undefined,
               nbs: regimeItem.isPrincipal ? (form.nbsCodigo || undefined) : undefined,
+              nbsDescricao: regimeItem.isPrincipal && form.nbsCodigo
+                ? (getNBSDescricao(form.nbsCodigo) || undefined)
+                : undefined,
             },
           ],
           isPrincipal: regimeItem.isPrincipal,

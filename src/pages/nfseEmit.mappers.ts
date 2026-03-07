@@ -1,5 +1,7 @@
 import type { ListaServicoItem } from '@/components/emissao/PrestacaoServicoSection';
 import type { Empresa } from '@/types/api';
+import { getCTNByCode } from '@/utils/ctn-data';
+import { getNBSDescricao } from '@/utils/nbs-data';
 
 type FavoritoVinculo = {
   ctn?: string;
@@ -35,6 +37,22 @@ const parseDateMs = (value: unknown) => {
   return Number.isFinite(ms) ? Number(ms) : 0;
 };
 
+const resolveCtnDescricao = (ctn?: string, explicit?: string) => {
+  const texto = String(explicit || '').trim();
+  if (texto) return texto;
+  if (!ctn) return '';
+  const codigo = ctn.replace(/\D/g, '').slice(0, 6);
+  if (!codigo) return '';
+  return getCTNByCode(codigo)?.descricao || codigo;
+};
+
+const resolveNbsDescricao = (nbs?: string, explicit?: string) => {
+  const texto = String(explicit || '').trim();
+  if (texto) return texto;
+  if (!nbs) return '';
+  return getNBSDescricao(nbs) || nbs;
+};
+
 export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoMapeado[] => {
   const rows = asArray(empresa?.parametroMunicipal);
   const favoritos = rows
@@ -43,13 +61,17 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
       const codigo = pickFirstString(raw, ['codigo', 'codigoCnae', 'cnaeCodigo', 'cnae']).replace(/\D/g, '');
       if (!codigo) return null;
       const vinculosRaw = asArray(raw.vinculos);
+      const seen = new Set<string>();
       const vinculos = vinculosRaw
         .map((v) => {
           const row = asObject(v);
           const ctn = pickFirstString(row, ['ctn', 'ctnCodigo', 'codigoCtn']) || undefined;
-          const ctnDescricao = pickFirstString(row, ['ctnDescricao', 'descricaoCtn']) || undefined;
           const nbs = pickFirstString(row, ['nbs', 'nbsCodigo', 'codigoNbs']) || undefined;
-          const nbsDescricao = pickFirstString(row, ['nbsDescricao', 'descricaoNbs']) || undefined;
+          const ctnDescricao = resolveCtnDescricao(ctn, pickFirstString(row, ['ctnDescricao', 'descricaoCtn']));
+          const nbsDescricao = resolveNbsDescricao(nbs, pickFirstString(row, ['nbsDescricao', 'descricaoNbs']));
+          const dedupeKey = `${ctn || ''}|${nbs || ''}`;
+          if (seen.has(dedupeKey)) return null;
+          seen.add(dedupeKey);
           if (!ctn && !nbs) return null;
           return { ctn, ctnDescricao, nbs, nbsDescricao };
         })
@@ -75,7 +97,30 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
     })
     .filter((item): item is FavoritoMapeado => Boolean(item));
 
-  return favoritos;
+  if (favoritos.length > 0) return favoritos;
+
+  const fallbackCtn = String(empresa?.ctnCodigo ?? '').trim();
+  const fallbackNbs = String(empresa?.nbsCodigo ?? '').trim();
+  const fallbackCnae = String(empresa?.cnaeFiscal ?? '').replace(/\D/g, '');
+
+  if (!fallbackCtn && !fallbackNbs) return favoritos;
+
+  return [
+    {
+      codigo: fallbackCnae || '0000000',
+      cnaeDescricao: String(empresa?.cnaeFiscalDescricao ?? '').trim() || 'CNAE principal',
+      lc116Item: '',
+      vinculos: [
+        {
+          ctn: fallbackCtn || undefined,
+          ctnDescricao: resolveCtnDescricao(fallbackCtn || undefined),
+          nbs: fallbackNbs || undefined,
+          nbsDescricao: resolveNbsDescricao(fallbackNbs || undefined),
+        },
+      ],
+    },
+  ];
+
 };
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
