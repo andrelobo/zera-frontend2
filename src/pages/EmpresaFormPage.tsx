@@ -412,6 +412,44 @@ const mapEmpresaConfigOperacionais = (empresa: Empresa): ConfigOperacionalItem[]
     .filter((item): item is ConfigOperacionalItem => item !== null);
 };
 
+const buildCanonicalParametroMunicipal = (
+  currentItems: CnaeAdicionado[],
+  form: EmpresaFormData,
+): CnaeAdicionado[] => {
+  if (currentItems.length > 0) return currentItems;
+
+  const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
+  if (!codigo) return [];
+
+  const lc = getLC116Item(codigo);
+  const vinculosPadrao = getDefaultVinculosForCnae(codigo);
+  const vinculos = vinculosPadrao.length > 0
+    ? vinculosPadrao.map((item, index) => ({
+        id: `save_${codigo}_${index + 1}`,
+        ctn: item.ctn,
+        ctnDescricao: item.ctnDescricao,
+        nbs: item.nbs,
+        nbsDescricao: item.nbsDescricao,
+      }))
+    : [{
+        id: `save_${codigo}`,
+        ctn: form.ctnCodigo || undefined,
+        ctnDescricao: form.ctnCodigo ? (getCTNByCode(form.ctnCodigo)?.descricao || undefined) : undefined,
+        nbs: form.nbsCodigo || undefined,
+        nbsDescricao: form.nbsCodigo ? (getNBSDescricao(form.nbsCodigo) || undefined) : undefined,
+      }].filter((item) => item.ctn || item.nbs);
+
+  return [{
+    codigo,
+    cnaeDescricao: form.cnaeFiscalDescricao || lc?.cnaeDescricao || 'CNAE principal',
+    lc116Descricao: lc?.descricao || '',
+    lc116Item: lc?.item || '',
+    vinculos,
+    isPrincipal: true,
+    vinculadoSN: true,
+  }];
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -695,6 +733,11 @@ const EmpresaFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
+      const parametroMunicipalCanonico = buildCanonicalParametroMunicipal(cnaesParam, form);
+      const principalParametroMunicipal =
+        parametroMunicipalCanonico.find((item) => item.isPrincipal)
+        || parametroMunicipalCanonico[0];
+      const primeiroVinculoPrincipal = principalParametroMunicipal?.vinculos?.[0];
       const capitalSocialNumber = form.capitalSocial.trim()
         ? Number(form.capitalSocial.replace(/\./g, '').replace(',', '.'))
         : undefined;
@@ -710,8 +753,8 @@ const EmpresaFormPage = () => {
         dataInicioAtividade: form.dataInicioAtividade || undefined,
         cnaeFiscal: form.cnaeFiscal || undefined,
         cnaeFiscalDescricao: form.cnaeFiscalDescricao || undefined,
-        ctnCodigo: form.ctnCodigo || undefined,
-        nbsCodigo: form.nbsCodigo || undefined,
+        ctnCodigo: primeiroVinculoPrincipal?.ctn || form.ctnCodigo || undefined,
+        nbsCodigo: primeiroVinculoPrincipal?.nbs || form.nbsCodigo || undefined,
         porte: form.porte || undefined,
         naturezaJuridica: form.naturezaJuridica || undefined,
         capitalSocial: Number.isFinite(capitalSocialNumber) ? capitalSocialNumber : undefined,
@@ -735,7 +778,7 @@ const EmpresaFormPage = () => {
             anexoLoading: item.anexoLoading,
           }))
           .filter((item) => Boolean(item.codigo)),
-        parametroMunicipal: cnaesParam as unknown as Record<string, unknown>[],
+        parametroMunicipal: parametroMunicipalCanonico as unknown as Record<string, unknown>[],
         configOperacionais: configOperacionais
           .map((item) => ({
             id: item.id || undefined,
