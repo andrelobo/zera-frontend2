@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -23,9 +23,11 @@ const getInitials = (name?: string | null, email?: string | null) => {
 
 const AppLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const displayName = user?.name || user?.email || 'Usuário';
   const initials = getInitials(user?.name, user?.email);
+  const showGlobalTicker = location.pathname !== '/';
 
   return (
     <SidebarProvider>
@@ -71,7 +73,7 @@ const AppLayout = () => {
               </DropdownMenu>
             </div>
           </header>
-          <GlobalTicker />
+          {showGlobalTicker ? <GlobalTicker /> : null}
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
             <Outlet />
           </main>
