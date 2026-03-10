@@ -49,18 +49,40 @@ const PIE_COLORS = [
 ];
 
 const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, notas, tomadores, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
+  const monthLabelFromYearMonth = (yearMonth: string): string => {
+    if (!/^\d{4}-\d{2}$/.test(yearMonth)) return yearMonth;
+    const [year, month] = yearMonth.split('-');
+    return `${month}/${year}`;
+  };
+
   const competenciaOptions = useMemo(() => {
-    const valid = dadosMensais
+    const map = new Map<string, string>();
+
+    dadosMensais
       .filter((item) => item.mes && /^\d{4}-\d{2}$/.test(item.mes))
-      .map((item) => ({ mes: item.mes, label: item.label }))
+      .forEach((item) => {
+        map.set(item.mes, item.label || monthLabelFromYearMonth(item.mes));
+      });
+
+    notas.forEach((nota) => {
+      const raw = nota.data_emissao || '';
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return;
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!map.has(mes)) map.set(mes, monthLabelFromYearMonth(mes));
+    });
+
+    const valid = Array.from(map.entries())
+      .map(([mes, label]) => ({ mes, label }))
       .sort((a, b) => a.mes.localeCompare(b.mes))
       .reverse();
+
     if (valid.length > 0) return valid;
     if (kpis.mesCompetencia && /^\d{4}-\d{2}$/.test(kpis.mesCompetencia)) {
       return [{ mes: kpis.mesCompetencia, label: kpis.competenciaLabel }];
     }
     return [];
-  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia]);
+  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia, notas]);
 
   const [mesSelecionado, setMesSelecionado] = useState<string>(
     competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
