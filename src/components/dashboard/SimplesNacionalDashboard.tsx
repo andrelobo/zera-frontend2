@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DollarSign, TrendingDown, Percent, ShieldCheck, Scale, Receipt, Landmark, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { NotaDashboard } from '@/hooks/useDashboardData';
@@ -49,6 +49,37 @@ const PIE_COLORS = [
 ];
 
 const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, notas, tomadores, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
+  const competenciaOptions = useMemo(() => {
+    const valid = dadosMensais
+      .filter((item) => item.mes && /^\d{4}-\d{2}$/.test(item.mes))
+      .map((item) => ({ mes: item.mes, label: item.label }))
+      .sort((a, b) => a.mes.localeCompare(b.mes))
+      .reverse();
+    if (valid.length > 0) return valid;
+    if (kpis.mesCompetencia && /^\d{4}-\d{2}$/.test(kpis.mesCompetencia)) {
+      return [{ mes: kpis.mesCompetencia, label: kpis.competenciaLabel }];
+    }
+    return [];
+  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia]);
+
+  const [mesSelecionado, setMesSelecionado] = useState<string>(
+    competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
+  );
+
+  useEffect(() => {
+    const existe = competenciaOptions.some((item) => item.mes === mesSelecionado);
+    if (!existe) {
+      setMesSelecionado(competenciaOptions[0]?.mes || kpis.mesCompetencia || '');
+    }
+  }, [competenciaOptions, kpis.mesCompetencia, mesSelecionado]);
+
+  const competenciaSelecionadaLabel = useMemo(() => {
+    const selected = competenciaOptions.find((item) => item.mes === mesSelecionado);
+    if (selected?.label) return selected.label;
+    if (kpis.competenciaLabel && !kpis.competenciaLabel.toLowerCase().includes('sem comp')) return kpis.competenciaLabel;
+    return 'MÊS ATUAL';
+  }, [competenciaOptions, kpis.competenciaLabel, mesSelecionado]);
+
   const composicaoTributaria = useMemo(() => {
     if (!calculo.faixa || !calculo.valido) return [];
     const aliqEfetiva = calculo.aliquotaEfetiva;
@@ -148,12 +179,30 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
 
       {/* Row 3: Emitidas + Participação Clientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-        <DashboardCard title={`EMITIDAS NFSE ${kpis.competenciaLabel.toUpperCase()}`} headerColor="green">
+        <DashboardCard title={`EMITIDAS NFSE ${competenciaSelecionadaLabel.toUpperCase()}`} headerColor="green">
+          {competenciaOptions.length > 0 && (
+            <div className="mb-2">
+              <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Competência
+              </label>
+              <select
+                className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs"
+                value={mesSelecionado}
+                onChange={(event) => setMesSelecionado(event.target.value)}
+              >
+                {competenciaOptions.map((item) => (
+                  <option key={item.mes} value={item.mes}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <EmissoesResumoMini
             notas={notas}
             tomadores={tomadores}
             aliquotaEfetiva={kpis.aliquotaEfetiva}
-            mesCompetencia={kpis.mesCompetencia}
+            mesCompetencia={mesSelecionado || kpis.mesCompetencia}
           />
         </DashboardCard>
         <DashboardCard title="Participação por Cliente" headerColor="blue">
