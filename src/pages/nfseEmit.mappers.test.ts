@@ -143,7 +143,7 @@ describe('nfseEmit mappers', () => {
     });
   });
 
-  it('maps lista servico from formatos atual e legado', () => {
+  it('maps lista servico from formato atual e ignora residuos legados', () => {
     const empresa = baseEmpresa({
       configOperacionais: [
         { id: 'a1', natureza: 'Contabilidade', descricao: 'Serviço contábil', codigoServico: '171901', aliquota: '5,00' },
@@ -152,9 +152,8 @@ describe('nfseEmit mappers', () => {
     });
 
     const lista = mapListaServicoFromConfig(empresa);
-    expect(lista).toHaveLength(2);
+    expect(lista).toHaveLength(1);
     expect(lista[0]).toMatchObject({ id: 'a1', natureza: 'Contabilidade', descricao: 'Serviço contábil', codigoServico: '171901', aliquota: '5,00' });
-    expect(lista[1]).toMatchObject({ id: 'b2', natureza: 'Psicologia', descricao: 'Atendimento psicológico' });
   });
 
   it('detects when empresa has favorites/config data', () => {

@@ -148,11 +148,13 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
   const rows = asArray(empresa?.configOperacionais);
-  return rows
+  const mapped = rows
     .map((item, index) => {
       const raw = asObject(item);
-      const natureza = pickFirstString(raw, ['natureza', 'codigoServico', 'codigo']);
-      const descricao = pickFirstString(raw, ['descricao', 'nomeServico', 'nome']);
+      // Na DANFSE usamos o cadastro operacional atual (natureza/descricao),
+      // evitando herdar resíduos de chaves legadas.
+      const natureza = pickFirstString(raw, ['natureza']);
+      const descricao = pickFirstString(raw, ['descricao']);
       if (!natureza && !descricao) return null;
       return {
         id: pickFirstString(raw, ['id']) || `cfg-${index + 1}`,
@@ -163,6 +165,16 @@ export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[]
       };
     })
     .filter((item): item is ListaServicoItem => Boolean(item));
+
+  const unique = new Map<string, ListaServicoItem>();
+  mapped.forEach((item) => {
+    const key = `${item.natureza.trim().toLowerCase()}::${item.descricao.trim().toLowerCase()}`;
+    if (!unique.has(key)) {
+      unique.set(key, item);
+    }
+  });
+
+  return Array.from(unique.values());
 };
 
 export const hasFavoriteConfig = (empresa: Empresa | null | undefined) =>
