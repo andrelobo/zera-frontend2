@@ -158,12 +158,27 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     const retencoes = biQuery.data?.retencoes;
     const serie = biQuery.data?.seriesCompetencia || [];
     const latest = serie[serie.length - 1];
+    const notasOrdenadasPorData = [...notas].sort((a, b) => (a.data_emissao || '').localeCompare(b.data_emissao || ''));
+    const ultimaNota = notasOrdenadasPorData[notasOrdenadasPorData.length - 1];
+    const competenciaFallback = (() => {
+      if (!ultimaNota?.data_emissao) return '';
+      const d = new Date(ultimaNota.data_emissao);
+      if (Number.isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    })();
+    const notasMesFallback = competenciaFallback
+      ? notas.filter((item) => {
+          const d = new Date(item.data_emissao);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          return key === competenciaFallback;
+        })
+      : [];
 
-    const faturamentoMes = latest?.valorServico || 0;
-    const totalNotasMes = latest?.quantidade || 0;
-    const mesReferencia = latest?.competencia || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const faturamentoMes = latest?.valorServico ?? notasMesFallback.reduce((acc, item) => acc + item.valor_servico, 0);
+    const totalNotasMes = latest?.quantidade ?? notasMesFallback.length;
+    const mesReferencia = latest?.competencia || competenciaFallback || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const mesReferenciaLabel = monthLabelFromCompetencia(mesReferencia);
-    const issRetidoMes = latest?.valorIss || 0;
+    const issRetidoMes = latest?.valorIss ?? notasMesFallback.reduce((acc, item) => acc + item.iss_valor, 0);
     const dasEstimado = faturamentoMes * (calculo.aliquotaEfetiva || 0);
     const dasAPagar = Math.max(dasEstimado - issRetidoMes, 0);
     const totalRetencoes = totals?.somaRetencoes
@@ -175,10 +190,11 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     return {
       faturamentoMes,
       mesReferencia,
+      mesCompetencia: mesReferencia,
       mesReferenciaLabel,
       competenciaLabel: mesReferenciaLabel,
       rbt12,
-      totalNotas: totals?.totalEmissoes || 0,
+      totalNotas: totals?.totalEmissoes ?? notas.length,
       totalNotasMes,
       dasEstimado,
       dasAPagar,
@@ -189,7 +205,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
       margemLiquida,
       totalRetencoes,
     };
-  }, [biQuery.data, calculo.aliquotaEfetiva, now, rbt12]);
+  }, [biQuery.data, calculo.aliquotaEfetiva, now, notas, rbt12]);
 
   const analiseClientes = useMemo<ClienteAnalise[]>(() => {
     const map = new Map<string, { faturamento: number; qtd: number; nome: string }>();
