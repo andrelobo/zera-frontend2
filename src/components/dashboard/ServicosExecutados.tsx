@@ -49,7 +49,7 @@ const ServicosExecutados: React.FC<Props> = ({ notas, mesCompetencia, configOper
 
     const map = new Map<string, { natureza: string; descricao: string; qtd: number; receita: number }>();
     notasMes.forEach(n => {
-      const desc = (n as any).descricao_servico || 'Serviço não especificado';
+      const desc = 'Serviço não especificado';
       const natureza = findNatureza(desc);
       const key = natureza;
       if (!map.has(key)) map.set(key, { natureza, descricao: desc, qtd: 0, receita: 0 });

@@ -174,20 +174,6 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     aliquota: c.aliquota,
   }));
 
-  const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, payload }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    const aliq = payload?.aliquota ?? 0;
-    if (aliq < 0.001) return null;
-    return (
-      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={7} fontWeight="bold">
-        {`${(aliq * 100).toFixed(2)}%`}
-      </text>
-    );
-  };
-
   return (
     <div className="space-y-3">
       {/* Row 1: Policia Federal + Split Payment */}
