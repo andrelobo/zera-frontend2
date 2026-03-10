@@ -226,6 +226,21 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     return sorted;
   }, [notas]);
 
+  const tomadores = useMemo<Record<string, { nome: string; subTrib: boolean }>>(() => {
+    const map: Record<string, { nome: string; subTrib: boolean }> = {};
+    notas.forEach((nota) => {
+      const key = nota.tomador_id || '';
+      if (!key) return;
+      if (!map[key]) {
+        map[key] = {
+          nome: nota.tomador_nome || 'Emissão expressa',
+          subTrib: false,
+        };
+      }
+    });
+    return map;
+  }, [notas]);
+
   const alertas = useMemo(() => {
     const list: { tipo: 'warning' | 'danger' | 'info'; mensagem: string }[] = [];
     if (kpis.margemLiquida < 20 && kpis.faturamentoMes > 0) {
@@ -246,5 +261,5 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
 
   const loading = biQuery.isLoading || nfseQuery.isLoading;
 
-  return { loading, notas, splits, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa };
+  return { loading, notas, splits, tomadores, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa };
 }

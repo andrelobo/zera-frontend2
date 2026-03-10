@@ -45,6 +45,7 @@ const DashboardPage = () => {
       rbt12={rbt12 > 0 ? rbt12 : 180000}
       cnaeAnexo="III"
       regime={typeof empresa?.regimeTributario === 'string' ? empresa.regimeTributario : null}
+      configOperacionais={empresa?.configOperacionais || []}
     />
   );
 };

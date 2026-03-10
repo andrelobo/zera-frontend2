@@ -5,6 +5,38 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-10)
+Fonte: `codigo local` + `execucao local`.
+
+### Emissao (DANFSE) - servicos
+
+Arquivos:
+- `src/pages/nfseEmit.mappers.ts`
+- `src/pages/nfseEmit.mappers.test.ts`
+
+Correcao aplicada:
+- `Lista Servico` passa a considerar somente dados canonicos de `configOperacionais` (`natureza` e `descricao`).
+- Removido aproveitamento de chaves legadas que causavam "residuo" de servicos antigos.
+- Deduplicacao por combinacao normalizada (`natureza + descricao`) para evitar opcoes repetidas.
+
+Validacao:
+- `yarn vitest run src/pages/nfseEmit.mappers.test.ts` -> passando.
+- `yarn build` -> passando.
+
+Observacoes operacionais:
+- `Servicos Favoritos` e `Lista Servico` dependem do retorno de `GET /empresas`.
+- Para alimentar corretamente a DANFSE, o prestador precisa ter:
+  - `configOperacionais` preenchido.
+  - `parametroMunicipal` preenchido e coerente com CNAE/CTN/NBS.
+
+### Ambiente de producao (front)
+
+Config canonica:
+- `VITE_API_BASE_URL=https://zera-backend.onrender.com`
+
+Regra:
+- remover qualquer referencia ativa a `zera-backend-1.onrender.com` para evitar divergencia de dados entre ambientes.
+
 ## 0. Atualizacao de Contexto (2026-03-07)
 Fonte: `codigo local` + `validacao funcional em producao`.
 

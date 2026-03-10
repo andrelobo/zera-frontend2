@@ -1,0 +1,234 @@
+import React, { useMemo, useState } from 'react';
+import { DollarSign, TrendingDown, Percent, ShieldCheck, Scale, Receipt, Landmark, ChevronDown, ChevronUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import type { NotaDashboard } from '@/hooks/useDashboardData';
+import {
+  PieChart as RechartsPie, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
+  Bar, BarChart, Line, ComposedChart,
+} from 'recharts';
+import { FAIXAS_ANEXO_III, formatCurrency, formatPercent, calcularSimplesAnexoIII } from '@/utils/simples-nacional';
+import type { CalculoSimplesResult } from '@/utils/simples-nacional';
+import type { MesData } from '@/hooks/useDashboardData';
+import DashboardCard from './DashboardCard';
+import FaixaThermometer from './FaixaThermometer';
+import SimuladorCenario from './SimuladorCenario';
+import EmissoesResumoMini from './EmissoesResumoMini';
+import ParticipacaoClientes from './ParticipacaoClientes';
+import ServicosExecutados from './ServicosExecutados';
+import type { ClienteAnalise } from '@/hooks/useDashboardData';
+
+interface Props {
+  rbt12: number;
+  cnaeAnexo: string;
+  calculo: CalculoSimplesResult;
+  kpis: {
+    faturamentoMes: number;
+    dasEstimado: number;
+    dasAPagar: number;
+    issRetidoMes: number;
+    totalRetencoes: number;
+    aliquotaEfetiva: number;
+    competenciaLabel: string;
+    mesCompetencia: string;
+  };
+  dadosMensais: MesData[];
+  notas: NotaDashboard[];
+  tomadores: Record<string, { nome: string; subTrib: boolean }>;
+  analiseClientes: ClienteAnalise[];
+  configOperacionais?: { id: string; natureza: string; descricao: string }[];
+  simuladorContent?: React.ReactNode;
+  splitPaymentContent?: React.ReactNode;
+}
+
+const CHART_GREEN = 'hsl(160, 60%, 45%)';
+
+const PIE_COLORS = [
+  'hsl(160, 60%, 45%)', 'hsl(160, 40%, 60%)', 'hsl(160, 30%, 72%)',
+  'hsl(38, 80%, 55%)', 'hsl(220, 60%, 55%)', 'hsl(280, 50%, 55%)',
+];
+
+const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, notas, tomadores, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
+  const composicaoTributaria = useMemo(() => {
+    if (!calculo.faixa || !calculo.valido) return [];
+    const aliqEfetiva = calculo.aliquotaEfetiva;
+    const percISS = calculo.faixa.percentualIss;
+    const percIRPJ = 0.04;
+    const percCSLL = 0.035;
+    const percCOFINS = 0.1282;
+    const percPIS = 0.0278;
+    const percCPP = 1 - percISS - percIRPJ - percCSLL - percCOFINS - percPIS;
+
+    const issCalculado = kpis.faturamentoMes * aliqEfetiva * percISS;
+    const issLiquido = Math.max(issCalculado - kpis.issRetidoMes, 0);
+
+    return [
+      { tributo: 'ISS', percentual: percISS, aliquota: aliqEfetiva * percISS, valor: issLiquido, valorBruto: issCalculado, issRetido: kpis.issRetidoMes, cor: PIE_COLORS[0] },
+      { tributo: 'CPP', percentual: percCPP, aliquota: aliqEfetiva * percCPP, valor: kpis.faturamentoMes * aliqEfetiva * percCPP, cor: PIE_COLORS[1] },
+      { tributo: 'IRPJ', percentual: percIRPJ, aliquota: aliqEfetiva * percIRPJ, valor: kpis.faturamentoMes * aliqEfetiva * percIRPJ, cor: PIE_COLORS[2] },
+      { tributo: 'CSLL', percentual: percCSLL, aliquota: aliqEfetiva * percCSLL, valor: kpis.faturamentoMes * aliqEfetiva * percCSLL, cor: PIE_COLORS[3] },
+      { tributo: 'COFINS', percentual: percCOFINS, aliquota: aliqEfetiva * percCOFINS, valor: kpis.faturamentoMes * aliqEfetiva * percCOFINS, cor: PIE_COLORS[4] },
+      { tributo: 'PIS', percentual: percPIS, aliquota: aliqEfetiva * percPIS, valor: kpis.faturamentoMes * aliqEfetiva * percPIS, cor: PIE_COLORS[5] },
+    ];
+  }, [calculo, kpis.faturamentoMes, kpis.issRetidoMes]);
+
+  const evolucaoMensal = useMemo(() => {
+    return dadosMensais.map(m => ({
+      label: m.label,
+      receita: m.faturamento,
+      das: m.tributoEstimado,
+      cargaTributaria: m.faturamento > 0 ? +((m.tributoEstimado / m.faturamento) * 100).toFixed(2) : 0,
+    }));
+  }, [dadosMensais]);
+
+  const pieComposicao = composicaoTributaria.map(c => ({
+    name: c.tributo,
+    value: c.valor,
+    percentual: c.percentual,
+    aliquota: c.aliquota,
+  }));
+
+  const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, payload }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const aliq = payload?.aliquota ?? 0;
+    if (aliq < 0.001) return null;
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={7} fontWeight="bold">
+        {`${(aliq * 100).toFixed(2)}%`}
+      </text>
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Row 1: Policia Federal + Split Payment */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <DashboardCard title="Simulador Simples Nacional" headerColor="orange">
+          {simuladorContent}
+        </DashboardCard>
+        {splitPaymentContent}
+      </div>
+
+      {/* Row 2: Apuração + Partilha | Termômetro */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        <div className="flex flex-col gap-3">
+          <DashboardCard title={`A Recolher ${kpis.competenciaLabel}`} headerColor="red">
+            <div className="flex flex-col gap-1">
+              <FinRow icon={<DollarSign className="w-3 h-3" />} label="Faturamento Bruto" value={formatCurrency(kpis.faturamentoMes)} accent="text-foreground" />
+              <FinRow icon={<TrendingDown className="w-3 h-3" />} label="Tributos Estimados" value={formatCurrency(kpis.dasEstimado)} accent="text-destructive" />
+              <FinRow icon={<Percent className="w-3 h-3" />} label="Alíquota Efetiva" value={formatPercent(kpis.aliquotaEfetiva)} accent="text-primary" />
+              <FinRow icon={<ShieldCheck className="w-3 h-3" />} label="Retido ISS (T)" value={`(${formatCurrency(kpis.issRetidoMes)})`} accent="text-accent" />
+              <FinRow icon={<Scale className="w-3 h-3" />} label="Alíquota ISS" value={calculo.valido ? formatPercent(calculo.issReferencia) : '–'} accent="text-foreground" />
+              <FinRow icon={<Receipt className="w-3 h-3" />} label="Retenções" value={formatCurrency(kpis.totalRetencoes)} accent="text-muted-foreground" />
+              <div className="border-t border-border pt-0.5 flex items-center gap-2 text-[9px] font-bold mt-0.5 text-destructive">
+                <Landmark className="w-3 h-3" />
+                <span className="shrink-0 font-extrabold">A RECOLHER PGDAS</span>
+                <div className="flex-1" />
+                <span className="tabular-nums font-extrabold">{formatCurrency(kpis.dasAPagar)}</span>
+              </div>
+            </div>
+          </DashboardCard>
+
+          <PartilhaCollapsible
+            composicaoTributaria={composicaoTributaria}
+            aliquotaEfetiva={kpis.aliquotaEfetiva}
+            dasAPagar={kpis.dasAPagar}
+            issRetidoMes={kpis.issRetidoMes}
+            faturamentoMes={kpis.faturamentoMes}
+          />
+        </div>
+
+        <DashboardCard title="Termômetro Simples Nacional" headerColor="blue">
+          <FaixaThermometer rbt12={rbt12} calculo={calculo} />
+        </DashboardCard>
+      </div>
+
+      {/* Row 3: Emitidas + Participação Clientes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+        <DashboardCard title={`EMITIDAS NFSE ${kpis.competenciaLabel.toUpperCase()}`} headerColor="green">
+          <EmissoesResumoMini
+            notas={notas}
+            tomadores={tomadores}
+            aliquotaEfetiva={kpis.aliquotaEfetiva}
+            mesCompetencia={kpis.mesCompetencia}
+          />
+        </DashboardCard>
+        <DashboardCard title="Participação por Cliente" headerColor="blue">
+          <ParticipacaoClientes analiseClientes={analiseClientes} aliquotaEfetiva={kpis.aliquotaEfetiva} />
+        </DashboardCard>
+      </div>
+
+    </div>
+  );
+};
+
+/* Sub-component for Financeiro rows */
+const FinRow: React.FC<{ icon?: React.ReactNode; label: string; value: string; accent?: string }> = ({ icon, label, value, accent = 'text-foreground' }) => (
+  <div className="flex items-center gap-1.5 text-[9px]">
+    {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
+    <span className="w-28 font-semibold text-muted-foreground shrink-0">{label}</span>
+    <div className="flex-1" />
+    <span className={`tabular-nums font-bold ${accent}`}>{value}</span>
+  </div>
+);
+
+/* Sub-component for collapsible Partilha Pgdas */
+const PartilhaCollapsible: React.FC<{
+  composicaoTributaria: { tributo: string; percentual: number; aliquota: number; valor: number; valorBruto?: number; issRetido?: number; cor: string }[];
+  aliquotaEfetiva: number;
+  dasAPagar: number;
+  issRetidoMes: number;
+  faturamentoMes: number;
+}> = ({ composicaoTributaria, aliquotaEfetiva, dasAPagar, issRetidoMes, faturamentoMes }) => {
+  const [aberto, setAberto] = useState(false);
+
+  if (composicaoTributaria.length === 0 || faturamentoMes <= 0) return null;
+
+  return (
+    <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+      <button
+        onClick={() => setAberto(!aberto)}
+        className="w-full px-3 py-1 flex items-center justify-between bg-[hsl(220,60%,50%)] text-white"
+      >
+        <h3 className="text-[10px] font-bold uppercase tracking-wider">Partilha Pgdas</h3>
+        {aberto ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+      </button>
+      <div className="px-2 py-1.5">
+        <div className="flex items-center gap-2 text-[9px] font-bold">
+          <span className="shrink-0">A RECOLHER PGDAS</span>
+          <div className="flex-1" />
+          <span className="w-12 text-right tabular-nums">{formatPercent(aliquotaEfetiva)}</span>
+          <span className="w-16 text-right tabular-nums text-destructive">{formatCurrency(dasAPagar)}</span>
+        </div>
+      </div>
+      {aberto && (
+        <div className="px-2 pb-2 flex flex-col gap-1">
+          {composicaoTributaria.map(c => {
+            const maxPerc = Math.max(...composicaoTributaria.map(t => t.percentual));
+            const barWidth = maxPerc > 0 ? (c.percentual / maxPerc) * 100 : 0;
+            return (
+              <div key={c.tributo}>
+                <div className="flex items-center gap-2 text-[9px]">
+                  <span className="w-10 font-semibold text-muted-foreground shrink-0">{c.tributo}</span>
+                  <div className="flex-1 h-3.5 bg-muted/40 rounded-sm overflow-hidden relative">
+                    <div
+                      className="h-full rounded-sm transition-all"
+                      style={{ width: `${barWidth}%`, backgroundColor: c.cor }}
+                    />
+                  </div>
+                  <span className="w-12 text-right tabular-nums text-muted-foreground">{formatPercent(c.aliquota)}</span>
+                  <span className="w-16 text-right tabular-nums font-bold text-foreground">{formatCurrency(c.valor)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SimplesNacionalDashboard;
