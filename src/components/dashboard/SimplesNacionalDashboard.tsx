@@ -202,6 +202,24 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         <div className="flex flex-col gap-3">
           <DashboardCard title={`A Recolher ${kpisMesSelecionado.competenciaLabel}`} headerColor="red">
+            {competenciaOptions.length > 0 && (
+              <div className="mb-2">
+                <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Competência
+                </label>
+                <select
+                  className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  value={mesSelecionado}
+                  onChange={(event) => setMesSelecionado(event.target.value)}
+                >
+                  {competenciaOptions.map((item) => (
+                    <option key={`recolher-${item.mes}`} value={item.mes}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex flex-col gap-1">
               <FinRow icon={<DollarSign className="w-3 h-3" />} label="Faturamento Bruto" value={formatCurrency(kpisMesSelecionado.faturamentoMes)} accent="text-foreground" />
               <FinRow icon={<TrendingDown className="w-3 h-3" />} label="Tributos Estimados" value={formatCurrency(kpisMesSelecionado.dasEstimado)} accent="text-destructive" />
