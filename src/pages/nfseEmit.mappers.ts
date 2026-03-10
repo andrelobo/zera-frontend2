@@ -147,6 +147,34 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
 };
 
 export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[] => {
+  const listaParametroMunicipal = mapFavoritosFromParametroMunicipal(empresa)
+    .flatMap((favorito) =>
+      favorito.vinculos
+        .map((vinculo, index) => {
+          const codigoServico = String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6);
+          if (!codigoServico) return null;
+          const natureza = String(vinculo.ctnDescricao || favorito.cnaeDescricao || '').trim();
+          const descricao = String(vinculo.nbsDescricao || vinculo.ctnDescricao || favorito.cnaeDescricao || '').trim();
+          if (!natureza && !descricao) return null;
+          return {
+            id: `${favorito.codigo}-${codigoServico}-${index + 1}`,
+            natureza: natureza || descricao || `CTN ${codigoServico}`,
+            descricao: descricao || natureza || `CTN ${codigoServico}`,
+            codigoServico,
+          } satisfies ListaServicoItem;
+        })
+        .filter((item): item is ListaServicoItem => Boolean(item)),
+    );
+
+  if (listaParametroMunicipal.length > 0) {
+    const uniqueFromParametro = new Map<string, ListaServicoItem>();
+    listaParametroMunicipal.forEach((item) => {
+      const key = `${item.codigoServico || ''}::${item.natureza.trim().toLowerCase()}::${item.descricao.trim().toLowerCase()}`;
+      if (!uniqueFromParametro.has(key)) uniqueFromParametro.set(key, item);
+    });
+    return Array.from(uniqueFromParametro.values());
+  }
+
   const rows = asArray(empresa?.configOperacionais);
   const mapped = rows
     .map((item, index) => {

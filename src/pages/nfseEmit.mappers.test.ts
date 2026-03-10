@@ -156,6 +156,29 @@ describe('nfseEmit mappers', () => {
     expect(lista[0]).toMatchObject({ id: 'a1', natureza: 'Contabilidade', descricao: 'Serviço contábil', codigoServico: '171901', aliquota: '5,00' });
   });
 
+  it('prioritizes parametroMunicipal for lista servico and ignores legacy config residues', () => {
+    const empresa = baseEmpresa({
+      parametroMunicipal: [
+        {
+          codigo: '6920601',
+          cnaeDescricao: 'Atividades de contabilidade',
+          vinculos: [
+            { ctn: '171901', ctnDescricao: 'Contabilidade', nbs: '1.2301.01.00', nbsDescricao: 'Serviços de contabilidade' },
+          ],
+        },
+      ],
+      configOperacionais: [
+        { id: 'legacy-1', natureza: 'Psicanálise', descricao: 'Serviços de consulta psicanalise em grupo para devs malucos' },
+      ],
+    });
+
+    const lista = mapListaServicoFromConfig(empresa);
+    expect(lista).toHaveLength(1);
+    expect(lista[0].codigoServico).toBe('171901');
+    expect(lista[0].natureza.toLowerCase()).toContain('contabilidade');
+    expect(lista[0].descricao.toLowerCase()).toContain('contabilidade');
+  });
+
   it('detects when empresa has favorites/config data', () => {
     expect(hasFavoriteConfig(baseEmpresa({}))).toBe(false);
     expect(hasFavoriteConfig(baseEmpresa({ parametroMunicipal: [{ codigo: '6201500' as unknown as never }] }))).toBe(true);

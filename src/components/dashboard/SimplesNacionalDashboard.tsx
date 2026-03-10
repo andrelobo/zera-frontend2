@@ -102,6 +102,39 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     return 'MÊS ATUAL';
   }, [competenciaOptions, kpis.competenciaLabel, mesSelecionado]);
 
+  const notasMesSelecionado = useMemo(() => {
+    if (!mesSelecionado) return notas;
+    return notas.filter((nota) => {
+      const d = new Date(nota.data_emissao || '');
+      if (Number.isNaN(d.getTime())) return false;
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return mes === mesSelecionado;
+    });
+  }, [mesSelecionado, notas]);
+
+  const kpisMesSelecionado = useMemo(() => {
+    const mesData = dadosMensais.find((item) => item.mes === mesSelecionado);
+    const faturamentoMes = mesData?.faturamento ?? notasMesSelecionado.reduce((acc, item) => acc + item.valor_servico, 0);
+    const issRetidoMes = mesData?.issRetido ?? notasMesSelecionado.reduce((acc, item) => acc + (item.iss_retido ? item.iss_valor : 0), 0);
+    const dasEstimado = mesData?.tributoEstimado ?? (faturamentoMes * (kpis.aliquotaEfetiva || 0));
+    const totalRetencoes = notasMesSelecionado.reduce(
+      (acc, item) => acc + (item.ret_pis || 0) + (item.ret_cofins || 0) + (item.ret_csll || 0) + (item.ret_ir || 0) + (item.ret_inss || 0),
+      0,
+    );
+    const dasAPagar = Math.max(dasEstimado - issRetidoMes, 0);
+
+    return {
+      ...kpis,
+      competenciaLabel: competenciaSelecionadaLabel,
+      mesCompetencia: mesSelecionado || kpis.mesCompetencia,
+      faturamentoMes,
+      issRetidoMes,
+      dasEstimado,
+      dasAPagar,
+      totalRetencoes,
+    };
+  }, [competenciaSelecionadaLabel, dadosMensais, kpis, mesSelecionado, notasMesSelecionado]);
+
   const composicaoTributaria = useMemo(() => {
     if (!calculo.faixa || !calculo.valido) return [];
     const aliqEfetiva = calculo.aliquotaEfetiva;
@@ -112,18 +145,18 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     const percPIS = 0.0278;
     const percCPP = 1 - percISS - percIRPJ - percCSLL - percCOFINS - percPIS;
 
-    const issCalculado = kpis.faturamentoMes * aliqEfetiva * percISS;
-    const issLiquido = Math.max(issCalculado - kpis.issRetidoMes, 0);
+    const issCalculado = kpisMesSelecionado.faturamentoMes * aliqEfetiva * percISS;
+    const issLiquido = Math.max(issCalculado - kpisMesSelecionado.issRetidoMes, 0);
 
     return [
       { tributo: 'ISS', percentual: percISS, aliquota: aliqEfetiva * percISS, valor: issLiquido, valorBruto: issCalculado, issRetido: kpis.issRetidoMes, cor: PIE_COLORS[0] },
-      { tributo: 'CPP', percentual: percCPP, aliquota: aliqEfetiva * percCPP, valor: kpis.faturamentoMes * aliqEfetiva * percCPP, cor: PIE_COLORS[1] },
-      { tributo: 'IRPJ', percentual: percIRPJ, aliquota: aliqEfetiva * percIRPJ, valor: kpis.faturamentoMes * aliqEfetiva * percIRPJ, cor: PIE_COLORS[2] },
-      { tributo: 'CSLL', percentual: percCSLL, aliquota: aliqEfetiva * percCSLL, valor: kpis.faturamentoMes * aliqEfetiva * percCSLL, cor: PIE_COLORS[3] },
-      { tributo: 'COFINS', percentual: percCOFINS, aliquota: aliqEfetiva * percCOFINS, valor: kpis.faturamentoMes * aliqEfetiva * percCOFINS, cor: PIE_COLORS[4] },
-      { tributo: 'PIS', percentual: percPIS, aliquota: aliqEfetiva * percPIS, valor: kpis.faturamentoMes * aliqEfetiva * percPIS, cor: PIE_COLORS[5] },
+      { tributo: 'CPP', percentual: percCPP, aliquota: aliqEfetiva * percCPP, valor: kpisMesSelecionado.faturamentoMes * aliqEfetiva * percCPP, cor: PIE_COLORS[1] },
+      { tributo: 'IRPJ', percentual: percIRPJ, aliquota: aliqEfetiva * percIRPJ, valor: kpisMesSelecionado.faturamentoMes * aliqEfetiva * percIRPJ, cor: PIE_COLORS[2] },
+      { tributo: 'CSLL', percentual: percCSLL, aliquota: aliqEfetiva * percCSLL, valor: kpisMesSelecionado.faturamentoMes * aliqEfetiva * percCSLL, cor: PIE_COLORS[3] },
+      { tributo: 'COFINS', percentual: percCOFINS, aliquota: aliqEfetiva * percCOFINS, valor: kpisMesSelecionado.faturamentoMes * aliqEfetiva * percCOFINS, cor: PIE_COLORS[4] },
+      { tributo: 'PIS', percentual: percPIS, aliquota: aliqEfetiva * percPIS, valor: kpisMesSelecionado.faturamentoMes * aliqEfetiva * percPIS, cor: PIE_COLORS[5] },
     ];
-  }, [calculo, kpis.faturamentoMes, kpis.issRetidoMes]);
+  }, [calculo, kpisMesSelecionado.faturamentoMes, kpisMesSelecionado.issRetidoMes]);
 
   const evolucaoMensal = useMemo(() => {
     return dadosMensais.map(m => ({
@@ -168,29 +201,29 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       {/* Row 2: Apuração + Partilha | Termômetro */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         <div className="flex flex-col gap-3">
-          <DashboardCard title={`A Recolher ${kpis.competenciaLabel}`} headerColor="red">
+          <DashboardCard title={`A Recolher ${kpisMesSelecionado.competenciaLabel}`} headerColor="red">
             <div className="flex flex-col gap-1">
-              <FinRow icon={<DollarSign className="w-3 h-3" />} label="Faturamento Bruto" value={formatCurrency(kpis.faturamentoMes)} accent="text-foreground" />
-              <FinRow icon={<TrendingDown className="w-3 h-3" />} label="Tributos Estimados" value={formatCurrency(kpis.dasEstimado)} accent="text-destructive" />
-              <FinRow icon={<Percent className="w-3 h-3" />} label="Alíquota Efetiva" value={formatPercent(kpis.aliquotaEfetiva)} accent="text-primary" />
-              <FinRow icon={<ShieldCheck className="w-3 h-3" />} label="Retido ISS (T)" value={`(${formatCurrency(kpis.issRetidoMes)})`} accent="text-accent" />
+              <FinRow icon={<DollarSign className="w-3 h-3" />} label="Faturamento Bruto" value={formatCurrency(kpisMesSelecionado.faturamentoMes)} accent="text-foreground" />
+              <FinRow icon={<TrendingDown className="w-3 h-3" />} label="Tributos Estimados" value={formatCurrency(kpisMesSelecionado.dasEstimado)} accent="text-destructive" />
+              <FinRow icon={<Percent className="w-3 h-3" />} label="Alíquota Efetiva" value={formatPercent(kpisMesSelecionado.aliquotaEfetiva)} accent="text-primary" />
+              <FinRow icon={<ShieldCheck className="w-3 h-3" />} label="Retido ISS (T)" value={`(${formatCurrency(kpisMesSelecionado.issRetidoMes)})`} accent="text-accent" />
               <FinRow icon={<Scale className="w-3 h-3" />} label="Alíquota ISS" value={calculo.valido ? formatPercent(calculo.issReferencia) : '–'} accent="text-foreground" />
-              <FinRow icon={<Receipt className="w-3 h-3" />} label="Retenções" value={formatCurrency(kpis.totalRetencoes)} accent="text-muted-foreground" />
+              <FinRow icon={<Receipt className="w-3 h-3" />} label="Retenções" value={formatCurrency(kpisMesSelecionado.totalRetencoes)} accent="text-muted-foreground" />
               <div className="border-t border-border pt-0.5 flex items-center gap-2 text-[9px] font-bold mt-0.5 text-destructive">
                 <Landmark className="w-3 h-3" />
                 <span className="shrink-0 font-extrabold">A RECOLHER PGDAS</span>
                 <div className="flex-1" />
-                <span className="tabular-nums font-extrabold">{formatCurrency(kpis.dasAPagar)}</span>
+                <span className="tabular-nums font-extrabold">{formatCurrency(kpisMesSelecionado.dasAPagar)}</span>
               </div>
             </div>
           </DashboardCard>
 
           <PartilhaCollapsible
             composicaoTributaria={composicaoTributaria}
-            aliquotaEfetiva={kpis.aliquotaEfetiva}
-            dasAPagar={kpis.dasAPagar}
-            issRetidoMes={kpis.issRetidoMes}
-            faturamentoMes={kpis.faturamentoMes}
+            aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
+            dasAPagar={kpisMesSelecionado.dasAPagar}
+            issRetidoMes={kpisMesSelecionado.issRetidoMes}
+            faturamentoMes={kpisMesSelecionado.faturamentoMes}
           />
         </div>
 
@@ -223,12 +256,12 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
           <EmissoesResumoMini
             notas={notas}
             tomadores={tomadores}
-            aliquotaEfetiva={kpis.aliquotaEfetiva}
+            aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
             mesCompetencia={mesSelecionado || kpis.mesCompetencia}
           />
         </DashboardCard>
         <DashboardCard title="Participação por Cliente" headerColor="blue">
-          <ParticipacaoClientes analiseClientes={analiseClientes} aliquotaEfetiva={kpis.aliquotaEfetiva} />
+          <ParticipacaoClientes analiseClientes={analiseClientes} aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva} />
         </DashboardCard>
       </div>
 
