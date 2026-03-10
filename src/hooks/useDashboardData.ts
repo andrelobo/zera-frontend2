@@ -61,6 +61,29 @@ function monthLabelFromCompetencia(competencia: string): string {
   return cleaned || 'Sem comp.';
 }
 
+function competenciaOrderValue(competencia: string): number {
+  const cleaned = (competencia || '').trim();
+  if (/^\d{4}-\d{2}$/.test(cleaned)) {
+    const [year, month] = cleaned.split('-');
+    return Number(year) * 100 + Number(month);
+  }
+  if (/^\d{2}\/\d{4}$/.test(cleaned)) {
+    const [month, year] = cleaned.split('/');
+    return Number(year) * 100 + Number(month);
+  }
+  return -1;
+}
+
+function normalizeCompetenciaToYearMonth(competencia: string): string {
+  const cleaned = (competencia || '').trim();
+  if (/^\d{4}-\d{2}$/.test(cleaned)) return cleaned;
+  if (/^\d{2}\/\d{4}$/.test(cleaned)) {
+    const [month, year] = cleaned.split('/');
+    return `${year}-${month}`;
+  }
+  return '';
+}
+
 function resolveTomadorNome(
   item: {
     tomadorRazaoSocial?: string;
@@ -89,12 +112,16 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
 
   const nfseQuery = useQuery({
     queryKey: ['nfse-dashboard-list-v3', prestadorId, dateFrom, dateTo],
-    queryFn: () => nfseApi.list({ page: 1, limit: 1000, dateFrom, dateTo }),
+    // Dashboard usa dataset bruto para evitar perder notas legadas com competencia/dataEmissao nulas.
+    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
     staleTime: 60_000,
   });
 
   const notas = useMemo<NotaDashboard[]>(() => {
-    const baseItems = nfseQuery.data?.data || [];
+    const baseItems = (nfseQuery.data?.data || []).filter((item) => {
+      const provider = (item.provider || '').toString().trim().toUpperCase();
+      return provider === 'PLUGNOTAS';
+    });
     return baseItems.map((item) => {
       const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
       const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
@@ -144,7 +171,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   const dadosMensais = useMemo<MesData[]>(() => {
     const series = biQuery.data?.seriesCompetencia || [];
     return series.map((item) => ({
-      mes: item.competencia,
+      mes: normalizeCompetenciaToYearMonth(item.competencia) || item.competencia,
       label: monthLabelFromCompetencia(item.competencia),
       faturamento: item.valorServico || 0,
       tributoEstimado: (item.valorServico || 0) * (calculo.aliquotaEfetiva || 0),
@@ -157,7 +184,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     const totals = biQuery.data?.totals;
     const retencoes = biQuery.data?.retencoes;
     const serie = biQuery.data?.seriesCompetencia || [];
-    const latest = serie[serie.length - 1];
+    const latest = [...serie].sort((a, b) => competenciaOrderValue(a.competencia) - competenciaOrderValue(b.competencia)).at(-1);
     const notasOrdenadasPorData = [...notas].sort((a, b) => (a.data_emissao || '').localeCompare(b.data_emissao || ''));
     const ultimaNota = notasOrdenadasPorData[notasOrdenadasPorData.length - 1];
     const competenciaFallback = (() => {
@@ -176,7 +203,8 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
 
     const faturamentoMes = latest?.valorServico ?? notasMesFallback.reduce((acc, item) => acc + item.valor_servico, 0);
     const totalNotasMes = latest?.quantidade ?? notasMesFallback.length;
-    const mesReferencia = latest?.competencia || competenciaFallback || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const mesReferenciaRaw = latest?.competencia || competenciaFallback || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const mesReferencia = normalizeCompetenciaToYearMonth(mesReferenciaRaw) || competenciaFallback || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const mesReferenciaLabel = monthLabelFromCompetencia(mesReferencia);
     const issRetidoMes = latest?.valorIss ?? notasMesFallback.reduce((acc, item) => acc + item.iss_valor, 0);
     const dasEstimado = faturamentoMes * (calculo.aliquotaEfetiva || 0);
