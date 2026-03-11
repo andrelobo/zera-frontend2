@@ -146,6 +146,9 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     estado: pickString(enderecoRaw.estado, enderecoRaw.uf),
   };
   const hasEndereco = Object.values(endereco).some((value) => value !== undefined && value !== '');
+  const simplesSnapshotRaw =
+    (legacy.simplesSnapshot as Record<string, unknown> | undefined) ??
+    (legacy.simples_snapshot as Record<string, unknown> | undefined);
 
   return {
     ...(raw as Empresa),
@@ -267,6 +270,31 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
       legacy.rbt12,
       providerData.rbt12,
     ),
+    simplesSnapshot: simplesSnapshotRaw
+      ? {
+          anexo: pickString(simplesSnapshotRaw.anexo),
+          faixa: typeof simplesSnapshotRaw.faixa === 'number' ? simplesSnapshotRaw.faixa : undefined,
+          aliquotaNominal:
+            typeof simplesSnapshotRaw.aliquotaNominal === 'number'
+              ? simplesSnapshotRaw.aliquotaNominal
+              : undefined,
+          parcelaDeduzir:
+            typeof simplesSnapshotRaw.parcelaDeduzir === 'number'
+              ? simplesSnapshotRaw.parcelaDeduzir
+              : undefined,
+          aliquotaEfetiva:
+            typeof simplesSnapshotRaw.aliquotaEfetiva === 'number'
+              ? simplesSnapshotRaw.aliquotaEfetiva
+              : undefined,
+          issReferencia:
+            typeof simplesSnapshotRaw.issReferencia === 'number'
+              ? simplesSnapshotRaw.issReferencia
+              : undefined,
+          rbt12: typeof simplesSnapshotRaw.rbt12 === 'number' ? simplesSnapshotRaw.rbt12 : undefined,
+          valido: pickBoolean(simplesSnapshotRaw.valido),
+          calculadoEm: pickString(simplesSnapshotRaw.calculadoEm),
+        }
+      : undefined,
     cnaesLista: pickCnaesLista(legacy.cnaesLista, legacy.cnaes_lista),
     parametroMunicipal: pickObjectArray(legacy.parametroMunicipal, legacy.parametro_municipal),
     configOperacionais: pickConfigOperacionais(legacy.configOperacionais, legacy.config_operacionais),

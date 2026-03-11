@@ -82,6 +82,17 @@ export interface Empresa {
   aliquotaSimplesNacional?: number | string;
   apuracaoSimplesNacional?: string;
   rbt12?: number | string;
+  simplesSnapshot?: {
+    anexo?: string;
+    faixa?: number;
+    aliquotaNominal?: number;
+    parcelaDeduzir?: number;
+    aliquotaEfetiva?: number;
+    issReferencia?: number;
+    rbt12?: number;
+    valido?: boolean;
+    calculadoEm?: string;
+  };
   cnaesLista?: Array<{
     codigo?: number | string;
     descricao?: string;
