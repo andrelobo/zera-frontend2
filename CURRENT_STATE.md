@@ -2,6 +2,33 @@
 
 Snapshot operacional do frontend em **07/03/2026**.
 
+## 0. Delta crítico de hoje (11/03/2026)
+
+Fonte: `codigo local`.
+
+Melhorias recentes de contrato/frontend para B.I.:
+
+- `src/pages/NfseEmitPage.tsx`
+  - payload da emissao agora envia `localPrestacao` (`pais`, `uf`, `municipio`) de forma aditiva.
+  - preenchimento artificial de `tributacaoTotal` foi removido do frontend para evitar contaminar B.I. com regra contábil não validada.
+- `src/types/api.ts`
+  - `EmitirNfseRequest` passou a declarar `localPrestacao?`.
+  - `Empresa` passou a declarar `simplesSnapshot?`.
+  - `NfseBiSummary` passou a aceitar:
+    - `tributacaoTotal?`
+    - `topMunicipiosPrestacao?`
+- `src/services/api.ts`
+  - `normalizeEmpresa()` passou a consumir `simplesSnapshot` vindo do backend.
+
+Regra operacional vigente:
+- `tributacaoTotal` não deve ser inventado no frontend.
+- até alinhamento com contador/regra fiscal, as retenções individuais continuam sendo a fonte confiável para analytics:
+  - `retPis`
+  - `retCofins`
+  - `retCsll`
+  - `retIr`
+  - `retInss`
+
 ## 1. Estado vigente
 
 - App principal em React + Vite, consumindo `zera-backend`.
