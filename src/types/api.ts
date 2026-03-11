@@ -502,6 +502,12 @@ export interface NfseBiSummary {
     quantidade: number;
     valorServico: number;
   }>;
+  topTomadores?: Array<{
+    cpfCnpj: string;
+    razaoSocial: string;
+    quantidade: number;
+    valorServico: number;
+  }>;
 }
 
 // Certificado digital
