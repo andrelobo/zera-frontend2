@@ -457,6 +457,11 @@ export interface NfseBiSummary {
     ir: number;
     inss: number;
   };
+  tributacaoTotal?: {
+    federal: number;
+    estadual: number;
+    municipal: number;
+  };
   seriesCompetencia: Array<{
     competencia: string;
     quantidade: number;
@@ -466,6 +471,12 @@ export interface NfseBiSummary {
   topServicos: Array<{
     codigoServico: string;
     descricaoServico: string;
+    quantidade: number;
+    valorServico: number;
+  }>;
+  topMunicipiosPrestacao?: Array<{
+    municipio: string;
+    uf: string;
     quantidade: number;
     valorServico: number;
   }>;
