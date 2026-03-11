@@ -93,6 +93,12 @@ export interface Empresa {
     valido?: boolean;
     calculadoEm?: string;
   };
+  biCatalogoResumo?: {
+    totalCnaes: number;
+    totalFavoritosMunicipais: number;
+    totalVinculosMunicipais: number;
+    totalConfigOperacionais: number;
+  };
   cnaesLista?: Array<{
     codigo?: number | string;
     descricao?: string;
