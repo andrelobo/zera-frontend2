@@ -324,6 +324,11 @@ export interface EmitirNfseRequest {
   numeroNfse?: string;
   competencia?: string;
   dataEmissao?: string;
+  localPrestacao?: {
+    pais?: string;
+    uf?: string;
+    municipio?: string;
+  };
   prestador: {
     cnpj: string;
     inscricaoMunicipal?: string;
