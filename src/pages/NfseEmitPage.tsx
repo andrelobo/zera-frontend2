@@ -384,10 +384,6 @@ const NfseEmitPage: React.FC = () => {
           retido: prestacao.issRetido,
           aliquota: prestacao.aliquota?.trim() ? parsePercent(prestacao.aliquota) : undefined,
         },
-        tributacaoTotal: {
-          federal: { valor: parseCurrency(prestacao.retPis) + parseCurrency(prestacao.retCofins) + parseCurrency(prestacao.retCsll) + parseCurrency(prestacao.retIr) },
-          municipal: { valor: parseCurrency(prestacao.retInss) },
-        },
       },
       referenciaExterna,
     };
