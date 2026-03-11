@@ -14,11 +14,15 @@ Melhorias recentes de contrato/frontend para B.I.:
 - `src/types/api.ts`
   - `EmitirNfseRequest` passou a declarar `localPrestacao?`.
   - `Empresa` passou a declarar `simplesSnapshot?`.
+  - `Empresa` passou a declarar `biCatalogoResumo?`.
   - `NfseBiSummary` passou a aceitar:
     - `tributacaoTotal?`
     - `topMunicipiosPrestacao?`
+    - `topTomadores?`
 - `src/services/api.ts`
   - `normalizeEmpresa()` passou a consumir `simplesSnapshot` vindo do backend.
+- `docs/BI_CONTRATO_MINIMO.md`
+  - contrato mínimo de B.I. formalizado para frontend.
 
 Regra operacional vigente:
 - `tributacaoTotal` não deve ser inventado no frontend.

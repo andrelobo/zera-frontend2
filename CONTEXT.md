@@ -5,6 +5,34 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-11)
+Fonte: `codigo local` + `contrato backend`.
+
+### B.I. - contrato ampliado no frontend
+
+Arquivos:
+- `src/pages/NfseEmitPage.tsx`
+- `src/services/api.ts`
+- `src/types/api.ts`
+- `docs/BI_CONTRATO_MINIMO.md`
+
+Melhorias recentes:
+- payload da emissao agora envia `localPrestacao` (`pais`, `uf`, `municipio`) de forma aditiva para analytics.
+- preenchimento artificial de `tributacaoTotal` foi removido do frontend; retencoes individuais permanecem como fonte confiavel.
+- `Empresa` passou a aceitar:
+  - `simplesSnapshot?`
+  - `biCatalogoResumo?`
+- `NfseBiSummary` passou a aceitar:
+  - `tributacaoTotal?`
+  - `topMunicipiosPrestacao?`
+  - `topTomadores?`
+- `normalizeEmpresa()` passou a consumir `simplesSnapshot` vindo do backend.
+
+Regra canônica do frontend:
+- frontend consome e apresenta dado canônico do backend;
+- frontend nao deve inventar regra fiscal para B.I.;
+- em caso de divergencia, a verdade operacional continua sendo a API.
+
 ## 0. Atualizacao de Contexto (2026-03-10)
 Fonte: `codigo local` + `execucao local`.
 
