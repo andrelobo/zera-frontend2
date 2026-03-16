@@ -545,6 +545,38 @@ export const shouldResetConfigOperacionaisOnCnaeChange = (
   return hasConfigOperacionais;
 };
 
+const updatePrincipalCnaeWithConfigReset = (
+  previousCnae: string,
+  nextCodigo: string,
+  nextDescricao: string | undefined,
+  hasConfigOperacionais: boolean,
+  setConfigOperacionais: React.Dispatch<React.SetStateAction<ConfigOperacionalItem[]>>,
+  setForm: React.Dispatch<React.SetStateAction<EmpresaFormData>>,
+) => {
+  const nextNormalized = String(nextCodigo || '').replace(/\D/g, '');
+  if (shouldResetConfigOperacionaisOnCnaeChange(previousCnae, nextNormalized, hasConfigOperacionais)) {
+    setConfigOperacionais([]);
+  }
+  setForm((prev) => ({
+    ...prev,
+    cnaeFiscal: nextCodigo,
+    cnaeFiscalDescricao: nextDescricao || prev.cnaeFiscalDescricao,
+  }));
+  return nextNormalized;
+};
+
+export const buildEmpresaSuccessRedirect = (
+  empresaId: string | undefined,
+  secao: PrestadorSubTab,
+  statusCadastro?: Empresa['statusCadastro'],
+) => {
+  if (!empresaId) return '/empresas';
+  if (statusCadastro === 'PENDENTE') {
+    return `/empresas/${empresaId}?secao=regime`;
+  }
+  return `/empresas/${empresaId}?secao=${secao}`;
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -914,16 +946,12 @@ const EmpresaFormPage = () => {
           description: `${partes.join(' ')} Continue nas próximas etapas para liberar emissão.`,
         });
         const targetEmpresaId = empresa.id || id;
-        if (targetEmpresaId) {
-          navigate(`/empresas/${targetEmpresaId}?secao=regime`);
-          return;
-        }
-        navigate('/empresas');
+        navigate(buildEmpresaSuccessRedirect(targetEmpresaId, prestadorSubTab, empresa.statusCadastro));
         return;
       }
 
       toast({ title: isEdit ? 'Empresa atualizada' : 'Empresa criada' });
-      navigate('/empresas');
+      navigate(buildEmpresaSuccessRedirect(empresa.id || id, prestadorSubTab, empresa.statusCadastro));
     },
   });
 
@@ -1206,11 +1234,14 @@ const EmpresaFormPage = () => {
               cnpj={form.cnpj}
               cnaeEscolhido={form.cnaeFiscal || null}
               onCnaeEscolhidoChange={(codigo, descricao) => {
-                setForm((prev) => ({
-                  ...prev,
-                  cnaeFiscal: codigo,
-                  cnaeFiscalDescricao: descricao || prev.cnaeFiscalDescricao,
-                }));
+                lastPrincipalCnaeRef.current = updatePrincipalCnaeWithConfigReset(
+                  lastPrincipalCnaeRef.current || String(form.cnaeFiscal || '').replace(/\D/g, ''),
+                  codigo,
+                  descricao,
+                  configOperacionais.length > 0,
+                  setConfigOperacionais,
+                  setForm,
+                );
               }}
               rbt12={rbt12Number}
               cnaesLista={cnaesRegime}
@@ -1218,11 +1249,14 @@ const EmpresaFormPage = () => {
                 setCnaesRegime(lista);
                 const principal = lista.find((item) => item.isPrincipal) || lista[0];
                 if (!principal) return;
-                setForm((prev) => ({
-                  ...prev,
-                  cnaeFiscal: String(principal.codigo),
-                  cnaeFiscalDescricao: principal.descricao || prev.cnaeFiscalDescricao,
-                }));
+                lastPrincipalCnaeRef.current = updatePrincipalCnaeWithConfigReset(
+                  lastPrincipalCnaeRef.current || String(form.cnaeFiscal || '').replace(/\D/g, ''),
+                  String(principal.codigo),
+                  principal.descricao,
+                  configOperacionais.length > 0,
+                  setConfigOperacionais,
+                  setForm,
+                );
               }}
             />
 

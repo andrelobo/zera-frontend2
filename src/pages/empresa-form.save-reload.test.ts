@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Empresa } from '@/types/api';
 import {
+  buildEmpresaSuccessRedirect,
   buildCanonicalParametroMunicipal,
   buildEmpresaUpdatePayload,
   mapEmpresaParametroMunicipal,
@@ -84,5 +85,15 @@ describe('EmpresaFormPage save/reload', () => {
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', true)).toBe(true);
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8650003', true)).toBe(false);
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', false)).toBe(false);
+  });
+
+  it('keeps user on same empresa and current tab after successful update', () => {
+    expect(buildEmpresaSuccessRedirect('empresa-1', 'cadastro', 'COMPLETO')).toBe('/empresas/empresa-1?secao=cadastro');
+    expect(buildEmpresaSuccessRedirect('empresa-1', 'regime', 'COMPLETO')).toBe('/empresas/empresa-1?secao=regime');
+    expect(buildEmpresaSuccessRedirect('empresa-1', 'parametros', 'COMPLETO')).toBe('/empresas/empresa-1?secao=parametros');
+  });
+
+  it('redirects pendente cadastro to same empresa on regime tab', () => {
+    expect(buildEmpresaSuccessRedirect('empresa-1', 'parametros', 'PENDENTE')).toBe('/empresas/empresa-1?secao=regime');
   });
 });
