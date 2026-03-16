@@ -13,11 +13,13 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
+  const [showReplaceForm, setShowReplaceForm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const certificadoImportado = Boolean(certificado?.filename || certificado?.uploadedAt);
   const uploadedAtLabel = certificado?.uploadedAt
     ? new Date(certificado.uploadedAt).toLocaleString('pt-BR')
     : '';
+  const exibirFormulario = !certificadoImportado || showReplaceForm;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,6 +58,17 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
           </p>
         </div>
       )}
+      {certificadoImportado && !showReplaceForm && (
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowReplaceForm(true)}
+            className="btn-outline h-9 px-3 text-xs sm:text-sm"
+          >
+            Substituir certificado
+          </button>
+        </div>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -63,6 +76,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
         className="hidden"
         onChange={handleFileSelect}
       />
+      {exibirFormulario && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Arquivo do Certificado</label>
@@ -112,6 +126,21 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
           </div>
         </div>
       </div>
+      )}
+      {certificadoImportado && showReplaceForm && (
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setShowReplaceForm(false);
+              handleRemover();
+            }}
+            className="btn-outline h-9 px-3 text-xs sm:text-sm"
+          >
+            Cancelar substituição
+          </button>
+        </div>
+      )}
     </div>
   );
 };
