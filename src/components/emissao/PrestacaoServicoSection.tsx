@@ -43,6 +43,67 @@ interface Props {
   listaServico?: ListaServicoItem[];
 }
 
+export function resolveFavoritoSelecionado(
+  favoritos: FavoritoItem[],
+  codigoServico: string,
+): FavoritoItem | null {
+  const codigoAtual = String(codigoServico || '').replace(/\D/g, '').slice(0, 6);
+  if (!favoritos.length) return null;
+
+  const favoritoCorrespondente = codigoAtual
+    ? favoritos.find((fav) =>
+        fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
+      )
+    : favoritos[0];
+
+  return favoritoCorrespondente || favoritos[0] || null;
+}
+
+export function resolvePrestacaoFromFavorito(
+  data: PrestacaoServicoData,
+  favoritoSelecionado: FavoritoItem | null,
+): { nextData: PrestacaoServicoData; ctnDescricao: string } | null {
+  if (!favoritoSelecionado) return null;
+
+  const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
+  const vinculoAtual = favoritoSelecionado.vinculos.find(
+    (vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual,
+  );
+  if (vinculoAtual) return null;
+
+  const primeiroVinculo = favoritoSelecionado.vinculos.find((vinculo) => Boolean(vinculo.ctn));
+  if (!primeiroVinculo?.ctn) return null;
+
+  const entry = getCTNByCode(primeiroVinculo.ctn);
+  const descricaoAtual = String(entry?.descricao || primeiroVinculo.ctnDescricao || '').trim();
+  return {
+    nextData: {
+      ...data,
+      codigoServico: primeiroVinculo.ctn,
+      descricaoServico: descricaoAtual,
+    },
+    ctnDescricao: descricaoAtual,
+  };
+}
+
+export function resolvePrestacaoFromListaServico(
+  data: PrestacaoServicoData,
+  item: ListaServicoItem,
+  optanteSimples: boolean,
+  tomadorSubstituto: boolean,
+): PrestacaoServicoData {
+  const codigoServico = String(item.codigoServico || '').replace(/\D/g, '').slice(0, 6);
+  const aliquota = String(item.aliquota || '').trim();
+  return {
+    ...data,
+    codigoServico: codigoServico || data.codigoServico,
+    descricaoServico: item.descricao || data.descricaoServico,
+    aliquota: !optanteSimples && !tomadorSubstituto && aliquota
+      ? formatPercent(aliquota)
+      : data.aliquota,
+  };
+}
+
 function formatCurrency(value: string): string {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
@@ -118,45 +179,20 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
   };
 
   useEffect(() => {
-    const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-    if (!favoritos.length) {
+    const favoritoResolvido = resolveFavoritoSelecionado(favoritos, data.codigoServico);
+    if (!favoritoResolvido) {
       setFavoritoSelecionado(null);
       return;
     }
-
-    const favoritoCorrespondente = codigoAtual
-      ? favoritos.find((fav) =>
-          fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
-        )
-      : favoritos[0];
-
-    if (!favoritoCorrespondente) {
-      setFavoritoSelecionado(favoritos[0] ?? null);
-      return;
-    }
-    if (favoritoSelecionado?.codigo === favoritoCorrespondente.codigo) return;
-    setFavoritoSelecionado(favoritoCorrespondente);
+    if (favoritoSelecionado?.codigo === favoritoResolvido.codigo) return;
+    setFavoritoSelecionado(favoritoResolvido);
   }, [data.codigoServico, favoritos, favoritoSelecionado?.codigo]);
 
   useEffect(() => {
-    if (!favoritoSelecionado) return;
-    const codigoAtual = String(data.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-    const vinculoAtual = favoritoSelecionado.vinculos.find(
-      (vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual,
-    );
-    if (vinculoAtual) return;
-
-    const primeiroVinculo = favoritoSelecionado.vinculos.find((vinculo) => Boolean(vinculo.ctn));
-    if (!primeiroVinculo?.ctn) return;
-
-    const entry = getCTNByCode(primeiroVinculo.ctn);
-    const descricaoAtual = String(entry?.descricao || primeiroVinculo.ctnDescricao || '').trim();
-    onChange({
-      ...data,
-      codigoServico: primeiroVinculo.ctn,
-      descricaoServico: descricaoAtual,
-    });
-    setCtnDescricaoSelecionada(descricaoAtual);
+    const resolved = resolvePrestacaoFromFavorito(data, favoritoSelecionado);
+    if (!resolved) return;
+    onChange(resolved.nextData);
+    setCtnDescricaoSelecionada(resolved.ctnDescricao);
   }, [data, favoritoSelecionado, onChange]);
 
   // Local prestação state
@@ -388,16 +424,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
               setListaServicoSelecionada(e.target.value);
               const item = listaServico.find(i => i.id === e.target.value);
               if (item) {
-                const codigoServico = String(item.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-                const aliquota = String(item.aliquota || '').trim();
-                onChange({
-                  ...data,
-                  codigoServico: codigoServico || data.codigoServico,
-                  descricaoServico: item.descricao || data.descricaoServico,
-                  aliquota: !optanteSimples && !tomadorSubstituto && aliquota
-                    ? formatPercent(aliquota)
-                    : data.aliquota,
-                });
+                onChange(resolvePrestacaoFromListaServico(data, item, optanteSimples, tomadorSubstituto));
               }
             }}
           >

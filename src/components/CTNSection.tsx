@@ -43,6 +43,40 @@ interface Props {
 }
 
 export type { CnaeAdicionado, CtnNbsVinculo };
+export function resolveEditorSeed(
+  cnaes: CnaeAdicionado[],
+  manualState: { manualCnae: string; manualCtn: string; manualNbs: string },
+): {
+  manualCnae: string;
+  manualCtn: string;
+  manualNbs: string;
+  manualCnaeDescricaoIBGE: string;
+  manualDescricao: string;
+  detectedItem: string | null;
+  detectedNbsPrefix: string | null;
+} | null {
+  if (cnaes.length === 0) return null;
+
+  const selectedCnaeForEditor = cnaes.find((item) => item.isPrincipal) || cnaes[0];
+  const currentManualCode = manualState.manualCnae.replace(/\D/g, '');
+  const hasManualSelection = !!currentManualCode || !!manualState.manualCtn || !!manualState.manualNbs;
+  const manualStillExists = currentManualCode
+    ? cnaes.some((item) => item.codigo === currentManualCode)
+    : false;
+
+  if (hasManualSelection && manualStillExists) return null;
+
+  const firstVinculo = selectedCnaeForEditor.vinculos[0];
+  return {
+    manualCnae: formatCNAECode(selectedCnaeForEditor.codigo),
+    manualCtn: firstVinculo?.ctn || '',
+    manualNbs: firstVinculo?.nbs || '',
+    manualCnaeDescricaoIBGE: selectedCnaeForEditor.cnaeDescricao || '',
+    manualDescricao: selectedCnaeForEditor.lc116Descricao || selectedCnaeForEditor.cnaeDescricao || '',
+    detectedItem: selectedCnaeForEditor.lc116Item ? selectedCnaeForEditor.lc116Item.split('.')[0].padStart(2, '0') : null,
+    detectedNbsPrefix: firstVinculo?.nbs ? firstVinculo.nbs.substring(0, 4) : null,
+  };
+}
 
 let vinculoIdCounter = 0;
 function nextVinculoId() {
@@ -214,6 +248,20 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    const seed = resolveEditorSeed(cnaes, { manualCnae, manualCtn, manualNbs });
+    if (!seed) return;
+    setManualCnae(seed.manualCnae);
+    setManualCtn(seed.manualCtn);
+    setManualNbs(seed.manualNbs);
+    setManualCnaeDescricaoIBGE(seed.manualCnaeDescricaoIBGE);
+    setManualDescricao(seed.manualDescricao);
+    setDetectedItem(seed.detectedItem);
+    setDetectedNbsPrefix(seed.detectedNbsPrefix);
+    setCtnQuery('');
+    setNbsQuery('');
+  }, [cnaes, manualCnae, manualCtn, manualNbs]);
 
   const handleManualCnaeChange = (value: string) => {
     setManualCnae(value);
