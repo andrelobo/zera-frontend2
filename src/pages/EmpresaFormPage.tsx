@@ -611,6 +611,7 @@ const EmpresaFormPage = () => {
   const [cnaesRegime, setCnaesRegime] = useState<CNAEAtividade[]>([]);
   const [cnaesParam, setCnaesParam] = useState<CnaeAdicionado[]>([]);
   const [configOperacionais, setConfigOperacionais] = useState<ConfigOperacionalItem[]>([]);
+  const [configOperacionaisContextCnae, setConfigOperacionaisContextCnae] = useState('');
   const [regimeApuracaoSNParametro, setRegimeApuracaoSNParametro] = useState(false);
   const [informarAliquotaSN, setInformarAliquotaSN] = useState(false);
   const [nfseNum, setNfseNum] = useState('');
@@ -645,6 +646,7 @@ const EmpresaFormPage = () => {
       if (configOperacionaisFromBackend.length > 0) {
         setConfigOperacionais(configOperacionaisFromBackend);
       }
+      setConfigOperacionaisContextCnae(String(existing.cnaeFiscal || '').replace(/\D/g, ''));
       setLastPreviewCnpj(existing.cnpj.replace(/\D/g, ''));
       setUltimoResumoCadastro({
         statusCadastro: existing.statusCadastro,
@@ -674,6 +676,18 @@ const EmpresaFormPage = () => {
     setConfigOperacionais([]);
     lastPrincipalCnaeRef.current = nextCnae;
   }, [form.cnaeFiscal, configOperacionais.length]);
+
+  useEffect(() => {
+    const currentCnae = String(form.cnaeFiscal || '').replace(/\D/g, '');
+    if (!currentCnae || !configOperacionaisContextCnae) return;
+    if (currentCnae === configOperacionaisContextCnae) return;
+    if (configOperacionais.length === 0) {
+      setConfigOperacionaisContextCnae(currentCnae);
+      return;
+    }
+    setConfigOperacionais([]);
+    setConfigOperacionaisContextCnae(currentCnae);
+  }, [form.cnaeFiscal, configOperacionais.length, configOperacionaisContextCnae]);
 
   useEffect(() => {
     const hasApuracao = form.apuracaoSimplesNacional.trim().length > 0;
@@ -1389,7 +1403,10 @@ const EmpresaFormPage = () => {
 
             <ConfigOperacionaisSection
               items={configOperacionais}
-              onChange={setConfigOperacionais}
+              onChange={(items) => {
+                setConfigOperacionais(items);
+                setConfigOperacionaisContextCnae(String(form.cnaeFiscal || '').replace(/\D/g, ''));
+              }}
             />
 
             <div className="flex justify-end pt-2">

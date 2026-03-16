@@ -97,4 +97,8 @@ describe('EmpresaFormPage save/reload', () => {
   it('redirects pendente cadastro to same empresa on regime tab', () => {
     expect(buildEmpresaSuccessRedirect('empresa-1', 'parametros', 'PENDENTE')).toBe('/empresas/empresa-1?secao=regime');
   });
+
+  it('treats lista servico as stale when bound cnae context differs from current cnae', () => {
+    expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', true)).toBe(true);
+  });
 });
