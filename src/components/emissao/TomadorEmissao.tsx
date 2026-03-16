@@ -54,6 +54,8 @@ const formatDoc = (value: string) => {
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
 
+const isCPF = (value: string) => value.replace(/\D/g, '').length <= 11;
+
 const toLocalidadeUf = (tomador: Tomador) => {
   const municipio = tomador.endereco?.municipio || '';
   const uf = tomador.endereco?.uf || '';
@@ -75,6 +77,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
   }, []);
 
   const tomadoresView = useMemo(() => tomadores.slice(0, 30), [tomadores]);
+  const currentIsCPF = isCPF(data.cnpjCpf);
   const tomadorExistente = useMemo(() => {
     const digits = data.cnpjCpf.replace(/\D/g, '');
     if (digits.length !== 11 && digits.length !== 14) return null;
@@ -136,7 +139,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_3fr] gap-3">
+      <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-[1fr_3fr]' : 'md:grid-cols-[1fr_1fr_3fr]'} gap-3`}>
         <div>
           <label className="field-label flex items-center gap-1">
             <FileText className="w-3.5 h-3.5" />CNPJ/CPF*
@@ -162,15 +165,17 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
           )}
         </div>
 
-        <div>
-          <label className="field-label">Inscrição Municipal</label>
-          <input
-            className="field-input"
-            placeholder="Inscrição"
-            value={data.inscricaoMunicipal}
-            onChange={(e) => onChange({ ...data, inscricaoMunicipal: e.target.value })}
-          />
-        </div>
+        {!currentIsCPF && (
+          <div>
+            <label className="field-label">Inscrição Municipal</label>
+            <input
+              className="field-input"
+              placeholder="Inscrição"
+              value={data.inscricaoMunicipal}
+              onChange={(e) => onChange({ ...data, inscricaoMunicipal: e.target.value })}
+            />
+          </div>
+        )}
 
         <div>
           <label className="field-label">Razão Social</label>
