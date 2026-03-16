@@ -42,6 +42,17 @@ interface Props {
 
 export type { CNAEAtividade };
 
+export const promoteSelectedCnaeAsPrincipal = (
+  atividades: CNAEAtividade[],
+  codigoSelecionado: string,
+): CNAEAtividade[] => {
+  const normalized = String(codigoSelecionado).replace(/\D/g, '');
+  return atividades.map((atividade) => ({
+    ...atividade,
+    isPrincipal: String(atividade.codigo).replace(/\D/g, '') === normalized,
+  }));
+};
+
 function formatCNAECode(codigo: number | string): string {
   const str = String(codigo).replace(/\D/g, '').padStart(7, '0');
   if (str.length >= 7) return `${str.slice(0, 4)}-${str.slice(4, 5)}/${str.slice(5, 7)}`;
@@ -167,6 +178,7 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
   };
 
   const handleSelect = (atividade: CNAEAtividade) => {
+    setManualActivities((prev) => promoteSelectedCnaeAsPrincipal(prev, String(atividade.codigo)));
     onCnaeEscolhidoChange(String(atividade.codigo), atividade.descricao);
   };
 
@@ -207,12 +219,15 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
     const nova: CNAEAtividade = {
       codigo: cleaned,
       descricao: manualCnaeDescricaoIBGE || 'Inclusão manual',
-      isPrincipal: false,
+      isPrincipal: !cnaeEscolhido,
       isManual: true,
       anexo,
       anexoLoading: false,
     };
-    setManualActivities((prev) => [...prev, nova]);
+    setManualActivities((prev) => {
+      const next = [...prev, nova];
+      return !cnaeEscolhido ? promoteSelectedCnaeAsPrincipal(next, cleaned) : next;
+    });
     setManualCnae('');
     setManualCnaeDescricaoIBGE('');
     if (!cnaeEscolhido) onCnaeEscolhidoChange(cleaned, nova.descricao);
