@@ -68,7 +68,7 @@ const parseLocalidadeUf = (value: string) => {
 };
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
-const toUpperTrimmed = (value?: string) => (value || '').trim().toUpperCase();
+const toUpperTrimmed = (value?: string) => (value || '').toUpperCase();
 const isCpfContext = (value: string) => isCPF(value);
 
 const TomadorFormPage = () => {
