@@ -488,7 +488,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-stretch">
         {/* CNAE Card */}
         <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start ${manualCnae ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'hsl(144, 72%, 28%)' }}>1. Código Cnae<span className="text-red-500">*</span></div>
+          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>1. Código Cnae<span className="text-red-500">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
@@ -532,7 +532,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
         {/* CTN Card */}
         <div ref={ctnDropdownRef} className={`radio-card flex flex-col items-start ${manualCtn ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'hsl(144, 72%, 28%)' }}>2. Código Tributação Nacional<span className="text-red-500">*</span></div>
+          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>2. Código Tributação Nacional<span className="text-red-500">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
@@ -587,7 +587,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
         {/* NBS Card */}
         <div ref={nbsDropdownRef} className={`radio-card flex flex-col items-start ${manualNbs ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'hsl(144, 72%, 28%)' }}>3. Nomenclatura Brasileira Serviços</div>
+          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>3. Nomenclatura Brasileira Serviços</div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
