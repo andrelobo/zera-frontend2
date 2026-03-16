@@ -19,7 +19,6 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
   const uploadedAtLabel = certificado?.uploadedAt
     ? new Date(certificado.uploadedAt).toLocaleString('pt-BR')
     : '';
-  const exibirFormulario = !certificadoImportado || showReplaceForm;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,13 +39,13 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
     toast.info('Certificado removido');
   };
 
-  return (
-    <div className="section-card">
-      <h2 className="section-title">
-        <ShieldCheck className="w-5 h-5 text-primary" />
-        Certificado CNPJ A1
-      </h2>
-      {certificadoImportado && (
+  if (certificadoImportado && !showReplaceForm) {
+    return (
+      <div className="section-card">
+        <h2 className="section-title">
+          <ShieldCheck className="w-5 h-5 text-primary" />
+          Certificado CNPJ A1
+        </h2>
         <div className="mb-3 rounded-md border border-emerald-600/25 bg-emerald-600/10 px-3 py-2">
           <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -57,9 +56,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
             </span>
           </p>
         </div>
-      )}
-      {certificadoImportado && !showReplaceForm && (
-        <div className="mb-3 flex justify-end">
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => setShowReplaceForm(true)}
@@ -68,7 +65,16 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
             Substituir certificado
           </button>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="section-card">
+      <h2 className="section-title">
+        <ShieldCheck className="w-5 h-5 text-primary" />
+        Certificado CNPJ A1
+      </h2>
       <input
         ref={inputRef}
         type="file"
@@ -76,7 +82,6 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
         className="hidden"
         onChange={handleFileSelect}
       />
-      {exibirFormulario && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Arquivo do Certificado</label>
@@ -126,7 +131,6 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
           </div>
         </div>
       </div>
-      )}
       {certificadoImportado && showReplaceForm && (
         <div className="mt-3 flex justify-end">
           <button
