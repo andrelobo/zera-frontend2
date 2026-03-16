@@ -1,6 +1,23 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **07/03/2026**.
+Snapshot operacional do frontend em **16/03/2026**.
+
+## 0. Delta critico de hoje (16/03/2026)
+
+Fonte: `contrato backend`.
+
+Novo dado canonico disponivel no backend para futuro consumo no frontend:
+- `prontoParaBi`
+- `percentualCompletudeBi`
+- `camposFaltantesBi`
+
+Leitura correta:
+- `statusCadastro` / `prontoParaEmitir` continuam tratando completude minima para cadastro/emissao;
+- `prontoParaBi` passa a representar completude analitica do prestador.
+
+Estado atual do frontend:
+- ainda nao ha bloco visual consumindo esses campos;
+- o backend ja passou a ser a fonte canonica dessa separacao.
 
 ## 0. Delta crítico de hoje (11/03/2026)
 

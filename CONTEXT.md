@@ -5,6 +5,22 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-16)
+Fonte: `codigo local` + `contrato backend`.
+
+### B.I. - prontidao analitica agora separada no backend
+
+- o backend passou a expor no retorno normalizado de empresa:
+  - `prontoParaBi`
+  - `percentualCompletudeBi`
+  - `camposFaltantesBi`
+- objetivo:
+  - separar completude minima de emissao da completude analitica para B.I.
+
+Observacao operacional:
+- o frontend ainda nao consome esses campos visualmente;
+- a fonte canonica agora existe no backend, pronta para uso em UX futura de prestador/onboarding.
+
 ## 0. Atualizacao de Contexto (2026-03-11)
 Fonte: `codigo local` + `contrato backend`.
 
