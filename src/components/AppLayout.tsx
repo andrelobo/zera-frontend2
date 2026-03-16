@@ -34,25 +34,25 @@ const AppLayout = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex h-14 items-center border-b px-4 lg:px-6">
-            <SidebarTrigger />
+          <header className="flex h-14 items-center border-b border-white/10 bg-[hsl(216,60%,16%)] px-4 text-white lg:px-6">
+            <SidebarTrigger className="text-white hover:bg-white/10 hover:text-white/80" />
             <div className="ml-auto flex items-center gap-2">
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-2 rounded-md border px-2 py-1 hover:bg-accent"
+                    className="flex items-center gap-2 rounded-md border border-white/20 px-2 py-1 text-white hover:bg-white/10"
                   >
                     <Avatar className="h-7 w-7">
-                      <AvatarFallback className="text-[11px] font-semibold">
+                      <AvatarFallback className="bg-white/15 text-[11px] font-semibold text-white">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:inline max-w-[180px] truncate text-sm">
+                    <span className="hidden max-w-[180px] truncate text-sm text-white sm:inline">
                       {displayName}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 text-white/70" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">

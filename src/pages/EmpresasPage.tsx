@@ -7,7 +7,6 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
@@ -44,12 +43,6 @@ const EmpresasPage = () => {
           </Button>
         </div>
       </div>
-
-      <Alert>
-        <AlertDescription>
-          Empresas já cadastradas continuam operando normalmente. O certificado digital é exigido apenas no momento da emissão de NFSe.
-        </AlertDescription>
-      </Alert>
 
       {!empresas?.length ? (
         <EmptyState message="Nenhuma empresa cadastrada." action={<Button onClick={() => navigate('/empresas/nova')}>Cadastrar empresa</Button>} />
