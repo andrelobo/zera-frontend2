@@ -84,6 +84,62 @@ const clearAutofillFields = (current: TomadorSectionData): TomadorSectionData =>
   whatsapp: '',
 });
 
+export function mergeTomadorFromCnpjResult(
+  current: TomadorSectionData,
+  result: {
+    razao_social?: string;
+    nome_fantasia?: string;
+    inscricao_estadual?: string;
+    suframa?: string;
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    uf?: string;
+    email?: string;
+    telefone?: string;
+  },
+): TomadorSectionData {
+  return {
+    ...current,
+    nomeEmpresarial: result.razao_social || current.nomeEmpresarial,
+    nomeFantasia: result.nome_fantasia || current.nomeFantasia,
+    inscricaoEstadual: result.inscricao_estadual || current.inscricaoEstadual,
+    suframa: result.suframa || current.suframa,
+    cep: result.cep ? formatCEP(result.cep) : current.cep,
+    logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
+    numero: result.numero || current.numero,
+    complemento: result.complemento || current.complemento,
+    bairro: result.bairro || current.bairro,
+    localidadeUf: result.municipio && result.uf
+      ? `${result.municipio} - ${result.uf}`
+      : current.localidadeUf,
+    email: result.email || current.email,
+    whatsapp: result.telefone ? formatPhone(result.telefone) : current.whatsapp,
+  };
+}
+
+export function mergeTomadorFromCepResult(
+  current: TomadorSectionData,
+  result: {
+    logradouro?: string;
+    bairro?: string;
+    municipio?: string;
+    uf?: string;
+  },
+): TomadorSectionData {
+  return {
+    ...current,
+    logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
+    bairro: result.bairro || current.bairro,
+    localidadeUf: result.municipio && result.uf
+      ? `${result.municipio} - ${result.uf}`
+      : current.localidadeUf,
+  };
+}
+
 async function fetchCNPJData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
   const empresa = await empresasApi.previewByCnpj(cleaned);
@@ -148,23 +204,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
       if (requestId !== cnpjRequestSeq.current) return;
       if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
       const current = dataRef.current;
-      const updated: TomadorSectionData = {
-        ...current,
-        nomeEmpresarial: result.razao_social || current.nomeEmpresarial,
-        nomeFantasia: result.nome_fantasia || current.nomeFantasia,
-        inscricaoEstadual: result.inscricao_estadual || current.inscricaoEstadual,
-        suframa: result.suframa || current.suframa,
-        cep: result.cep ? formatCEP(result.cep) : current.cep,
-        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
-        numero: result.numero || current.numero,
-        complemento: result.complemento || current.complemento,
-        bairro: result.bairro || current.bairro,
-        localidadeUf: result.municipio && result.uf
-          ? `${result.municipio} - ${result.uf}`
-          : current.localidadeUf,
-        email: result.email || current.email,
-        whatsapp: result.telefone ? formatPhone(result.telefone) : current.whatsapp,
-      };
+      const updated = mergeTomadorFromCnpjResult(current, result);
       onChange(updated);
       setLookupSource(result.source || '');
       onAutosave();
@@ -194,14 +234,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
       if (requestId !== cepRequestSeq.current) return;
       if (dataRef.current.cep.replace(/\D/g, '') !== cleaned) return;
       const current = dataRef.current;
-      const updated: TomadorSectionData = {
-        ...current,
-        logradouro: result.logradouro ? normalizeLogradouro(result.logradouro) : current.logradouro,
-        bairro: result.bairro || current.bairro,
-        localidadeUf: result.municipio && result.uf
-          ? `${result.municipio} - ${result.uf}`
-          : current.localidadeUf,
-      };
+      const updated = mergeTomadorFromCepResult(current, result);
       onChange(updated);
       onAutosave();
       toast.success('Endereço preenchido automaticamente!');

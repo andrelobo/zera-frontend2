@@ -345,7 +345,7 @@ const mapEmpresaCnaesListaToRegime = (empresa: Empresa): CNAEAtividade[] => {
     .filter((item): item is CNAEAtividade => item !== null);
 };
 
-const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
+export const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
   if (!Array.isArray(empresa.parametroMunicipal)) return [];
   return empresa.parametroMunicipal
     .map((item) => {
@@ -412,7 +412,7 @@ const mapEmpresaConfigOperacionais = (empresa: Empresa): ConfigOperacionalItem[]
     .filter((item): item is ConfigOperacionalItem => item !== null);
 };
 
-const buildCanonicalParametroMunicipal = (
+export const buildCanonicalParametroMunicipal = (
   currentItems: CnaeAdicionado[],
   form: EmpresaFormData,
 ): CnaeAdicionado[] => {
@@ -448,6 +448,89 @@ const buildCanonicalParametroMunicipal = (
     isPrincipal: true,
     vinculadoSN: true,
   }];
+};
+
+export const buildEmpresaUpdatePayload = (
+  form: EmpresaFormData,
+  cnaesRegime: CNAEAtividade[],
+  cnaesParam: CnaeAdicionado[],
+  configOperacionais: ConfigOperacionalItem[],
+  extra: {
+    nfseNum?: string;
+    dpsNum?: string;
+    serieDpsNum?: string;
+  } = {},
+) => {
+  const parametroMunicipalCanonico = buildCanonicalParametroMunicipal(cnaesParam, form);
+  const principalParametroMunicipal =
+    parametroMunicipalCanonico.find((item) => item.isPrincipal)
+    || parametroMunicipalCanonico[0];
+  const primeiroVinculoPrincipal = principalParametroMunicipal?.vinculos?.[0];
+  const capitalSocialNumber = form.capitalSocial.trim()
+    ? Number(form.capitalSocial.replace(/\./g, '').replace(',', '.'))
+    : undefined;
+
+  return {
+    cnpj: form.cnpj,
+    razaoSocial: form.razaoSocial,
+    nomeFantasia: form.nomeFantasia || undefined,
+    inscricaoMunicipal: form.inscricaoMunicipal || undefined,
+    inscricaoEstadual: form.inscricaoEstadual || undefined,
+    suframa: form.suframa || undefined,
+    situacaoCadastral: form.situacaoCadastral || undefined,
+    dataSituacaoCadastral: form.dataSituacaoCadastral || undefined,
+    dataInicioAtividade: form.dataInicioAtividade || undefined,
+    cnaeFiscal: form.cnaeFiscal || undefined,
+    cnaeFiscalDescricao: form.cnaeFiscalDescricao || undefined,
+    ctnCodigo: primeiroVinculoPrincipal?.ctn || form.ctnCodigo || undefined,
+    nbsCodigo: primeiroVinculoPrincipal?.nbs || form.nbsCodigo || undefined,
+    porte: form.porte || undefined,
+    naturezaJuridica: form.naturezaJuridica || undefined,
+    capitalSocial: Number.isFinite(capitalSocialNumber) ? capitalSocialNumber : undefined,
+    opcaoPeloSimples: fromBooleanSelectValue(form.opcaoPeloSimples),
+    opcaoPeloMei: fromBooleanSelectValue(form.opcaoPeloMei),
+    dataOpcaoPeloSimples: form.dataOpcaoPeloSimples || undefined,
+    dataExclusaoDoSimples: form.dataExclusaoDoSimples || undefined,
+    regimeTributario: form.regimeTributario || undefined,
+    aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
+    apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
+    rbt12: form.rbt12.trim()
+      ? Number(form.rbt12.replace(/\./g, '').replace(',', '.'))
+      : undefined,
+    cnaesLista: cnaesRegime
+      .map((item) => ({
+        codigo: String(item.codigo ?? '').replace(/\D/g, '') || undefined,
+        descricao: item.descricao || undefined,
+        isPrincipal: item.isPrincipal,
+        isManual: item.isManual,
+        anexo: item.anexo ?? undefined,
+        anexoLoading: item.anexoLoading,
+      }))
+      .filter((item) => Boolean(item.codigo)),
+    parametroMunicipal: parametroMunicipalCanonico as unknown as Record<string, unknown>[],
+    configOperacionais: configOperacionais
+      .map((item) => ({
+        id: item.id || undefined,
+        natureza: item.natureza || undefined,
+        descricao: item.descricao || undefined,
+      }))
+      .filter((item) => Boolean(item.natureza || item.descricao)),
+    email: form.email || undefined,
+    telefone: form.telefone || form.whatsapp || undefined,
+    whatsapp: form.whatsapp || form.telefone || undefined,
+    nfseNum: extra.nfseNum || undefined,
+    dpsNum: extra.dpsNum || undefined,
+    serieDpsNum: extra.serieDpsNum || undefined,
+    endereco: {
+      logradouro: form.endereco || undefined,
+      numero: form.numero || undefined,
+      complemento: form.complemento || undefined,
+      bairro: form.bairro || undefined,
+      cidade: form.cidade || undefined,
+      uf: form.uf || undefined,
+      cep: normalizeCep(form.cep) || undefined,
+    },
+  };
 };
 
 const EmpresaFormPage = () => {
@@ -733,75 +816,11 @@ const EmpresaFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
-      const parametroMunicipalCanonico = buildCanonicalParametroMunicipal(cnaesParam, form);
-      const principalParametroMunicipal =
-        parametroMunicipalCanonico.find((item) => item.isPrincipal)
-        || parametroMunicipalCanonico[0];
-      const primeiroVinculoPrincipal = principalParametroMunicipal?.vinculos?.[0];
-      const capitalSocialNumber = form.capitalSocial.trim()
-        ? Number(form.capitalSocial.replace(/\./g, '').replace(',', '.'))
-        : undefined;
-      const payload = {
-        cnpj: form.cnpj,
-        razaoSocial: form.razaoSocial,
-        nomeFantasia: form.nomeFantasia || undefined,
-        inscricaoMunicipal: form.inscricaoMunicipal || undefined,
-        inscricaoEstadual: form.inscricaoEstadual || undefined,
-        suframa: form.suframa || undefined,
-        situacaoCadastral: form.situacaoCadastral || undefined,
-        dataSituacaoCadastral: form.dataSituacaoCadastral || undefined,
-        dataInicioAtividade: form.dataInicioAtividade || undefined,
-        cnaeFiscal: form.cnaeFiscal || undefined,
-        cnaeFiscalDescricao: form.cnaeFiscalDescricao || undefined,
-        ctnCodigo: primeiroVinculoPrincipal?.ctn || form.ctnCodigo || undefined,
-        nbsCodigo: primeiroVinculoPrincipal?.nbs || form.nbsCodigo || undefined,
-        porte: form.porte || undefined,
-        naturezaJuridica: form.naturezaJuridica || undefined,
-        capitalSocial: Number.isFinite(capitalSocialNumber) ? capitalSocialNumber : undefined,
-        opcaoPeloSimples: fromBooleanSelectValue(form.opcaoPeloSimples),
-        opcaoPeloMei: fromBooleanSelectValue(form.opcaoPeloMei),
-        dataOpcaoPeloSimples: form.dataOpcaoPeloSimples || undefined,
-        dataExclusaoDoSimples: form.dataExclusaoDoSimples || undefined,
-        regimeTributario: form.regimeTributario || undefined,
-        aliquotaSimplesNacional: form.aliquotaSimplesNacional || undefined,
-        apuracaoSimplesNacional: form.apuracaoSimplesNacional || undefined,
-        rbt12: form.rbt12.trim()
-          ? Number(form.rbt12.replace(/\./g, '').replace(',', '.'))
-          : undefined,
-        cnaesLista: cnaesRegime
-          .map((item) => ({
-            codigo: String(item.codigo ?? '').replace(/\D/g, '') || undefined,
-            descricao: item.descricao || undefined,
-            isPrincipal: item.isPrincipal,
-            isManual: item.isManual,
-            anexo: item.anexo ?? undefined,
-            anexoLoading: item.anexoLoading,
-          }))
-          .filter((item) => Boolean(item.codigo)),
-        parametroMunicipal: parametroMunicipalCanonico as unknown as Record<string, unknown>[],
-        configOperacionais: configOperacionais
-          .map((item) => ({
-            id: item.id || undefined,
-            natureza: item.natureza || undefined,
-            descricao: item.descricao || undefined,
-          }))
-          .filter((item) => Boolean(item.natureza || item.descricao)),
-        email: form.email || undefined,
-        telefone: form.telefone || form.whatsapp || undefined,
-        whatsapp: form.whatsapp || form.telefone || undefined,
-        nfseNum: nfseNum || undefined,
-        dpsNum: dpsNum || undefined,
-        serieDpsNum: serieDpsNum || undefined,
-        endereco: {
-          logradouro: form.endereco || undefined,
-          numero: form.numero || undefined,
-          complemento: form.complemento || undefined,
-          bairro: form.bairro || undefined,
-          cidade: form.cidade || undefined,
-          uf: form.uf || undefined,
-          cep: normalizeCep(form.cep) || undefined,
-        },
-      };
+      const payload = buildEmpresaUpdatePayload(form, cnaesRegime, cnaesParam, configOperacionais, {
+        nfseNum,
+        dpsNum,
+        serieDpsNum,
+      });
       return isEdit ? empresasApi.update(id!, {
       razaoSocial: payload.razaoSocial,
       nomeFantasia: payload.nomeFantasia,
