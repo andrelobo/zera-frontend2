@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isCPF,
   mergeTomadorFromCepResult,
   mergeTomadorFromCnpjResult,
   type TomadorSectionData,
@@ -81,5 +82,11 @@ describe('TomadorSection logic', () => {
       complemento: 'SALA 1',
       email: 'x@y.com',
     });
+  });
+
+  it('treats started cpf input as pessoa fisica context', () => {
+    expect(isCPF('123')).toBe(true);
+    expect(isCPF('123.456.789-01')).toBe(true);
+    expect(isCPF('12.345.678/0001-90')).toBe(false);
   });
 });

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CheckCircle, Save } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
-import TomadorSection, { type TomadorSectionData } from '@/components/TomadorSection';
+import TomadorSection, { isCPF, type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, normalizeCep } from '@/services/cep';
 import { empresasApi, tomadoresApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
@@ -69,6 +69,7 @@ const parseLocalidadeUf = (value: string) => {
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '');
 const toUpperTrimmed = (value?: string) => (value || '').trim().toUpperCase();
+const isCpfContext = (value: string) => isCPF(value);
 
 const TomadorFormPage = () => {
   const { id } = useParams();
@@ -123,16 +124,17 @@ const TomadorFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
+      const cpfContext = isCpfContext(form.cnpjCpf);
       const { municipio, uf } = parseLocalidadeUf(form.localidadeUf);
       const payload = {
         empresaCnpj: fallbackEmpresaCnpj.replace(/\D/g, ''),
         cpfCnpj: form.cnpjCpf.replace(/\D/g, ''),
         razaoSocial: form.nomeEmpresarial.trim(),
-        nomeFantasia: form.nomeFantasia || undefined,
-        inscricaoMunicipal: form.inscricaoMunicipal || undefined,
-        inscricaoEstadual: form.inscricaoEstadual || undefined,
-        suframa: form.suframa || undefined,
-        substitutoTributario: form.substitutoTributario,
+        nomeFantasia: cpfContext ? undefined : (form.nomeFantasia || undefined),
+        inscricaoMunicipal: cpfContext ? undefined : (form.inscricaoMunicipal || undefined),
+        inscricaoEstadual: cpfContext ? undefined : (form.inscricaoEstadual || undefined),
+        suframa: cpfContext ? undefined : (form.suframa || undefined),
+        substitutoTributario: cpfContext ? false : form.substitutoTributario,
         email: form.email || undefined,
         whatsapp: form.whatsapp || undefined,
         endereco: {

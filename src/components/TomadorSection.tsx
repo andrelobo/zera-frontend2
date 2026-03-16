@@ -53,7 +53,7 @@ export function validateCPF(cpf: string): boolean {
   return parseInt(cleaned[10], 10) === rest;
 }
 
-function isCPF(value: string): boolean {
+export function isCPF(value: string): boolean {
   return value.replace(/\D/g, '').length <= 11;
 }
 
@@ -277,7 +277,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         Tomadores
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr_1fr] gap-4">
+      <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-1' : 'md:grid-cols-[1.2fr_1fr_1fr]'} gap-4`}>
         <div>
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
           <div className="flex gap-2">
@@ -291,29 +291,35 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
           )}
         </div>
 
-        <div>
-          <label className="field-label">Inscrição Municipal</label>
-          <input className="field-input" placeholder="Inscrição" value={data.inscricaoMunicipal} onChange={(e) => update('inscricaoMunicipal', e.target.value)} />
-        </div>
+        {!currentIsCPF && (
+          <div>
+            <label className="field-label">Inscrição Municipal</label>
+            <input className="field-input" placeholder="Inscrição" value={data.inscricaoMunicipal} onChange={(e) => update('inscricaoMunicipal', e.target.value)} />
+          </div>
+        )}
 
-        <div>
-          <label className="field-label">Inscrição Estadual</label>
-          <input className="field-input" placeholder="Inscrição" value={data.inscricaoEstadual} onChange={(e) => update('inscricaoEstadual', e.target.value)} />
-        </div>
+        {!currentIsCPF && (
+          <div>
+            <label className="field-label">Inscrição Estadual</label>
+            <input className="field-input" placeholder="Inscrição" value={data.inscricaoEstadual} onChange={(e) => update('inscricaoEstadual', e.target.value)} />
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 mt-4 items-end">
+      <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-1' : 'md:grid-cols-[1fr_auto]'} gap-4 mt-4 items-end`}>
         <div>
           <label className="field-label">TOMADOR(A)</label>
           <input className="field-input" placeholder="Tomador(a)" value={data.nomeEmpresarial} onChange={(e) => update('nomeEmpresarial', e.target.value)} />
         </div>
-        <div className="flex items-center gap-3 pb-1">
-          <label className="field-label whitespace-nowrap mb-0">Substituto Tributário</label>
-          <div className="flex items-center gap-0">
-            <button type="button" className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${data.substitutoTributario ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: true }); onAutosave(); }}>Sim</button>
-            <button type="button" className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${!data.substitutoTributario ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: false }); onAutosave(); }}>Não</button>
+        {!currentIsCPF && (
+          <div className="flex items-center gap-3 pb-1">
+            <label className="field-label whitespace-nowrap mb-0">Substituto Tributário</label>
+            <div className="flex items-center gap-0">
+              <button type="button" className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${data.substitutoTributario ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: true }); onAutosave(); }}>Sim</button>
+              <button type="button" className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${!data.substitutoTributario ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: false }); onAutosave(); }}>Não</button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="mt-5 pt-5 border-t border-border">
