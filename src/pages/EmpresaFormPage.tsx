@@ -919,6 +919,9 @@ const EmpresaFormPage = () => {
     setForm((prev) => ({
       ...prev,
       endereco: normalizeLogradouro(address.logradouro || prev.endereco),
+      numero: String(address.numero || prev.numero),
+      complemento: toUpperTrimmed(address.complemento || prev.complemento),
+      bairro: toUpperTrimmed(address.bairro || prev.bairro),
       cidade: address.cidade || prev.cidade,
       uf: address.uf || prev.uf,
       cep: formatCep(address.cep),

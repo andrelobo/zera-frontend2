@@ -33,7 +33,33 @@ describe('cep service', () => {
     expect(result).toEqual({
       cep: '69010040',
       logradouro: 'Rua Exemplo',
+      numero: '',
       bairro: 'Centro',
+      cidade: 'Manaus',
+      uf: 'AM',
+      complemento: '',
+    });
+  });
+
+  it('accepts fallback payload keys from providers', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({
+      data: {
+        cep: '69017-020',
+        street: 'R FREI JOSE DE LEONISSA',
+        addressNumber: '123',
+        neighborhood: 'ALVORADA',
+        city: 'Manaus',
+        state: 'am',
+      },
+    } as never);
+
+    const result = await lookupCep('69017020');
+
+    expect(result).toEqual({
+      cep: '69017020',
+      logradouro: 'R FREI JOSE DE LEONISSA',
+      numero: '123',
+      bairro: 'ALVORADA',
       cidade: 'Manaus',
       uf: 'AM',
       complemento: '',
