@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { empresasApi } from '@/services/api';
 import type { ApiError, ImportCertificadoDigitalResponse } from '@/types/api';
@@ -51,6 +51,7 @@ const CertificadoDigitalPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<ApiError | null>(null);
   const [success, setSuccess] = useState<ImportCertificadoDigitalResponse | null>(null);
+  const [showReplaceForm, setShowReplaceForm] = useState(false);
 
   const cnpjClean = useMemo(() => cnpj.replace(/\D/g, ''), [cnpj]);
   const cnpjFromQuery = (searchParams.get('cnpj') || '').replace(/\D/g, '');
@@ -60,6 +61,21 @@ const CertificadoDigitalPage = () => {
     if (cnpjClean.length > 0) return;
     setCnpj(formatCNPJ(cnpjFromQuery));
   }, [cnpjClean.length, cnpjFromQuery]);
+
+  const { data: empresaByCnpj } = useQuery({
+    queryKey: ['empresa-certificado', cnpjClean],
+    queryFn: () => empresasApi.getByCnpj(cnpjClean),
+    enabled: cnpjClean.length === 14,
+    retry: false,
+  });
+
+  const certificadoAtual = (empresaByCnpj as ({ certificado?: {
+    filename?: string;
+    size?: number;
+    uploadedAt?: string;
+  } } | undefined))?.certificado;
+  const certificadoImportado = Boolean(certificadoAtual?.filename || certificadoAtual?.uploadedAt);
+  const exibirFormularioImportacao = !certificadoImportado || showReplaceForm;
 
   const mutation = useMutation({
     mutationFn: () => empresasApi.importCertificadoDigital({
@@ -123,6 +139,31 @@ const CertificadoDigitalPage = () => {
           </p>
         </CardHeader>
         <CardContent>
+          {certificadoImportado && !showReplaceForm && (
+            <Alert className="mb-4">
+              <ShieldCheck className="h-4 w-4" />
+              <AlertTitle>Certificado já importado</AlertTitle>
+              <AlertDescription>
+                <p><strong>Arquivo:</strong> {certificadoAtual?.filename || 'Certificado existente'}</p>
+                {typeof certificadoAtual?.size === 'number' && (
+                  <p><strong>Tamanho:</strong> {formatFileSize(certificadoAtual.size)}</p>
+                )}
+                {certificadoAtual?.uploadedAt && (
+                  <p><strong>Upload:</strong> {new Date(certificadoAtual.uploadedAt).toLocaleString('pt-BR')}</p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {certificadoImportado && !showReplaceForm && (
+            <div className="flex justify-end gap-2 pb-2">
+              <Button type="button" variant="outline" onClick={() => setShowReplaceForm(true)}>
+                Substituir certificado
+              </Button>
+            </div>
+          )}
+
+          {exibirFormularioImportacao && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ</Label>
@@ -192,12 +233,18 @@ const CertificadoDigitalPage = () => {
               <Button type="button" variant="outline" onClick={() => navigate('/empresas')}>
                 Voltar
               </Button>
+              {certificadoImportado && (
+                <Button type="button" variant="outline" onClick={() => setShowReplaceForm(false)}>
+                  Cancelar substituição
+                </Button>
+              )}
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Importar certificado
+                {certificadoImportado ? 'Substituir certificado' : 'Importar certificado'}
               </Button>
             </div>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>
