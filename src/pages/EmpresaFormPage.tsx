@@ -18,6 +18,7 @@ import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
 import CertificadoDigitalCard from '@/components/prestador/CertificadoDigitalCard';
+import IdentificacaoDocumentoCard from '@/components/prestador/IdentificacaoDocumentoCard';
 import ConfigOperacionaisSection from '@/components/ConfigOperacionaisSection';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getDefaultVinculosForCnae, getLC116Item, shouldRepairLegacyVinculos } from '@/utils/cnae-lc116';
@@ -1263,6 +1264,13 @@ const EmpresaFormPage = () => {
 
             <CertificadoDigitalCard
               certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string } | undefined) ?? null}
+            />
+
+            <IdentificacaoDocumentoCard
+              nfseNum={nfseNum}
+              dpsNum={dpsNum}
+              serieDpsNum={serieDpsNum}
+              readOnly
             />
 
           </div>

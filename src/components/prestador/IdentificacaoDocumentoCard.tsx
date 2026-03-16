@@ -3,17 +3,19 @@ import { FileText } from 'lucide-react';
 
 interface Props {
   nfseNum: string;
-  onNfseNumChange: (v: string) => void;
+  onNfseNumChange?: (v: string) => void;
   dpsNum: string;
-  onDpsNumChange: (v: string) => void;
+  onDpsNumChange?: (v: string) => void;
   serieDpsNum: string;
-  onSerieDpsNumChange: (v: string) => void;
+  onSerieDpsNumChange?: (v: string) => void;
+  readOnly?: boolean;
 }
 
 const IdentificacaoDocumentoCard: React.FC<Props> = ({
   nfseNum, onNfseNumChange,
   dpsNum, onDpsNumChange,
   serieDpsNum, onSerieDpsNumChange,
+  readOnly = false,
 }) => {
   return (
     <div className="section-card">
@@ -24,15 +26,33 @@ const IdentificacaoDocumentoCard: React.FC<Props> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="field-label">NFS-e Nº</label>
-          <input className="field-input" placeholder="Número" value={nfseNum} onChange={e => onNfseNumChange(e.target.value.replace(/\D/g, ''))} />
+          <input
+            className={`field-input ${readOnly ? 'bg-muted/30' : ''}`}
+            placeholder="Número"
+            value={nfseNum}
+            readOnly={readOnly}
+            onChange={(e) => onNfseNumChange?.(e.target.value.replace(/\D/g, ''))}
+          />
         </div>
         <div>
           <label className="field-label">DPS Nº</label>
-          <input className="field-input" placeholder="Número" value={dpsNum} onChange={e => onDpsNumChange(e.target.value.replace(/\D/g, ''))} />
+          <input
+            className={`field-input ${readOnly ? 'bg-muted/30' : ''}`}
+            placeholder="Número"
+            value={dpsNum}
+            readOnly={readOnly}
+            onChange={(e) => onDpsNumChange?.(e.target.value.replace(/\D/g, ''))}
+          />
         </div>
         <div>
           <label className="field-label">Série DPS Nº</label>
-          <input className="field-input" placeholder="Número" value={serieDpsNum} onChange={e => onSerieDpsNumChange(e.target.value.replace(/\D/g, ''))} />
+          <input
+            className={`field-input ${readOnly ? 'bg-muted/30' : ''}`}
+            placeholder="Número"
+            value={serieDpsNum}
+            readOnly={readOnly}
+            onChange={(e) => onSerieDpsNumChange?.(e.target.value.replace(/\D/g, ''))}
+          />
         </div>
       </div>
     </div>
