@@ -109,8 +109,8 @@ const GlobalTicker = () => {
     <div className="w-full border-b border-primary/20 bg-gradient-to-r from-primary/5 via-card to-primary/5 overflow-hidden">
       <div className="px-4 lg:px-6">
         <div className="ticker-viewport py-1">
-          <div className="ticker-track flex items-center overflow-x-auto">
-            <div className="ticker-content flex items-center gap-1">
+          <div className="ticker-track overflow-x-auto">
+            <div className="ticker-content flex min-w-full items-center justify-between gap-2">
               {items}
             </div>
           </div>
