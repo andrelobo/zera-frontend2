@@ -7,6 +7,7 @@ import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import TomadoresLista, { type TomadorListaItem } from '@/components/TomadoresLista';
 import { toast } from '@/hooks/use-toast';
+import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
 const formatDoc = (value?: string) => {
   const digits = (value || '').replace(/\D/g, '');
@@ -30,10 +31,11 @@ const TomadoresPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: tomadores = [], isLoading, isError, refetch } = useQuery({
+  const { data: tomadores = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['tomadores'],
     queryFn: () => tomadoresApi.list(),
   });
+  const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && tomadores.length === 0), 400);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => tomadoresApi.delete(id),
@@ -58,7 +60,7 @@ const TomadoresPage = () => {
   );
 
   if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (shouldShowError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6 animate-fade-in">

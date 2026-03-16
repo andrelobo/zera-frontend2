@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
 const NFSE_LIST_DATE_FROM = '2026-02-01';
 
@@ -26,7 +27,7 @@ const NfseListPage = () => {
   const status = (searchParams.get('status') as NfseStatus) || undefined;
   const provider = (searchParams.get('provider') as NfseProvider) || undefined;
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['nfse', page, status, provider],
     queryFn: () => nfseApi.list({
       page,
@@ -38,6 +39,7 @@ const NfseListPage = () => {
       order: 'DESC',
     }),
   });
+  const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && !data), 400);
 
   const items = data?.data || [];
   const totalPages = data?.totalPages || 1;
@@ -72,7 +74,7 @@ const NfseListPage = () => {
   };
 
   if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (shouldShowError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-4 animate-fade-in">

@@ -10,16 +10,18 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 import { formatCNPJ } from '@/utils/validators';
 
 const EmpresasPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: empresas, isLoading, isError, refetch } = useQuery({
+  const { data: empresas, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['empresas'],
     queryFn: empresasApi.list,
   });
+  const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && !empresas), 400);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => empresasApi.delete(id),
@@ -30,7 +32,7 @@ const EmpresasPage = () => {
   });
 
   if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState onRetry={() => refetch()} />;
+  if (shouldShowError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-4 animate-fade-in">
