@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle, Save } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, Save } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { isCPF, type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, normalizeCep } from '@/services/cep';
@@ -92,6 +92,11 @@ const TomadorFormPage = () => {
     enabled: !isEdit,
   });
 
+  const empresaCnpjContext = useMemo(
+    () => (existing?.empresaCnpj || fallbackEmpresaCnpj || '').replace(/\D/g, ''),
+    [existing?.empresaCnpj, fallbackEmpresaCnpj],
+  );
+
   useEffect(() => {
     if (!isEdit && empresas[0]?.cnpj) {
       setFallbackEmpresaCnpj(empresas[0].cnpj.replace(/\D/g, ''));
@@ -121,6 +126,20 @@ const TomadorFormPage = () => {
       whatsapp: formatPhone(existing.whatsapp || ''),
     });
   }, [existing]);
+
+  const docDigits = onlyDigits(form.cnpjCpf);
+  const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
+
+  const { data: tomadoresMesmoDocumento = [] } = useQuery({
+    queryKey: ['tomadores', 'duplicidade', empresaCnpjContext, docDigits],
+    queryFn: () => tomadoresApi.list({ empresaCnpj: empresaCnpjContext, q: docDigits }),
+    enabled: empresaCnpjContext.length === 14 && (docDigits.length === 11 || docDigits.length === 14) && docOk,
+  });
+
+  const tomadorDuplicado = useMemo(
+    () => tomadoresMesmoDocumento.find((item) => item.cpfCnpj.replace(/\D/g, '') === docDigits && item.id !== id) || null,
+    [docDigits, id, tomadoresMesmoDocumento],
+  );
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -190,10 +209,16 @@ const TomadorFormPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const docDigits = onlyDigits(form.cnpjCpf);
-    const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
     if (!docOk) {
       toast({ title: 'Documento inválido', description: 'CNPJ/CPF inválido.', variant: 'destructive' });
+      return;
+    }
+    if (tomadorDuplicado) {
+      toast({
+        title: 'Tomador já cadastrado',
+        description: `Já existe um tomador com este CPF/CNPJ: ${tomadorDuplicado.razaoSocial}.`,
+        variant: 'destructive',
+      });
       return;
     }
     if (form.email && !validateEmail(form.email)) {
@@ -208,10 +233,7 @@ const TomadorFormPage = () => {
   };
 
   if (isEdit && isLoading) return <LoadingState />;
-
-  const docDigits = onlyDigits(form.cnpjCpf);
-  const docOk = docDigits.length === 11 ? validateCPF(docDigits) : validateCNPJ(docDigits);
-  const configValida = docDigits.length >= 11 && docOk && (form.email === '' || validateEmail(form.email));
+  const configValida = docDigits.length >= 11 && docOk && !tomadorDuplicado && (form.email === '' || validateEmail(form.email));
 
   return (
     <div className="min-h-screen bg-background">
@@ -226,6 +248,12 @@ const TomadorFormPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {tomadorDuplicado && (
+              <div className="flex items-center gap-2 text-xs text-destructive">
+                <AlertCircle className="w-4 h-4" />
+                Tomador já cadastrado para este CPF/CNPJ
+              </div>
+            )}
             {configValida && (
               <div className="alert-success flex items-center gap-2 text-xs">
                 <CheckCircle className="w-4 h-4" />
@@ -242,6 +270,12 @@ const TomadorFormPage = () => {
 
           <div className="section-card">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {tomadorDuplicado && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  Tomador já cadastrado: {tomadorDuplicado.razaoSocial}
+                </div>
+              )}
               {configValida && (
                 <div className="alert-success flex items-center gap-2 text-sm">
                   <CheckCircle className="w-4 h-4" />
