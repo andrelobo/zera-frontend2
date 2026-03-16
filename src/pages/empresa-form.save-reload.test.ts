@@ -4,6 +4,7 @@ import {
   buildEmpresaSuccessRedirect,
   buildCanonicalParametroMunicipal,
   buildEmpresaUpdatePayload,
+  hasConfigOperacionaisContextMismatch,
   mapEmpresaParametroMunicipal,
   resolveConfigOperacionaisAtivos,
   shouldResetConfigOperacionaisOnCnaeChange,
@@ -110,5 +111,7 @@ describe('EmpresaFormPage save/reload', () => {
     ];
     expect(resolveConfigOperacionaisAtivos(items, '8650003', '8122200')).toEqual([]);
     expect(resolveConfigOperacionaisAtivos(items, '8650003', '8650003')).toEqual(items);
+    expect(hasConfigOperacionaisContextMismatch(items, '8650003', '8122200')).toBe(true);
+    expect(hasConfigOperacionaisContextMismatch(items, '8650003', '8650003')).toBe(false);
   });
 });

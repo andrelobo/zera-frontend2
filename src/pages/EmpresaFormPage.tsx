@@ -588,6 +588,18 @@ export const resolveConfigOperacionaisAtivos = (
   return context === current ? items : [];
 };
 
+export const hasConfigOperacionaisContextMismatch = (
+  items: ConfigOperacionalItem[],
+  configCnaeContext: string,
+  currentCnae: string,
+) => {
+  if (items.length === 0) return false;
+  const context = String(configCnaeContext || '').replace(/\D/g, '');
+  const current = String(currentCnae || '').replace(/\D/g, '');
+  if (!context || !current) return false;
+  return context !== current;
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -884,6 +896,10 @@ const EmpresaFormPage = () => {
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
   const currentCnaeContext = useMemo(() => String(form.cnaeFiscal || '').replace(/\D/g, ''), [form.cnaeFiscal]);
+  const configOperacionaisContextMismatch = useMemo(
+    () => hasConfigOperacionaisContextMismatch(configOperacionais, configOperacionaisContextCnae, currentCnaeContext),
+    [configOperacionais, configOperacionaisContextCnae, currentCnaeContext],
+  );
   const configOperacionaisAtivos = useMemo(
     () => resolveConfigOperacionaisAtivos(configOperacionais, configOperacionaisContextCnae, currentCnaeContext),
     [configOperacionais, configOperacionaisContextCnae, currentCnaeContext],
@@ -1417,8 +1433,35 @@ const EmpresaFormPage = () => {
               />
             </div>
 
+            {configOperacionaisContextMismatch && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
+                <div className="font-medium text-foreground">
+                  A Lista Serviço pertence ao CNAE anterior.
+                </div>
+                <p className="mt-1 text-foreground/80">
+                  Revise, edite ou remova os itens antes de salvar. Enquanto isso, esses serviços não serão considerados para o CNAE atual.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="btn-outline h-9 px-3 text-xs sm:text-sm"
+                    onClick={() => setConfigOperacionais([])}
+                  >
+                    Limpar lista antiga
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-outline h-9 px-3 text-xs sm:text-sm"
+                    onClick={() => setConfigOperacionaisContextCnae(currentCnaeContext)}
+                  >
+                    Manter neste CNAE
+                  </button>
+                </div>
+              </div>
+            )}
+
             <ConfigOperacionaisSection
-              items={configOperacionaisAtivos}
+              items={configOperacionais}
               onChange={(items) => {
                 setConfigOperacionais(items);
                 setConfigOperacionaisContextCnae(String(form.cnaeFiscal || '').replace(/\D/g, ''));
