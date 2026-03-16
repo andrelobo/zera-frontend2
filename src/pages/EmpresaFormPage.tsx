@@ -1432,9 +1432,6 @@ const EmpresaFormPage = () => {
                 <Settings className="w-4 h-4 text-primary" />
                 Parâmetros Municipais
               </h2>
-              <h3 className="text-xs font-bold mb-1.5" style={{ color: 'rgb(207, 155, 23)' }}>
-                Serviços Favoritos
-              </h3>
               <CTNSection
                 ctnSelecionado={form.ctnCodigo || null}
                 onCtnChange={(codigo, _descricao, _itemFormatado) => update('ctnCodigo', codigo)}
