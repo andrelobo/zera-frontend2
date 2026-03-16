@@ -577,6 +577,17 @@ export const buildEmpresaSuccessRedirect = (
   return `/empresas/${empresaId}?secao=${secao}`;
 };
 
+export const resolveConfigOperacionaisAtivos = (
+  items: ConfigOperacionalItem[],
+  configCnaeContext: string,
+  currentCnae: string,
+) => {
+  const context = String(configCnaeContext || '').replace(/\D/g, '');
+  const current = String(currentCnae || '').replace(/\D/g, '');
+  if (!context || !current) return items;
+  return context === current ? items : [];
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -872,6 +883,11 @@ const EmpresaFormPage = () => {
   }, [searchParams]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
+  const currentCnaeContext = useMemo(() => String(form.cnaeFiscal || '').replace(/\D/g, ''), [form.cnaeFiscal]);
+  const configOperacionaisAtivos = useMemo(
+    () => resolveConfigOperacionaisAtivos(configOperacionais, configOperacionaisContextCnae, currentCnaeContext),
+    [configOperacionais, configOperacionaisContextCnae, currentCnaeContext],
+  );
 
   const cepLookupQuery = useQuery({
     queryKey: ['cep-lookup', 'empresa-form', cepDigits],
@@ -894,7 +910,7 @@ const EmpresaFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
-      const payload = buildEmpresaUpdatePayload(form, cnaesRegime, cnaesParam, configOperacionais, {
+      const payload = buildEmpresaUpdatePayload(form, cnaesRegime, cnaesParam, configOperacionaisAtivos, {
         nfseNum,
         dpsNum,
         serieDpsNum,
@@ -1402,7 +1418,7 @@ const EmpresaFormPage = () => {
             </div>
 
             <ConfigOperacionaisSection
-              items={configOperacionais}
+              items={configOperacionaisAtivos}
               onChange={(items) => {
                 setConfigOperacionais(items);
                 setConfigOperacionaisContextCnae(String(form.cnaeFiscal || '').replace(/\D/g, ''));

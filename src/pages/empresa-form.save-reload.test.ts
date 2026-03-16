@@ -5,6 +5,7 @@ import {
   buildCanonicalParametroMunicipal,
   buildEmpresaUpdatePayload,
   mapEmpresaParametroMunicipal,
+  resolveConfigOperacionaisAtivos,
   shouldResetConfigOperacionaisOnCnaeChange,
 } from './EmpresaFormPage';
 
@@ -100,5 +101,14 @@ describe('EmpresaFormPage save/reload', () => {
 
   it('treats lista servico as stale when bound cnae context differs from current cnae', () => {
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', true)).toBe(true);
+  });
+
+  it('does not expose lista servico when cnae context differs from current cnae', () => {
+    const items = [
+      { id: '1', natureza: 'Serviços de consulta psicologia', descricao: 'Serviços de consulta psicologia' },
+      { id: '2', natureza: 'Serviços de consulta psicanalise', descricao: 'Serviços de consulta psicanalise' },
+    ];
+    expect(resolveConfigOperacionaisAtivos(items, '8650003', '8122200')).toEqual([]);
+    expect(resolveConfigOperacionaisAtivos(items, '8650003', '8650003')).toEqual(items);
   });
 });
