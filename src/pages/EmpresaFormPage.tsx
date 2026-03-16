@@ -1047,15 +1047,6 @@ const EmpresaFormPage = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <button
-              type="button"
-              onClick={() => mutation.mutate()}
-              disabled={mutation.isPending}
-              className="flex items-center gap-2 text-sm py-2 btn-primary"
-            >
-              {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              <span className="hidden sm:inline">SALVAR</span>
-            </button>
           </div>
         </header>
 
