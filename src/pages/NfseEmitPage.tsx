@@ -81,6 +81,22 @@ function parsePercent(value: string): number {
   return parseFloat(value.replace(',', '.')) || 0;
 }
 
+const formatDoc = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 11) {
+    return digits
+      .replace(/^(\d{3})(\d)/, '$1.$2')
+      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1-$2');
+  }
+  return digits
+    .slice(0, 14)
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
 const splitLocalidadeUf = (value: string) => {
   const [municipio, uf] = value.split('-').map((part) => part.trim());
   return { municipio: municipio || '', uf: (uf || '').toUpperCase() };
@@ -300,7 +316,7 @@ const NfseEmitPage: React.FC = () => {
     }));
     setTomador((prev) => ({
       ...prev,
-      cnpjCpf: t.cpfCnpj,
+      cnpjCpf: formatDoc(t.cpfCnpj || ''),
       nomeRazaoSocial: t.razaoSocial || prev.nomeRazaoSocial,
       inscricaoMunicipal: t.inscricaoMunicipal || '',
       email: t.email || '',
