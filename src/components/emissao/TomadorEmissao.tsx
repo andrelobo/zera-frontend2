@@ -75,6 +75,11 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
   }, []);
 
   const tomadoresView = useMemo(() => tomadores.slice(0, 30), [tomadores]);
+  const tomadorExistente = useMemo(() => {
+    const digits = data.cnpjCpf.replace(/\D/g, '');
+    if (digits.length !== 11 && digits.length !== 14) return null;
+    return tomadores.find((item) => item.cpfCnpj.replace(/\D/g, '') === digits) || null;
+  }, [data.cnpjCpf, tomadores]);
 
   const selecionarTomador = (t: Tomador) => {
     onChange({
@@ -150,6 +155,11 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
               </div>
             )}
           </div>
+          {tomadorExistente && (
+            <p className="mt-1 text-[11px] font-medium text-[hsl(144,72%,28%)]">
+              Tomador já cadastrado: {tomadorExistente.razaoSocial || formatDoc(tomadorExistente.cpfCnpj)}
+            </p>
+          )}
         </div>
 
         <div>
