@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Empresa } from '@/types/api';
-import { buildCanonicalParametroMunicipal, buildEmpresaUpdatePayload, mapEmpresaParametroMunicipal } from './EmpresaFormPage';
+import {
+  buildCanonicalParametroMunicipal,
+  buildEmpresaUpdatePayload,
+  mapEmpresaParametroMunicipal,
+  shouldResetConfigOperacionaisOnCnaeChange,
+} from './EmpresaFormPage';
 
 describe('EmpresaFormPage save/reload', () => {
   it('builds canonical parametroMunicipal on save and reads it back consistently', () => {
@@ -73,5 +78,11 @@ describe('EmpresaFormPage save/reload', () => {
     expect(reloaded[0].codigo).toBe('8650003');
     expect(reloaded[0].vinculos[0].ctn).toBe('041601');
     expect(reloaded[0].vinculos[0].nbs).toBe('1.2301.98.00');
+  });
+
+  it('clears lista servico when principal CNAE changes', () => {
+    expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', true)).toBe(true);
+    expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8650003', true)).toBe(false);
+    expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', false)).toBe(false);
   });
 });

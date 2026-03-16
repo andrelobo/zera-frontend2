@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
@@ -533,6 +533,18 @@ export const buildEmpresaUpdatePayload = (
   };
 };
 
+export const shouldResetConfigOperacionaisOnCnaeChange = (
+  previousCnae: string,
+  nextCnae: string,
+  hasConfigOperacionais: boolean,
+) => {
+  const prev = String(previousCnae || '').replace(/\D/g, '');
+  const next = String(nextCnae || '').replace(/\D/g, '');
+  if (!prev || !next) return false;
+  if (prev === next) return false;
+  return hasConfigOperacionais;
+};
+
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -581,6 +593,7 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
+  const lastPrincipalCnaeRef = useRef('');
 
   useEffect(() => {
     if (existing) {
@@ -608,8 +621,27 @@ const EmpresaFormPage = () => {
         camposFaltantes: existing.camposFaltantes,
         camposFaltantesEmissao: existing.camposFaltantesEmissao,
       });
+      lastPrincipalCnaeRef.current = String(existing.cnaeFiscal || '').replace(/\D/g, '');
     }
   }, [existing]);
+
+  useEffect(() => {
+    const nextCnae = String(form.cnaeFiscal || '').replace(/\D/g, '');
+    if (!nextCnae) return;
+
+    if (!lastPrincipalCnaeRef.current) {
+      lastPrincipalCnaeRef.current = nextCnae;
+      return;
+    }
+
+    if (!shouldResetConfigOperacionaisOnCnaeChange(lastPrincipalCnaeRef.current, nextCnae, configOperacionais.length > 0)) {
+      lastPrincipalCnaeRef.current = nextCnae;
+      return;
+    }
+
+    setConfigOperacionais([]);
+    lastPrincipalCnaeRef.current = nextCnae;
+  }, [form.cnaeFiscal, configOperacionais.length]);
 
   useEffect(() => {
     const hasApuracao = form.apuracaoSimplesNacional.trim().length > 0;
