@@ -288,7 +288,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         <div className="grid grid-cols-1 md:grid-cols-[0.4fr_2.1fr_0.35fr_1.1fr] gap-4">
           <div>
             <label className="field-label">CEP</label>
-            <input className="field-input" placeholder="00000-000" value={data.cep} onChange={(e) => handleCEPChange(e.target.value)} maxLength={9} />
+            <input className="field-input" placeholder="00000-000" value={formatCEP(data.cep)} onChange={(e) => handleCEPChange(e.target.value)} maxLength={9} />
             {loadingCEP && <Loader2 className="w-4 h-4 animate-spin text-primary mt-2" />}
           </div>
           <div>

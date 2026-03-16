@@ -344,7 +344,7 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
               <input
                 className="field-input"
                 placeholder="00000-000"
-                value={data.cep}
+                value={formatCEP(data.cep)}
                 onChange={(e) => handleCEPChange(e.target.value)}
                 maxLength={9}
               />
