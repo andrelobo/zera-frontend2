@@ -85,6 +85,7 @@ describe('EmpresaFormPage save/reload', () => {
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', true)).toBe(true);
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8650003', true)).toBe(false);
     expect(shouldResetConfigOperacionaisOnCnaeChange('8650003', '8122200', false)).toBe(false);
+    expect(shouldResetConfigOperacionaisOnCnaeChange('6920601', '8122200', true)).toBe(true);
   });
 
   it('keeps user on same empresa and current tab after successful update', () => {

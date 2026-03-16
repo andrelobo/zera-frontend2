@@ -1077,6 +1077,12 @@ const EmpresaFormPage = () => {
     if (!principal) {
       return;
     }
+    const previousPrincipal = lastPrincipalCnaeRef.current || String(form.cnaeFiscal || '').replace(/\D/g, '');
+    const nextPrincipal = String(principal.codigo || '').replace(/\D/g, '');
+    if (shouldResetConfigOperacionaisOnCnaeChange(previousPrincipal, nextPrincipal, configOperacionais.length > 0)) {
+      setConfigOperacionais([]);
+    }
+    lastPrincipalCnaeRef.current = nextPrincipal;
     const primeiroVinculo = principal.vinculos[0];
     setForm((prev) => ({
       ...prev,
