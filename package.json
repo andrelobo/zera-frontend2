@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:critical": "vitest run src/pages/empresa-form.autocomplete-fixtures.test.ts src/pages/empresa-form.save-reload.test.ts src/components/prestador/prestador-cards.test.tsx src/components/prestador/CertificadoDigitalCard.test.tsx src/components/TomadorSection.test.tsx src/components/tomador-section.logic.test.ts src/components/emissao/TomadorEmissao.test.tsx src/components/emissao/PrestadorSection.test.tsx src/components/emissao/PrestacaoServicoSection.test.tsx src/components/emissao/prestacao-servico.logic.test.ts src/pages/nfseEmit.mappers.test.ts src/utils/validators.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
