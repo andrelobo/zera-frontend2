@@ -61,6 +61,7 @@ interface EmpresaFormData {
   whatsapp: string;
   email: string;
 }
+export type { EmpresaFormData };
 
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
 type ConfigOperacionalItem = {
@@ -191,6 +192,11 @@ const clearAutofillCadastroFields = (prev: EmpresaFormData): EmpresaFormData => 
   email: '',
 });
 
+const isEmpresaAutocompleteCandidate = (empresa: Empresa) => {
+  const raw = empresa as unknown as Record<string, unknown>;
+  return raw.found !== false;
+};
+
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
   const legacy = empresa as Record<string, unknown>;
   const endereco = (empresa.endereco || {}) as Record<string, unknown>;
@@ -315,6 +321,23 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     telefone: formatPhone(String(empresa.telefone || empresa.fone || empresa.whatsapp || legacy.ddd_telefone_1 || previous.telefone || '')),
     whatsapp: formatPhone(String(empresa.whatsapp || empresa.telefone || empresa.fone || legacy.ddd_telefone_1 || previous.whatsapp || '')),
     email: empresa.email || String(legacy.email || previous.email),
+  };
+};
+
+export const applyEmpresaAutocompleteMerge = (
+  previous: EmpresaFormData,
+  empresas: Empresa[],
+): EmpresaFormData => {
+  let merged = clearAutofillCadastroFields(previous);
+
+  for (const empresa of empresas.filter(isEmpresaAutocompleteCandidate)) {
+    merged = mapEmpresaToForm(empresa, merged);
+  }
+
+  return {
+    ...merged,
+    // Regra operacional: IM não deve vir por autocomplete.
+    inscricaoMunicipal: previous.inscricaoMunicipal,
   };
 };
 
@@ -599,7 +622,7 @@ const EmpresaFormPage = () => {
   const queryClient = useQueryClient();
   const isEdit = !!id;
 
-  const { data: existing, isLoading } = useQuery({
+  const { data: existing, isLoading, refetch: refetchEmpresa } = useQuery({
     queryKey: ['empresa', id],
     queryFn: () => empresasApi.getById(id!),
     enabled: isEdit,
@@ -641,6 +664,16 @@ const EmpresaFormPage = () => {
     camposFaltantesEmissao?: string[];
   } | null>(null);
   const lastPrincipalCnaeRef = useRef('');
+
+  const focusCertificadoCard = () => {
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      document.getElementById('certificado-digital-card')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+  };
 
   useEffect(() => {
     if (existing) {
@@ -1014,18 +1047,7 @@ const EmpresaFormPage = () => {
     },
     onSuccess: ({ cnpj, empresas }) => {
       setLastPreviewCnpj(cnpj);
-      setForm((prev) => {
-        let merged = clearAutofillCadastroFields(prev);
-        for (const empresa of empresas) {
-          merged = mapEmpresaToForm(empresa, merged);
-        }
-
-        return {
-          ...merged,
-          // Regra operacional: IM não deve vir por autocomplete.
-          inscricaoMunicipal: prev.inscricaoMunicipal,
-        };
-      });
+      setForm((prev) => applyEmpresaAutocompleteMerge(prev, empresas));
       toast({
         title: 'Dados preenchidos',
         description: 'Autocompletar por CNPJ concluiu com CNPJA como fonte principal e fallback automático.',
@@ -1183,9 +1205,8 @@ const EmpresaFormPage = () => {
                   type="button"
                   className="btn-outline h-9 px-3 text-xs sm:text-sm"
                   onClick={() => {
-                    const cnpjDigits = form.cnpj.replace(/\D/g, '');
-                    const cnpjQuery = cnpjDigits ? `?cnpj=${cnpjDigits}` : '';
-                    navigate(`/certificado-digital${cnpjQuery}`);
+                    setPrestadorSubTab('cadastro');
+                    focusCertificadoCard();
                   }}
                 >
                   Importar certificado digital agora
@@ -1240,7 +1261,12 @@ const EmpresaFormPage = () => {
             />
 
             <CertificadoDigitalCard
+              cnpj={form.cnpj}
               certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string } | undefined) ?? null}
+              onImported={async () => {
+                if (!isEdit) return;
+                await refetchEmpresa();
+              }}
             />
 
             <IdentificacaoDocumentoCard
