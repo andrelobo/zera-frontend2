@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
-import { BotMessageSquare } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { BotMessageSquare, ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/simples-nacional';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 
@@ -41,7 +51,17 @@ const parseSnapshot = (raw: string | null): HeaderSnapshot | null => {
   }
 };
 
+const getInitials = (nameOrEmail: string | undefined) => {
+  const safe = (nameOrEmail || '').trim();
+  if (!safe) return 'US';
+  const parts = safe.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
 const AppLayout = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [snapshot, setSnapshot] = useState<HeaderSnapshot>(() => {
     if (typeof window === 'undefined') return FALLBACK_SNAPSHOT;
     return parseSnapshot(window.localStorage.getItem(TICKER_STORAGE_KEY)) || FALLBACK_SNAPSHOT;
@@ -72,12 +92,20 @@ const AppLayout = () => {
 
   const receitaMes = snapshot.rbt12 / 12;
   const aRecolher = receitaMes * snapshot.aliquotaEfetiva;
+  const displayName = user?.name || user?.email || 'Usuário';
+  const displayEmail = user?.email || '';
+  const initials = getInitials(displayName);
   const headerKpis = useMemo(() => ([
     { label: 'Receita Jan 2026', value: formatCurrency(receitaMes) },
     { label: 'Aliq. Efetiva', value: formatPercent(snapshot.aliquotaEfetiva) },
     { label: 'Alíq. ISS', value: formatPercent(snapshot.issReferencia) },
     { label: 'A Recolher', value: formatCurrency(aRecolher), accent: true },
   ]), [aRecolher, receitaMes, snapshot.aliquotaEfetiva, snapshot.issReferencia]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <SidebarProvider>
@@ -104,7 +132,39 @@ const AppLayout = () => {
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-3 shrink-0" />
+            <div className="ml-auto flex items-center gap-3 shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-md border border-white/20 px-2 py-1 hover:bg-white/10"
+                  >
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="bg-white/15 text-[11px] font-semibold text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline max-w-[180px] truncate text-sm text-white">{displayName}</span>
+                    <ChevronDown className="h-4 w-4 text-white/70" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="leading-tight">
+                    <p className="truncate">{displayName}</p>
+                    {displayEmail ? <p className="text-xs text-muted-foreground truncate">{displayEmail}</p> : null}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/account')}>
+                    <UserRound className="mr-2 h-4 w-4" />
+                    Minha Conta
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
             <Outlet />
