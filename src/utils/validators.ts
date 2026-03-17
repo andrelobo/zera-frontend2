@@ -68,9 +68,10 @@ export function formatPhone(value: string): string {
 
 export function normalizeLogradouro(value: string): string {
   return String(value || '')
-    .trim()
+    .replace(/^\s+/u, '')
     .toUpperCase()
     .replace(/^RUA\b\.?\s*/u, 'R ')
     .replace(/^AVENIDA\b\.?\s*/u, 'AV ')
-    .replace(/^AV\b\.?\s*/u, 'AV ');
+    .replace(/^AV\b\.?\s*/u, 'AV ')
+    .replace(/[ \t]{2,}/gu, ' ');
 }
