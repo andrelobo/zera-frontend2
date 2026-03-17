@@ -53,6 +53,7 @@ const App = () => (
                 }
               >
                 <Route path="/" element={<DashboardPage />} />
+                <Route path="/gestor-ai" element={<DashboardPage />} />
                 <Route path="/account" element={<MyAccountPage />} />
                 <Route path="/nfse" element={<NfseListPage />} />
                 <Route path="/nfse/nova" element={<NfseEmitPage />} />

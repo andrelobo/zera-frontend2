@@ -4,6 +4,7 @@ import {
   Building2,
   Users,
   Receipt,
+  FileText,
   Landmark,
   Settings,
   ClipboardList,
@@ -23,7 +24,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-type ActiveTab = 'dashboard' | 'prestador' | 'tomador' | 'emissao';
+type ActiveTab = 'dashboard' | 'gestorAi' | 'prestador' | 'tomador' | 'emissao';
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
 
 const prestadorSubItems = [
@@ -40,6 +41,7 @@ const AppSidebar = () => {
 
   const activeTab = useMemo<ActiveTab>(() => {
     if (location.pathname === '/') return 'dashboard';
+    if (location.pathname.startsWith('/gestor-ai')) return 'gestorAi';
     if (location.pathname.startsWith('/empresas')) return 'prestador';
     if (location.pathname.startsWith('/tomadores')) return 'tomador';
     if (location.pathname.startsWith('/nfse')) return 'emissao';
@@ -65,6 +67,11 @@ const AppSidebar = () => {
 
   const goPrestador = () => {
     navigate('/empresas');
+    closeMobile();
+  };
+
+  const goGestorAi = () => {
+    navigate('/gestor-ai');
     closeMobile();
   };
 
@@ -115,6 +122,22 @@ const AppSidebar = () => {
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Dashboard</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeTab === 'gestorAi'}
+                  onClick={goGestorAi}
+                  tooltip="Gestor AI"
+                  className={
+                    activeTab === 'gestorAi'
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
+                      : ''
+                  }
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Gestor AI</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
