@@ -1,6 +1,33 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **16/03/2026**.
+Snapshot operacional do frontend em **17/03/2026**.
+
+## 0. Delta critico de hoje (17/03/2026) - refetch automatico de NFSe
+
+Fonte: `codigo local` + `execucao local`.
+
+Mudanca aplicada:
+- `src/pages/NfseDetailPage.tsx`
+  - passa a fazer `refetch` automatico a cada `15s` enquanto a emissao estiver em:
+    - `PENDING`
+    - `PROCESSING`
+  - o mesmo intervalo vale para:
+    - detalhe da NFSe
+    - artifacts
+    - provider response
+- `src/pages/NfseListPage.tsx`
+  - passa a fazer `refetch` automatico a cada `15s` quando houver ao menos uma emissao ativa na lista (`PENDING`/`PROCESSING`)
+
+Objetivo:
+- reduzir necessidade de refresh manual para acompanhar transicao de status.
+
+Garantia de nao regressao:
+- nenhum payload foi alterado;
+- nenhum fluxo de emissao foi alterado;
+- mudanca restrita a reconsulta de dados em tela.
+
+Validacao:
+- `yarn eslint src/pages/NfseDetailPage.tsx src/pages/NfseListPage.tsx` -> `PASS`
 
 ## 0. Delta critico de hoje (16/03/2026) - cards 1/2/3 de Parametros Municipais
 

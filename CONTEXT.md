@@ -5,6 +5,32 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-03-17)
+Fonte: `codigo local` + `execucao local`.
+
+### NFSe - atualizacao automatica de status em tela
+
+Arquivos:
+- `src/pages/NfseDetailPage.tsx`
+- `src/pages/NfseListPage.tsx`
+
+Ajuste aplicado:
+- detalhe da NFSe agora faz `refetch` automatico a cada `15s` enquanto o status estiver em:
+  - `PENDING`
+  - `PROCESSING`
+- lista de NFSe agora faz `refetch` automatico a cada `15s` quando houver pelo menos uma emissao ativa na lista.
+
+Objetivo:
+- reduzir dependencia de refresh manual para visualizar transicoes de status vindas do backend.
+
+Escopo:
+- nenhuma regra fiscal foi alterada;
+- nenhuma estrutura de payload foi alterada;
+- mudanca restrita a polling de query no frontend.
+
+Validacao local:
+- `yarn eslint src/pages/NfseDetailPage.tsx src/pages/NfseListPage.tsx` -> passando.
+
 ## 0. Atualizacao de Contexto (2026-03-16)
 Fonte: `codigo local` + `execucao local`.
 
