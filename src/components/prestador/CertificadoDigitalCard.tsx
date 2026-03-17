@@ -1,47 +1,136 @@
-import React, { useRef, useState } from 'react';
-import { ShieldCheck, Upload, X, Eye, EyeOff, FileKey2, CheckCircle2 } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import axios from 'axios';
+import { useMutation } from '@tanstack/react-query';
+import { Loader2, ShieldCheck, Upload, X, Eye, EyeOff, FileKey2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { empresasApi } from '@/services/api';
+import { formatCNPJ } from '@/utils/validators';
+import type { ApiError, ImportCertificadoDigitalResponse } from '@/types/api';
 
 interface Props {
+  cnpj?: string;
   certificado?: {
     filename?: string;
+    size?: number;
     uploadedAt?: string;
   } | null;
+  onImported?: (result: ImportCertificadoDigitalResponse) => void | Promise<void>;
 }
 
-const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
-  const [nomeArquivo, setNomeArquivo] = useState('');
+const CERT_EXTENSIONS = ['.pfx', '.p12'];
+
+const getFileExtension = (fileName: string) => {
+  const parts = fileName.toLowerCase().split('.');
+  if (parts.length < 2) return '';
+  return `.${parts[parts.length - 1]}`;
+};
+
+const getApiError = (error: unknown): ApiError => {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const data = error.response.data as Partial<ApiError>;
+    return {
+      code: data.code || 'HTTP_ERROR',
+      message: data.message || 'Falha ao importar certificado.',
+      correlationId: data.correlationId,
+      details: data.details,
+    };
+  }
+
+  return {
+    code: 'UNEXPECTED_ERROR',
+    message: 'Falha ao importar certificado.',
+  };
+};
+
+const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImported }) => {
+  const [file, setFile] = useState<File | null>(null);
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
   const [showReplaceForm, setShowReplaceForm] = useState(false);
+  const [apiError, setApiError] = useState<ApiError | null>(null);
+  const [certificadoAtual, setCertificadoAtual] = useState<Props['certificado']>(certificado ?? null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const certificadoImportado = Boolean(certificado?.filename || certificado?.uploadedAt);
-  const uploadedAtLabel = certificado?.uploadedAt
-    ? new Date(certificado.uploadedAt).toLocaleString('pt-BR')
+  const cnpjClean = useMemo(() => cnpj.replace(/\D/g, ''), [cnpj]);
+  const certificadoImportado = Boolean(certificadoAtual?.filename || certificadoAtual?.uploadedAt);
+  const uploadedAtLabel = certificadoAtual?.uploadedAt
+    ? new Date(certificadoAtual.uploadedAt).toLocaleString('pt-BR')
     : '';
 
+  const resetForm = () => {
+    setFile(null);
+    setSenha('');
+    setApiError(null);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    if (!['.pfx', '.p12'].includes(ext)) {
+    const nextFile = e.target.files?.[0];
+    if (!nextFile) return;
+    const ext = getFileExtension(nextFile.name);
+    if (!CERT_EXTENSIONS.includes(ext)) {
       toast.error('Formato inválido. Use arquivos .pfx ou .p12');
+      if (inputRef.current) inputRef.current.value = '';
       return;
     }
-    setNomeArquivo(file.name);
-    toast.success(`Certificado "${file.name}" selecionado`);
+    setFile(nextFile);
+    setApiError(null);
+    toast.success(`Certificado "${nextFile.name}" selecionado`);
   };
 
   const handleRemover = () => {
-    setNomeArquivo('');
-    setSenha('');
-    if (inputRef.current) inputRef.current.value = '';
+    resetForm();
     toast.info('Certificado removido');
+  };
+
+  const validate = () => {
+    if (cnpjClean.length !== 14) return 'Informe um CNPJ válido antes de importar o certificado.';
+    if (!senha.trim() || !file) return 'Selecione o arquivo e informe a senha do certificado.';
+    const ext = getFileExtension(file.name);
+    if (!CERT_EXTENSIONS.includes(ext)) return 'Arquivo inválido. Use .pfx ou .p12.';
+    return null;
+  };
+
+  const mutation = useMutation({
+    mutationFn: () => empresasApi.importCertificadoDigital({
+      cnpj: cnpjClean,
+      senhaCertificado: senha,
+      file: file!,
+    }),
+    onSuccess: async (result) => {
+      const nextCertificado = {
+        filename: result.fileName || file?.name || certificadoAtual?.filename,
+        size: result.fileSize ?? file?.size ?? certificadoAtual?.size,
+        uploadedAt: result.uploadedAt || new Date().toISOString(),
+      };
+      setApiError(null);
+      setCertificadoAtual(nextCertificado);
+      setShowReplaceForm(false);
+      resetForm();
+      toast.success('Certificado importado com sucesso');
+      await onImported?.(result);
+    },
+    onError: (error) => {
+      const nextError = getApiError(error);
+      setApiError(nextError);
+      toast.error(nextError.message);
+    },
+  });
+
+  const handleImport = async () => {
+    const validationError = validate();
+    if (validationError) {
+      setApiError({ code: 'VALIDATION_ERROR', message: validationError });
+      toast.error(validationError);
+      return;
+    }
+
+    setApiError(null);
+    await mutation.mutateAsync();
   };
 
   if (certificadoImportado && !showReplaceForm) {
     return (
-      <div className="section-card">
+      <div className="section-card" id="certificado-digital-card">
         <h2 className="section-title">
           <ShieldCheck className="w-5 h-5 text-primary" />
           Certificado CNPJ A1
@@ -51,7 +140,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span>
               Certificado digital já importado
-              {certificado?.filename ? `: ${certificado.filename}` : ''}
+              {certificadoAtual?.filename ? `: ${certificadoAtual.filename}` : ''}
               {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
             </span>
           </p>
@@ -70,11 +159,18 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
   }
 
   return (
-    <div className="section-card">
+    <div className="section-card" id="certificado-digital-card">
       <h2 className="section-title">
         <ShieldCheck className="w-5 h-5 text-primary" />
         Certificado CNPJ A1
       </h2>
+      <div className="mb-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        {cnpjClean.length === 14 ? (
+          <span>Certificado vinculado ao CNPJ {formatCNPJ(cnpjClean)}.</span>
+        ) : (
+          <span>Preencha um CNPJ válido no cadastro antes de importar o certificado.</span>
+        )}
+      </div>
       <input
         ref={inputRef}
         type="file"
@@ -85,11 +181,12 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="field-label">Arquivo do Certificado</label>
-          {!nomeArquivo ? (
+          {!file ? (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               className="field-input w-full flex items-center gap-2 text-muted-foreground cursor-pointer hover:border-primary/50 transition-colors"
+              disabled={mutation.isPending}
             >
               <Upload className="w-4 h-4 shrink-0" />
               <span className="text-sm">Importar .pfx ou .p12</span>
@@ -98,11 +195,12 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
             <div className="field-input flex items-center gap-2">
               <FileKey2 className="w-4 h-4 text-primary shrink-0" />
               <span className="text-sm font-medium text-foreground truncate flex-1">
-                {nomeArquivo}
+                {file.name}
               </span>
               <button
                 type="button"
                 onClick={handleRemover}
+                disabled={mutation.isPending}
                 className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
@@ -119,6 +217,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
               placeholder="Digite a senha do certificado"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
+              disabled={mutation.isPending}
             />
             <button
               type="button"
@@ -131,19 +230,48 @@ const CertificadoDigitalCard: React.FC<Props> = ({ certificado }) => {
           </div>
         </div>
       </div>
-      {certificadoImportado && showReplaceForm && (
-        <div className="mt-3 flex justify-end">
+      {apiError && (
+        <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {apiError.message}
+        </div>
+      )}
+      <div className="mt-3 flex justify-end gap-2">
+        {certificadoImportado && showReplaceForm && (
           <button
             type="button"
             onClick={() => {
               setShowReplaceForm(false);
               handleRemover();
             }}
+            disabled={mutation.isPending}
             className="btn-outline h-9 px-3 text-xs sm:text-sm"
           >
             Cancelar substituição
           </button>
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={() => void handleImport()}
+          disabled={mutation.isPending}
+          className="btn-primary h-9 px-3 text-xs sm:text-sm"
+        >
+          {mutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              {certificadoImportado ? 'Substituir certificado' : 'Importar certificado'}
+            </>
+          )}
+        </button>
+      </div>
+      {certificadoImportado && showReplaceForm && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          A substituição atualiza o certificado do prestador neste cadastro.
+        </p>
       )}
     </div>
   );
