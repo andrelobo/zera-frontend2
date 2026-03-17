@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PrestadorSection from './PrestadorSection';
@@ -162,5 +163,32 @@ describe('emissao PrestadorSection UI', () => {
 
     expect(mocks.getByCnpj).not.toHaveBeenCalled();
     expect(mocks.previewByCnpj).not.toHaveBeenCalled();
+  });
+
+  it('allows editing logradouro after autocomplete-filled value without swallowing spaces', () => {
+    const Harness = () => {
+      const [data, setData] = useState({
+        ...baseData,
+        cnpj: '43.521.115/0001-34',
+        logradouro: 'R SALDANHA MARINHO',
+      });
+
+      return (
+        <PrestadorSection
+          data={data}
+          onChange={setData}
+          onAutosave={vi.fn()}
+        />
+      );
+    };
+
+    render(<Harness />);
+
+    const input = screen.getByPlaceholderText('Rua, Av., etc.') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Rua ' } });
+    expect(input.value).toBe('R ');
+
+    fireEvent.change(input, { target: { value: 'Rua Nova' } });
+    expect(input.value).toBe('R NOVA');
   });
 });
