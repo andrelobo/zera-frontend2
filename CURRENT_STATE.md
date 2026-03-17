@@ -2,6 +2,25 @@
 
 Snapshot operacional do frontend em **16/03/2026**.
 
+## 0. Delta critico de hoje (16/03/2026) - cards 1/2/3 de Parametros Municipais
+
+Fonte: `codigo local` + `execucao local`.
+
+Mudanca aplicada em `src/components/CTNSection.tsx`:
+- removida a borda azul fixa (`radio-card-selected`) dos 3 cards:
+  - `1. Código Cnae`
+  - `2. Código Tributação Nacional`
+  - `3. Nomenclatura Brasileira Serviços`
+- efeito azul agora fica apenas no `hover` (classe base `radio-card`), como no comportamento esperado.
+
+Garantia de nao regressao funcional:
+- nenhuma regra de preenchimento automatico/autocomplete foi alterada;
+- nenhuma regra de salvamento de `parametroMunicipal` foi alterada.
+
+Validacao:
+- `yarn test` -> 16 arquivos, 61 testes, `PASS`
+- `yarn build` -> `PASS`
+
 ## 0. Delta critico de hoje (16/03/2026)
 
 Fonte: `contrato backend`.

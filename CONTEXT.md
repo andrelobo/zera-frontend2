@@ -6,6 +6,23 @@ Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (o
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
 ## 0. Atualizacao de Contexto (2026-03-16)
+Fonte: `codigo local` + `execucao local`.
+
+### Prestador -> Parâmetros Municipais (cards 1/2/3)
+
+Ajuste visual aplicado em `CTNSection`:
+- cards `1. Código Cnae`, `2. Código Tributação Nacional` e `3. Nomenclatura Brasileira Serviços` nao ficam mais com borda azul fixa quando selecionados;
+- borda azul permanece apenas no `hover`, alinhando com o comportamento solicitado.
+
+Escopo:
+- mudanca somente de estilo (classe de estado selecionado removida desses 3 cards);
+- regras de autocomplete, vinculos CNAE/CTN/NBS e payload de save permanecem inalteradas.
+
+Validacao local:
+- `yarn test` -> 16 arquivos / 61 testes passando;
+- `yarn build` -> passando.
+
+## 0. Atualizacao de Contexto (2026-03-16)
 Fonte: `codigo local` + `contrato backend`.
 
 ### B.I. - prontidao analitica agora separada no backend
