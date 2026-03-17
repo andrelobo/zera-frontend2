@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PrestadorSection from './PrestadorSection';
 
@@ -192,7 +192,7 @@ describe('emissao PrestadorSection UI', () => {
     expect(input.value).toBe('R NOVA');
   });
 
-  it('allows editing localidade, cep and whatsapp after prefilled values', () => {
+  it('allows editing localidade, cep and whatsapp after prefilled values', async () => {
     const Harness = () => {
       const [data, setData] = useState({
         ...baseData,
@@ -217,13 +217,19 @@ describe('emissao PrestadorSection UI', () => {
     const localidadeInput = screen.getByPlaceholderText('Cidade - UF') as HTMLInputElement;
     const whatsappInput = screen.getByPlaceholderText('(00) 00000-0000') as HTMLInputElement;
 
-    fireEvent.change(cepInput, { target: { value: '69050010' } });
+    await act(async () => {
+      fireEvent.change(cepInput, { target: { value: '69050010' } });
+    });
     expect(cepInput.value).toBe('69050-010');
 
-    fireEvent.change(localidadeInput, { target: { value: 'Coari - AM' } });
+    await act(async () => {
+      fireEvent.change(localidadeInput, { target: { value: 'Coari - AM' } });
+    });
     expect(localidadeInput.value).toBe('Coari - AM');
 
-    fireEvent.change(whatsappInput, { target: { value: '92981234567' } });
+    await act(async () => {
+      fireEvent.change(whatsappInput, { target: { value: '92981234567' } });
+    });
     expect(whatsappInput.value).toBe('(92) 98123-4567');
   });
 });
