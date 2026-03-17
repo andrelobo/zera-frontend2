@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
+import GestorAiPage from "@/pages/GestorAiPage";
 import MyAccountPage from "@/pages/MyAccountPage";
 import NfseListPage from "@/pages/NfseListPage";
 import NfseDetailPage from "@/pages/NfseDetailPage";
@@ -53,7 +54,7 @@ const App = () => (
                 }
               >
                 <Route path="/" element={<DashboardPage />} />
-                <Route path="/gestor-ai" element={<DashboardPage />} />
+                <Route path="/gestor-ai" element={<GestorAiPage />} />
                 <Route path="/account" element={<MyAccountPage />} />
                 <Route path="/nfse" element={<NfseListPage />} />
                 <Route path="/nfse/nova" element={<NfseEmitPage />} />
