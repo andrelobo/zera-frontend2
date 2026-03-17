@@ -191,4 +191,39 @@ describe('emissao PrestadorSection UI', () => {
     fireEvent.change(input, { target: { value: 'Rua Nova' } });
     expect(input.value).toBe('R NOVA');
   });
+
+  it('allows editing localidade, cep and whatsapp after prefilled values', () => {
+    const Harness = () => {
+      const [data, setData] = useState({
+        ...baseData,
+        cnpj: '43.521.115/0001-34',
+        cep: '69010-040',
+        localidadeUf: 'Manaus - AM',
+        whatsapp: '(92) 99159-4210',
+      });
+
+      return (
+        <PrestadorSection
+          data={data}
+          onChange={setData}
+          onAutosave={vi.fn()}
+        />
+      );
+    };
+
+    render(<Harness />);
+
+    const cepInput = screen.getByPlaceholderText('00000-000') as HTMLInputElement;
+    const localidadeInput = screen.getByPlaceholderText('Cidade - UF') as HTMLInputElement;
+    const whatsappInput = screen.getByPlaceholderText('(00) 00000-0000') as HTMLInputElement;
+
+    fireEvent.change(cepInput, { target: { value: '69050010' } });
+    expect(cepInput.value).toBe('69050-010');
+
+    fireEvent.change(localidadeInput, { target: { value: 'Coari - AM' } });
+    expect(localidadeInput.value).toBe('Coari - AM');
+
+    fireEvent.change(whatsappInput, { target: { value: '92981234567' } });
+    expect(whatsappInput.value).toBe('(92) 98123-4567');
+  });
 });
