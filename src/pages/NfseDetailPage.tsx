@@ -14,6 +14,9 @@ import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfs
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import { formatCNPJ } from '@/utils/validators';
 
+const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
+const NFSE_DETAIL_REFETCH_INTERVAL_MS = 15000;
+
 const first = (value: unknown): Record<string, unknown> | null => {
   if (Array.isArray(value)) {
     const item = value[0];
@@ -108,22 +111,38 @@ const NfseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const shouldRefetchActiveEmission = (status?: string) =>
+    Boolean(status && ACTIVE_NFSE_STATUSES.has(status));
+
   const { data: nfse, isLoading, isError, refetch } = useQuery({
     queryKey: ['nfse', id],
     queryFn: () => nfseApi.getById(id!),
     enabled: !!id,
+    refetchInterval: (query) =>
+      shouldRefetchActiveEmission((query.state.data as { status?: string } | undefined)?.status)
+        ? NFSE_DETAIL_REFETCH_INTERVAL_MS
+        : false,
+    refetchIntervalInBackground: true,
   });
 
   const { data: artifacts, refetch: refetchArtifacts } = useQuery({
     queryKey: ['nfse-artifacts', id],
     queryFn: () => nfseApi.artifacts(id!),
     enabled: !!id,
+    refetchInterval: shouldRefetchActiveEmission(nfse?.status)
+      ? NFSE_DETAIL_REFETCH_INTERVAL_MS
+      : false,
+    refetchIntervalInBackground: true,
   });
 
   const { data: providerResp, isLoading: isProviderLoading, isError: isProviderError } = useQuery({
     queryKey: ['nfse-provider', id],
     queryFn: () => nfseApi.providerResponse(id!),
     enabled: !!id,
+    refetchInterval: shouldRefetchActiveEmission(nfse?.status)
+      ? NFSE_DETAIL_REFETCH_INTERVAL_MS
+      : false,
+    refetchIntervalInBackground: true,
   });
 
   const syncMutation = useMutation({

@@ -17,6 +17,8 @@ import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
 const NFSE_LIST_DATE_FROM = '2026-02-01';
+const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
+const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
 
 const NfseListPage = () => {
   const navigate = useNavigate();
@@ -38,6 +40,12 @@ const NfseListPage = () => {
       sort: 'createdAt',
       order: 'DESC',
     }),
+    refetchInterval: (query) => {
+      const rows = (query.state.data as { data?: Array<{ status?: string }> } | undefined)?.data ?? [];
+      const hasActiveEmission = rows.some((item) => item.status && ACTIVE_NFSE_STATUSES.has(item.status));
+      return hasActiveEmission ? NFSE_LIST_REFETCH_INTERVAL_MS : false;
+    },
+    refetchIntervalInBackground: true,
   });
   const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && !data), 400);
 
