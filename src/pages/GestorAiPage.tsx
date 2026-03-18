@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Bot } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import GestorAiTabela from '@/components/dashboard/GestorAiTabela';
@@ -47,7 +48,19 @@ const GestorAiPage = () => {
   if (empresasQuery.isError && !empresa) return <ErrorState onRetry={() => empresasQuery.refetch()} />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Bot className="w-5 h-5" />
+            Gestor AI
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Visão consolidada por tomador para apoiar decisões fiscais e comerciais.
+          </p>
+        </div>
+      </div>
+
       <GestorAiTabela
         notas={notas}
         tomadores={tomadores}

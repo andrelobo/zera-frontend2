@@ -93,7 +93,7 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
 
   if (linhas.length === 0) {
     return (
-      <div className="section-card flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <div className="rounded-lg border bg-card flex flex-col items-center justify-center py-12 text-muted-foreground">
         <Users className="w-10 h-10 mb-3 opacity-40" />
         <p className="text-sm">Nenhuma nota fiscal emitida ainda.</p>
       </div>
@@ -101,7 +101,7 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
   }
 
   return (
-    <div className="section-card overflow-hidden">
+    <div className="rounded-lg border bg-card overflow-x-auto">
       <Table className="table-fixed w-full">
         <colgroup>
           <col className="w-[24%]" />
@@ -123,7 +123,7 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
         </TableHeader>
         <TableBody>
           {linhas.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className="hover:bg-muted/40">
               <TableCell className="text-left">
                 <div className="min-w-0">
                   <div className="truncate font-medium text-foreground text-sm">{row.nome}</div>
