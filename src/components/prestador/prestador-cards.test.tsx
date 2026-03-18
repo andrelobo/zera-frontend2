@@ -66,7 +66,7 @@ describe('prestador cards', () => {
     expect(onFieldChange).toHaveBeenCalledWith('localidadeUf', 'Coari - AM');
   });
 
-  it('formats whatsapp before forwarding contact changes', () => {
+  it('forwards raw whatsapp input and email changes', () => {
     const onFieldChange = vi.fn();
 
     render(
@@ -81,6 +81,6 @@ describe('prestador cards', () => {
     fireEvent.change(screen.getByPlaceholderText('(00) 00000-0000'), { target: { value: '92991594210' } });
 
     expect(onFieldChange).toHaveBeenCalledWith('email', 'novo@empresa.com.br');
-    expect(onFieldChange).toHaveBeenCalledWith('whatsapp', '(92) 99159-4210');
+    expect(onFieldChange).toHaveBeenCalledWith('whatsapp', '92991594210');
   });
 });

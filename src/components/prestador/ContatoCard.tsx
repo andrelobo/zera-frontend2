@@ -1,6 +1,5 @@
 import React from 'react';
 import { Mail } from 'lucide-react';
-import { formatPhone } from '@/utils/validators';
 
 interface Props {
   email: string;
@@ -21,7 +20,7 @@ const ContatoCard: React.FC<Props> = ({ email, whatsapp, onFieldChange }) => (
       </div>
       <div>
         <label className="field-label">WhatsApp</label>
-        <input className="field-input" placeholder="(00) 00000-0000" value={whatsapp} onChange={(e) => onFieldChange('whatsapp', formatPhone(e.target.value))} maxLength={15} />
+        <input className="field-input" placeholder="(00) 00000-0000" value={whatsapp} onChange={(e) => onFieldChange('whatsapp', e.target.value)} maxLength={15} />
       </div>
     </div>
   </div>
