@@ -42,6 +42,7 @@ describe('prestador cards', () => {
   it('forwards cep and address changes correctly', () => {
     const onFieldChange = vi.fn();
     const onCEPChange = vi.fn();
+    const onFieldBlur = vi.fn();
 
     render(
       <EnderecoCard
@@ -52,6 +53,7 @@ describe('prestador cards', () => {
         bairro="CENTRO"
         localidadeUf="Manaus - AM"
         onFieldChange={onFieldChange}
+        onFieldBlur={onFieldBlur}
         onCEPChange={onCEPChange}
         loadingCEP={false}
       />,
@@ -66,6 +68,12 @@ describe('prestador cards', () => {
     expect(onFieldChange).toHaveBeenCalledWith('logradouro', 'Rua Nova');
     expect(onFieldChange).toHaveBeenCalledWith('numero', '12-' );
     expect(onFieldChange).toHaveBeenCalledWith('localidadeUf', 'Coari - AM');
+
+    fireEvent.blur(screen.getByPlaceholderText('Cidade - UF'), {
+      target: { value: 'Coari - AM' },
+    });
+
+    expect(onFieldBlur).toHaveBeenCalledWith('localidadeUf', 'Coari - AM');
   });
 
   it('forwards raw whatsapp input and email changes', () => {
@@ -106,7 +114,7 @@ describe('prestador cards', () => {
       target: { value: ' 92991594210 ' },
     });
 
-    expect(onFieldChange).toHaveBeenCalledWith('email', 'contato@empresa.com.br');
+    expect(onFieldChange).toHaveBeenCalledWith('email', '  contato@empresa.com.br  ');
     expect(onFieldChange).toHaveBeenCalledWith('whatsapp', ' 92991594210 ');
   });
 

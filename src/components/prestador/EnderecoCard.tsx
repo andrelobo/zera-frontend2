@@ -10,13 +10,14 @@ interface Props {
   bairro: string;
   localidadeUf: string;
   onFieldChange: (field: string, value: string) => void;
+  onFieldBlur?: (field: string, value: string) => void;
   onCEPChange: (value: string) => void;
   loadingCEP: boolean;
 }
 
 const EnderecoCard: React.FC<Props> = ({
   cep, logradouro, numero, complemento, bairro, localidadeUf,
-  onFieldChange, onCEPChange, loadingCEP,
+  onFieldChange, onFieldBlur, onCEPChange, loadingCEP,
 }) => (
   <div className="section-card">
     <h2 className="section-title">
@@ -49,7 +50,13 @@ const EnderecoCard: React.FC<Props> = ({
       </div>
       <div>
         <label className="field-label">Localidade / UF</label>
-        <input className="field-input" placeholder="Cidade - UF" value={localidadeUf} onChange={(e) => onFieldChange('localidadeUf', e.target.value)} />
+        <input
+          className="field-input"
+          placeholder="Cidade - UF"
+          value={localidadeUf}
+          onChange={(e) => onFieldChange('localidadeUf', e.target.value)}
+          onBlur={(e) => onFieldBlur?.('localidadeUf', e.target.value)}
+        />
       </div>
     </div>
   </div>

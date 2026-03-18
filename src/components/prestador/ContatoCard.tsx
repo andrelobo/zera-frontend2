@@ -17,7 +17,17 @@ const ContatoCard: React.FC<Props> = ({ email, whatsapp, onFieldChange, onFieldB
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label className="field-label">E-mail</label>
-        <input className="field-input" type="email" placeholder="contato@empresa.com.br" value={email} onChange={(e) => onFieldChange('email', e.target.value)} />
+        <input
+          className="field-input"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="contato@empresa.com.br"
+          value={email}
+          onChange={(e) => onFieldChange('email', e.target.value)}
+        />
       </div>
       <div>
         <label className="field-label">WhatsApp</label>

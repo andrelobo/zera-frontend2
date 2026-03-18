@@ -97,6 +97,23 @@ export const formatLocalidadeUfDisplay = (cidade?: string, uf?: string) => {
   return safeCidade || safeUf || '';
 };
 
+const parseLocalidadeUfInput = (value: string) => {
+  const raw = String(value || '');
+  const separatorIndex = raw.lastIndexOf('-');
+
+  if (separatorIndex === -1) {
+    return {
+      cidade: raw,
+      uf: '',
+    };
+  }
+
+  return {
+    cidade: raw.slice(0, separatorIndex).trim(),
+    uf: raw.slice(separatorIndex + 1).trim().toUpperCase(),
+  };
+};
+
 const ToggleSwitch = ({
   checked,
   onChange,
@@ -670,6 +687,7 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
+  const [localidadeUfInput, setLocalidadeUfInput] = useState('');
   const lastPrincipalCnaeRef = useRef('');
 
   const focusCertificadoCard = () => {
@@ -712,6 +730,10 @@ const EmpresaFormPage = () => {
       lastPrincipalCnaeRef.current = String(existing.cnaeFiscal || '').replace(/\D/g, '');
     }
   }, [existing]);
+
+  useEffect(() => {
+    setLocalidadeUfInput(formatLocalidadeUfDisplay(form.cidade, form.uf));
+  }, [form.cidade, form.uf]);
 
   useEffect(() => {
     const nextCnae = String(form.cnaeFiscal || '').replace(/\D/g, '');
@@ -1251,15 +1273,19 @@ const EmpresaFormPage = () => {
               numero={form.numero}
               complemento={form.complemento}
               bairro={form.bairro}
-              localidadeUf={formatLocalidadeUfDisplay(form.cidade, form.uf)}
+              localidadeUf={localidadeUfInput}
               onFieldChange={(field, value) => {
                 if (field !== 'localidadeUf') {
                   handlePrestadorChange(field, value);
                   return;
                 }
-                const [cidade, uf] = value.split('-').map((part) => part.trim());
-                update('cidade', cidade || '');
-                update('uf', (uf || '').toUpperCase());
+                setLocalidadeUfInput(value);
+              }}
+              onFieldBlur={(field, value) => {
+                if (field !== 'localidadeUf') return;
+                const { cidade, uf } = parseLocalidadeUfInput(value);
+                update('cidade', cidade);
+                update('uf', uf);
               }}
               onCEPChange={(value) => update('cep', formatCep(value))}
               loadingCEP={cepLookupQuery.isFetching}
