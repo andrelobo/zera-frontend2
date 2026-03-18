@@ -253,7 +253,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
           type="button"
           onClick={() => void handleImport()}
           disabled={mutation.isPending}
-          className="btn-primary h-9 px-3 text-xs sm:text-sm"
+          className="btn-primary inline-flex h-9 items-center justify-center px-3 text-xs leading-none sm:text-sm"
         >
           {mutation.isPending ? (
             <>
