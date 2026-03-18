@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Building2, Loader2, FileText, MapPin } from 'lucide-react';
-import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, validateCNPJ } from '@/utils/validators';
+import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, sanitizeAddressNumber, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
 
 export interface PrestadorSectionData {
@@ -120,7 +120,11 @@ const PrestadorSection: React.FC<Props> = ({ data, onChange, onAutosave, onSimpl
   }, [optanteSimples, simplesChecked]);
 
   const update = (field: keyof PrestadorSectionData, value: string) => {
-    const normalizedValue = field === 'logradouro' ? normalizeLogradouro(value) : value;
+    const normalizedValue = field === 'logradouro'
+      ? normalizeLogradouro(value)
+      : field === 'numero'
+        ? sanitizeAddressNumber(value)
+        : value;
     onChange({ ...data, [field]: normalizedValue });
     onAutosave();
   };

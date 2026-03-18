@@ -66,6 +66,10 @@ export function formatPhone(value: string): string {
     .replace(/-$/, '');
 }
 
+export function sanitizeAddressNumber(value: string): string {
+  return String(value || '').replace(/[^\d/-]/g, '');
+}
+
 export function normalizeLogradouro(value: string): string {
   return String(value || '')
     .replace(/^\s+/u, '')

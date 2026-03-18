@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
+import { sanitizeAddressNumber } from '@/utils/validators';
 
 interface Props {
   cep: string;
@@ -34,7 +35,7 @@ const EnderecoCard: React.FC<Props> = ({
       </div>
       <div>
         <label className="field-label">Número</label>
-        <input className="field-input" placeholder="Nº" value={numero} onChange={(e) => onFieldChange('numero', e.target.value)} />
+        <input className="field-input" placeholder="Nº" value={numero} onChange={(e) => onFieldChange('numero', sanitizeAddressNumber(e.target.value))} inputMode="numeric" />
       </div>
       <div>
         <label className="field-label">Bairro/Distrito</label>

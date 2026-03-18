@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Building2, MapPin, Mail, Loader2, FileText } from 'lucide-react';
-import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, validateCNPJ } from '@/utils/validators';
+import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, sanitizeAddressNumber, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
 import { empresasApi } from '@/services/api';
 import { lookupCep } from '@/services/cep';
@@ -187,6 +187,8 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
       ? normalizeLogradouro(value)
       : field === 'whatsapp'
         ? formatPhone(value)
+        : field === 'numero'
+          ? sanitizeAddressNumber(value)
         : value;
     onChange({ ...data, [field]: normalizedValue });
     onAutosave();

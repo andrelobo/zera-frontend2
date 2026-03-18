@@ -59,10 +59,12 @@ describe('prestador cards', () => {
 
     fireEvent.change(screen.getByPlaceholderText('00000-000'), { target: { value: '69010040' } });
     fireEvent.change(screen.getByPlaceholderText('Rua, Av., etc.'), { target: { value: 'Rua Nova' } });
+    fireEvent.change(screen.getByPlaceholderText('Nº'), { target: { value: '12A-B' } });
     fireEvent.change(screen.getByPlaceholderText('Cidade - UF'), { target: { value: 'Coari - AM' } });
 
     expect(onCEPChange).toHaveBeenCalledWith('69010040');
     expect(onFieldChange).toHaveBeenCalledWith('logradouro', 'Rua Nova');
+    expect(onFieldChange).toHaveBeenCalledWith('numero', '12-' );
     expect(onFieldChange).toHaveBeenCalledWith('localidadeUf', 'Coari - AM');
   });
 
@@ -82,5 +84,27 @@ describe('prestador cards', () => {
 
     expect(onFieldChange).toHaveBeenCalledWith('email', 'novo@empresa.com.br');
     expect(onFieldChange).toHaveBeenCalledWith('whatsapp', '92991594210');
+  });
+
+  it('does not trim whatsapp input while typing', () => {
+    const onFieldChange = vi.fn();
+
+    render(
+      <ContatoCard
+        email=""
+        whatsapp=""
+        onFieldChange={onFieldChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('contato@empresa.com.br'), {
+      target: { value: '  contato@empresa.com.br  ' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('(00) 00000-0000'), {
+      target: { value: ' 92991594210 ' },
+    });
+
+    expect(onFieldChange).toHaveBeenCalledWith('email', 'contato@empresa.com.br');
+    expect(onFieldChange).toHaveBeenCalledWith('whatsapp', ' 92991594210 ');
   });
 });

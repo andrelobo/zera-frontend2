@@ -22,7 +22,7 @@ import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { getDefaultVinculosForCnae, getLC116Item, shouldRepairLegacyVinculos } from '@/utils/cnae-lc116';
 import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
-import { formatPhone, normalizeLogradouro } from '@/utils/validators';
+import { formatPhone, normalizeLogradouro, sanitizeAddressNumber } from '@/utils/validators';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -89,6 +89,13 @@ const campoLabel: Record<string, string> = {
 
 const toCampoLabel = (field: string) => campoLabel[field] ?? field;
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
+
+export const formatLocalidadeUfDisplay = (cidade?: string, uf?: string) => {
+  const safeCidade = String(cidade || '');
+  const safeUf = String(uf || '');
+  if (safeCidade && safeUf) return `${safeCidade} - ${safeUf}`;
+  return safeCidade || safeUf || '';
+};
 
 const ToggleSwitch = ({
   checked,
@@ -1093,6 +1100,10 @@ const EmpresaFormPage = () => {
         update(field as keyof EmpresaFormData, formatPhone(value));
         return;
       }
+      if (field === 'numero') {
+        update('numero', sanitizeAddressNumber(value));
+        return;
+      }
       if (field === 'nomeEmpresarial') {
         update('razaoSocial', value);
         return;
@@ -1240,7 +1251,7 @@ const EmpresaFormPage = () => {
               numero={form.numero}
               complemento={form.complemento}
               bairro={form.bairro}
-              localidadeUf={form.cidade && form.uf ? `${form.cidade} - ${form.uf}` : ''}
+              localidadeUf={formatLocalidadeUfDisplay(form.cidade, form.uf)}
               onFieldChange={(field, value) => {
                 if (field !== 'localidadeUf') {
                   handlePrestadorChange(field, value);
@@ -1271,9 +1282,11 @@ const EmpresaFormPage = () => {
 
             <IdentificacaoDocumentoCard
               nfseNum={nfseNum}
+              onNfseNumChange={setNfseNum}
               dpsNum={dpsNum}
+              onDpsNumChange={setDpsNum}
               serieDpsNum={serieDpsNum}
-              readOnly
+              onSerieDpsNumChange={setSerieDpsNum}
             />
 
           </div>

@@ -61,10 +61,18 @@ describe('EmpresaFormPage save/reload', () => {
       [{ codigo: '8650003', descricao: 'Atividades de psicologia e psicanálise', isPrincipal: true, isManual: true, anexo: 'III', anexoLoading: false }],
       [],
       [],
+      {
+        nfseNum: '1001',
+        dpsNum: '2002',
+        serieDpsNum: '3',
+      },
     );
 
     expect(payload.ctnCodigo).toBe('041601');
     expect(payload.nbsCodigo).toBe('1.2301.98.00');
+    expect(payload.nfseNum).toBe('1001');
+    expect(payload.dpsNum).toBe('2002');
+    expect(payload.serieDpsNum).toBe('3');
     expect(Array.isArray(payload.parametroMunicipal)).toBe(true);
 
     const persistedEmpresa = {
