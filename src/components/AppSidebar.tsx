@@ -66,11 +66,6 @@ const AppSidebar = () => {
     closeMobile();
   };
 
-  const goDash2 = () => {
-    navigate('/dash2');
-    closeMobile();
-  };
-
   const goPrestador = () => {
     navigate('/empresas');
     closeMobile();
@@ -128,22 +123,6 @@ const AppSidebar = () => {
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={location.pathname.startsWith('/dash2')}
-                  onClick={goDash2}
-                  tooltip="Dash2"
-                  className={
-                    location.pathname.startsWith('/dash2')
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
-                      : ''
-                  }
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dash2</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
