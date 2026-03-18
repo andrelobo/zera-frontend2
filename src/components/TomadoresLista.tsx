@@ -106,7 +106,7 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => onEditar(t)}
-                        className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                        className="rounded-full border border-sky-200 bg-sky-50 p-1.5 text-sky-800 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
                         title="Editar"
                       >
                         <Pencil className="w-4 h-4" />
@@ -117,7 +117,7 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                             onExcluir(t.id);
                           }
                         }}
-                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        className="rounded-full border border-rose-200 bg-rose-50 p-1.5 text-rose-800 shadow-sm transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-950"
                         title="Excluir"
                       >
                         <Trash2 className="w-4 h-4" />
