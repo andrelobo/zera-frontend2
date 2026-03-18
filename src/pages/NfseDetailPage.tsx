@@ -255,6 +255,14 @@ const NfseDetailPage = () => {
           <Button
             variant="outline"
             className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            onClick={() => downloadFile(() => nfseApi.downloadXml(id!), `nfse-${id}.xml`)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Baixar XML
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
             onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -356,14 +364,7 @@ const NfseDetailPage = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">
-            {/* Quick download buttons */}
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={() => downloadFile(() => nfseApi.downloadXml(id!), `nfse-${id}.xml`)}>
-                <Download className="mr-2 h-3.5 w-3.5" /> XML Local
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}>
-                <Download className="mr-2 h-3.5 w-3.5" /> PDF Local
-              </Button>
               <Button variant="outline" size="sm" onClick={() => downloadFile(() => nfseApi.downloadRemoteXml(id!), `nfse-${id}-remote.xml`)}>
                 <Download className="mr-2 h-3.5 w-3.5" /> XML Remoto
               </Button>
