@@ -235,7 +235,7 @@ const NfseDetailPage = () => {
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button
             variant="outline"
-            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            className="rounded-full border-sky-200 bg-sky-50 text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
             onClick={openPdfPreview}
           >
             <Eye className="mr-2 h-4 w-4" />
@@ -243,7 +243,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            className="rounded-full border-violet-200 bg-violet-50 text-violet-900 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
             onClick={async () => {
               await openPdfPreview();
               window.setTimeout(() => window.print(), 350);
@@ -254,7 +254,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-900 shadow-sm hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950"
             onClick={() => downloadFile(() => nfseApi.downloadXml(id!), `nfse-${id}.xml`)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -262,7 +262,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            className="rounded-full border-amber-200 bg-amber-50 text-amber-900 shadow-sm hover:border-amber-300 hover:bg-amber-100 hover:text-amber-950"
             onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -270,7 +270,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="ghost"
-            className="rounded-full text-muted-foreground hover:text-foreground"
+            className="rounded-full border border-slate-200 bg-white/70 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
             onClick={() => window.open(window.location.href, '_blank', 'noopener,noreferrer')}
           >
             <ExternalLink className="mr-2 h-4 w-4" />

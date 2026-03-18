@@ -218,7 +218,7 @@ const NfseListPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          className="h-8 w-8 rounded-full border border-sky-200 bg-sky-50 text-sky-800 shadow-sm hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
                           onClick={(event) => {
                             event.stopPropagation();
                             navigate(`/nfse/${nfse.id}`);
@@ -230,7 +230,7 @@ const NfseListPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          className="h-8 w-8 rounded-full border border-violet-200 bg-violet-50 text-violet-800 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
                           onClick={(event) => handleOpenPdf(event, nfse.id)}
                           title="Abrir PDF"
                         >
@@ -239,7 +239,7 @@ const NfseListPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          className="h-8 w-8 rounded-full border border-amber-200 bg-amber-50 text-amber-800 shadow-sm hover:border-amber-300 hover:bg-amber-100 hover:text-amber-950"
                           onClick={(event) => handleDownloadPdf(event, nfse.id)}
                           title="Baixar PDF"
                         >
