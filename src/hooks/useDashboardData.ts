@@ -113,13 +113,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   const nfseQuery = useQuery({
     queryKey: ['nfse-dashboard-list-v3', prestadorId, dateFrom, dateTo],
     // Dashboard usa dataset bruto para evitar perder notas legadas com competencia/dataEmissao nulas.
-    queryFn: () => nfseApi.list({
-      page: 1,
-      limit: 1000,
-      provider: 'PLUGNOTAS',
-      dateFrom,
-      dateTo,
-    }),
+    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
     staleTime: 60_000,
   });
 
