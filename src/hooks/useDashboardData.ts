@@ -94,6 +94,11 @@ function resolveTomadorNome(
   return nome || 'Emissão expressa';
 }
 
+export function selectDashboardItems<T extends { provider?: string | null }>(items: T[]): T[] {
+  const plugNotasItems = items.filter((item) => String(item.provider || '').trim().toUpperCase() === 'PLUGNOTAS');
+  return plugNotasItems.length > 0 ? plugNotasItems : items;
+}
+
 export function useDashboardData(prestadorId: string | null, rbt12: number, cnaeAnexo: string) {
   const now = useMemo(() => new Date(), []);
   const oneYearAgo = useMemo(() => {
@@ -118,10 +123,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   });
 
   const notas = useMemo<NotaDashboard[]>(() => {
-    const baseItems = (nfseQuery.data?.data || []).filter((item) => {
-      const provider = (item.provider || '').toString().trim().toUpperCase();
-      return provider === 'PLUGNOTAS';
-    });
+    const baseItems = selectDashboardItems(nfseQuery.data?.data || []);
     return baseItems.map((item) => {
       const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
       const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
