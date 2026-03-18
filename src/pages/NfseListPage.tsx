@@ -9,7 +9,7 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Zap, Eye, Printer, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -19,6 +19,12 @@ import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 const NFSE_LIST_DATE_FROM = '2026-02-01';
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
+
+const openBlobInNewTab = (blob: Blob) => {
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
 
 const NfseListPage = () => {
   const navigate = useNavigate();
@@ -79,6 +85,46 @@ const NfseListPage = () => {
     const params = new URLSearchParams(searchParams);
     params.set('page', p.toString());
     setSearchParams(params);
+  };
+
+  const handleOpenPdf = async (event: React.MouseEvent, nfseId: string) => {
+    event.stopPropagation();
+    try {
+      const blob = await nfseApi.downloadPdf(nfseId);
+      openBlobInNewTab(blob);
+    } catch {
+      try {
+        const blob = await nfseApi.downloadRemotePdf(nfseId);
+        openBlobInNewTab(blob);
+      } catch {
+        // handled by interceptor
+      }
+    }
+  };
+
+  const handleDownloadPdf = async (event: React.MouseEvent, nfseId: string) => {
+    event.stopPropagation();
+    try {
+      const blob = await nfseApi.downloadPdf(nfseId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nfse-${nfseId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      try {
+        const blob = await nfseApi.downloadRemotePdf(nfseId);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nfse-${nfseId}-remote.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch {
+        // handled by interceptor
+      }
+    }
   };
 
   if (isLoading) return <LoadingState />;
@@ -143,6 +189,7 @@ const NfseListPage = () => {
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Provedor</TableHead>
                   <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,6 +212,40 @@ const NfseListPage = () => {
                     <TableCell className="text-xs uppercase text-muted-foreground">{nfse.provider}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {format(new Date(nfse.createdAt), 'dd/MM/yy HH:mm')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/nfse/${nfse.id}`);
+                          }}
+                          title="Visualizar DANFSE"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          onClick={(event) => handleOpenPdf(event, nfse.id)}
+                          title="Abrir PDF"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                          onClick={(event) => handleDownloadPdf(event, nfse.id)}
+                          title="Baixar PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

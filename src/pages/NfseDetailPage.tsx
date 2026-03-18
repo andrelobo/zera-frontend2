@@ -7,7 +7,7 @@ import ErrorState from '@/components/ErrorState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, Printer, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -16,6 +16,12 @@ import { formatCNPJ } from '@/utils/validators';
 
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_DETAIL_REFETCH_INTERVAL_MS = 15000;
+
+const openBlobInNewTab = (blob: Blob) => {
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
 
 const first = (value: unknown): Record<string, unknown> | null => {
   if (Array.isArray(value)) {
@@ -167,6 +173,20 @@ const NfseDetailPage = () => {
     }
   };
 
+  const openPdfPreview = async () => {
+    try {
+      const blob = await nfseApi.downloadPdf(id!);
+      openBlobInNewTab(blob);
+    } catch {
+      try {
+        const blob = await nfseApi.downloadRemotePdf(id!);
+        openBlobInNewTab(blob);
+      } catch {
+        // handled by interceptor
+      }
+    }
+  };
+
   if (isLoading) return <LoadingState />;
   if (isError || !nfse) return <ErrorState onRetry={() => refetch()} />;
   const inferred = inferNfseDataFromProvider(providerResp);
@@ -197,19 +217,58 @@ const NfseDetailPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/nfse')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            NFSe {numeroNfse ? `#${numeroNfse}` : nfse.id.slice(0, 8)}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Criada em {format(new Date(nfse.createdAt), 'dd/MM/yyyy HH:mm:ss')}
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/nfse')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">
+              NFSe {numeroNfse ? `#${numeroNfse}` : nfse.id.slice(0, 8)}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Criada em {format(new Date(nfse.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+            </p>
+          </div>
+          <StatusBadge status={nfse.status} />
         </div>
-        <StatusBadge status={nfse.status} />
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <Button
+            variant="outline"
+            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            onClick={openPdfPreview}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            Visualizar
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            onClick={async () => {
+              await openPdfPreview();
+              window.setTimeout(() => window.print(), 350);
+            }}
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Imprimir
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full border-primary/20 bg-background/80 hover:bg-primary/5"
+            onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Baixar PDF
+          </Button>
+          <Button
+            variant="ghost"
+            className="rounded-full text-muted-foreground hover:text-foreground"
+            onClick={() => window.open(window.location.href, '_blank', 'noopener,noreferrer')}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Nova aba
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 min-w-0">
