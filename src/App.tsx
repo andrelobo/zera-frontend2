@@ -1,30 +1,32 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { QueryClient, QueryClientProvider, dehydrate, hydrate } from "@tanstack/react-query";
 import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import Dash2Page from "@/pages/Dash2Page";
-import GestorAiPage from "@/pages/GestorAiPage";
-import MyAccountPage from "@/pages/MyAccountPage";
-import NfseListPage from "@/pages/NfseListPage";
-import NfseDetailPage from "@/pages/NfseDetailPage";
-import NfseEmitPage from "@/pages/NfseEmitPage";
-import NfseQuickEmitPage from "@/pages/NfseQuickEmitPage";
-import EmpresasPage from "@/pages/EmpresasPage";
-import EmpresaFormPage from "@/pages/EmpresaFormPage";
-import TomadoresPage from "@/pages/TomadoresPage";
-import TomadorFormPage from "@/pages/TomadorFormPage";
-import CertificadoDigitalPage from "@/pages/CertificadoDigitalPage";
-import UsersPage from "@/pages/UsersPage";
-import UserFormPage from "@/pages/UserFormPage";
-import NotFound from "@/pages/NotFound";
+import LoadingState from "@/components/LoadingState";
 import { ThemeProvider } from "@/components/theme-provider";
+
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const Dash2Page = lazy(() => import("@/pages/Dash2Page"));
+const GestorAiPage = lazy(() => import("@/pages/GestorAiPage"));
+const MyAccountPage = lazy(() => import("@/pages/MyAccountPage"));
+const NfseListPage = lazy(() => import("@/pages/NfseListPage"));
+const NfseDetailPage = lazy(() => import("@/pages/NfseDetailPage"));
+const NfseEmitPage = lazy(() => import("@/pages/NfseEmitPage"));
+const NfseQuickEmitPage = lazy(() => import("@/pages/NfseQuickEmitPage"));
+const EmpresasPage = lazy(() => import("@/pages/EmpresasPage"));
+const EmpresaFormPage = lazy(() => import("@/pages/EmpresaFormPage"));
+const TomadoresPage = lazy(() => import("@/pages/TomadoresPage"));
+const TomadorFormPage = lazy(() => import("@/pages/TomadorFormPage"));
+const CertificadoDigitalPage = lazy(() => import("@/pages/CertificadoDigitalPage"));
+const UsersPage = lazy(() => import("@/pages/UsersPage"));
+const UserFormPage = lazy(() => import("@/pages/UserFormPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const DASHBOARD_CACHE_STORAGE_KEY = "zera_dashboard_cache_v1";
 const DASHBOARD_CACHE_MAX_AGE_MS = 1000 * 60 * 15;
@@ -135,36 +137,38 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Router>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/dash2" element={<Dash2Page />} />
-                <Route path="/gestor-ai" element={<GestorAiPage />} />
-                <Route path="/account" element={<MyAccountPage />} />
-                <Route path="/nfse" element={<NfseListPage />} />
-                <Route path="/nfse/nova" element={<NfseEmitPage />} />
-                <Route path="/nfse/rapida" element={<NfseQuickEmitPage />} />
-                <Route path="/nfse/:id" element={<NfseDetailPage />} />
-                <Route path="/empresas" element={<EmpresasPage />} />
-                <Route path="/empresas/nova" element={<EmpresaFormPage />} />
-                <Route path="/empresas/:id" element={<EmpresaFormPage />} />
-                <Route path="/tomadores" element={<TomadoresPage />} />
-                <Route path="/tomadores/novo" element={<TomadorFormPage />} />
-                <Route path="/tomadores/:id" element={<TomadorFormPage />} />
-                <Route path="/certificado-digital" element={<CertificadoDigitalPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/users/novo" element={<UserFormPage />} />
-                <Route path="/users/:id" element={<UserFormPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<LoadingState />}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/dash2" element={<Dash2Page />} />
+                  <Route path="/gestor-ai" element={<GestorAiPage />} />
+                  <Route path="/account" element={<MyAccountPage />} />
+                  <Route path="/nfse" element={<NfseListPage />} />
+                  <Route path="/nfse/nova" element={<NfseEmitPage />} />
+                  <Route path="/nfse/rapida" element={<NfseQuickEmitPage />} />
+                  <Route path="/nfse/:id" element={<NfseDetailPage />} />
+                  <Route path="/empresas" element={<EmpresasPage />} />
+                  <Route path="/empresas/nova" element={<EmpresaFormPage />} />
+                  <Route path="/empresas/:id" element={<EmpresaFormPage />} />
+                  <Route path="/tomadores" element={<TomadoresPage />} />
+                  <Route path="/tomadores/novo" element={<TomadorFormPage />} />
+                  <Route path="/tomadores/:id" element={<TomadorFormPage />} />
+                  <Route path="/certificado-digital" element={<CertificadoDigitalPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/novo" element={<UserFormPage />} />
+                  <Route path="/users/:id" element={<UserFormPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </Router>
         </TooltipProvider>
       </AuthProvider>

@@ -5,25 +5,17 @@ interface Props {
   notas: NotaDashboard[];
   tomadores: Record<string, { nome: string; subTrib: boolean }>;
   aliquotaEfetiva: number;
-  mesCompetencia: string;
 }
 
 function fmt(v: number) {
   return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva, mesCompetencia }) => {
+const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva }) => {
   const linhas = useMemo(() => {
-    // Filter notas for the current competência
-    const notasMes = notas.filter(n => {
-      const d = new Date(n.data_emissao);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return key === mesCompetencia;
-    });
+    const totalGeral = notas.reduce((s, n) => s + n.valor_servico, 0);
 
-    const totalGeral = notasMes.reduce((s, n) => s + n.valor_servico, 0);
-
-    return notasMes.map(n => {
+    return notas.map(n => {
       const d = new Date(n.data_emissao);
       const dataFmt = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
       const tom = tomadores[n.tomador_id || ''];
@@ -38,7 +30,7 @@ const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva
 
       return { dataFmt, nome, subTrib, vs, issRet, aliqIss, simples, das, percentual };
     });
-  }, [notas, tomadores, aliquotaEfetiva, mesCompetencia]);
+  }, [notas, tomadores, aliquotaEfetiva]);
 
   if (linhas.length === 0) return null;
 

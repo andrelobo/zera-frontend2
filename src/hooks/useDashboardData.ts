@@ -113,7 +113,13 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   const nfseQuery = useQuery({
     queryKey: ['nfse-dashboard-list-v3', prestadorId, dateFrom, dateTo],
     // Dashboard usa dataset bruto para evitar perder notas legadas com competencia/dataEmissao nulas.
-    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
+    queryFn: () => nfseApi.list({
+      page: 1,
+      limit: 1000,
+      provider: 'PLUGNOTAS',
+      dateFrom,
+      dateTo,
+    }),
     staleTime: 60_000,
   });
 
@@ -236,6 +242,31 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   }, [biQuery.data, calculo.aliquotaEfetiva, now, notas, rbt12]);
 
   const analiseClientes = useMemo<ClienteAnalise[]>(() => {
+    const topTomadores = biQuery.data?.topTomadores || [];
+    if (topTomadores.length > 0) {
+      const totalFat = topTomadores.reduce((sum, item) => sum + (item.valorServico || 0), 0);
+      let acum = 0;
+
+      return topTomadores
+        .map((item) => ({
+          tomadorId: item.cpfCnpj || item.razaoSocial || 'sem-tomador',
+          nome: item.razaoSocial || 'Emissão expressa',
+          faturamento: item.valorServico || 0,
+          quantidadeNf: item.quantidade || 0,
+          ticketMedio: item.quantidade > 0 ? (item.valorServico || 0) / item.quantidade : 0,
+          percentual: totalFat > 0 ? ((item.valorServico || 0) / totalFat) * 100 : 0,
+          classificacao: 'C' as 'A' | 'B' | 'C',
+        }))
+        .sort((a, b) => b.faturamento - a.faturamento)
+        .map((cliente) => {
+          acum += cliente.percentual;
+          if (acum <= 80) cliente.classificacao = 'A';
+          else if (acum <= 95) cliente.classificacao = 'B';
+          else cliente.classificacao = 'C';
+          return cliente;
+        });
+    }
+
     const map = new Map<string, { faturamento: number; qtd: number; nome: string }>();
     notas.forEach((n) => {
       const tid = n.tomador_id || 'sem-tomador';
@@ -268,7 +299,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     });
 
     return sorted;
-  }, [notas]);
+  }, [biQuery.data?.topTomadores, notas]);
 
   const tomadores = useMemo<Record<string, { nome: string; subTrib: boolean }>>(() => {
     const map: Record<string, { nome: string; subTrib: boolean }> = {};

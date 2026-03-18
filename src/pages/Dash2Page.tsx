@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import { empresasApi, nfseApi } from '@/services/api';
-import { getNfseValor } from '@/lib/nfse';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { formatCurrency, formatPercent } from '@/utils/simples-nacional';
 
@@ -31,22 +30,24 @@ const Dash2Page = () => {
 
   const nfseQuery = useQuery({
     queryKey: ['nfse', 'dashboard-rbt12'],
-    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
+    queryFn: () => {
+      const now = new Date();
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+      const cutoffDate = oneYearAgo > DASHBOARD_MIN_EMISSAO_DATE ? oneYearAgo : DASHBOARD_MIN_EMISSAO_DATE;
+
+      return nfseApi.biSummary({
+        dateFrom: cutoffDate.toISOString().slice(0, 10),
+        dateTo: now.toISOString().slice(0, 10),
+      });
+    },
     staleTime: 60_000,
   });
 
   const empresa = (empresasQuery.data || [])[0];
 
   const rbt12 = useMemo(() => {
-    const items = nfseQuery.data?.data || [];
-    const now = new Date();
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setFullYear(now.getFullYear() - 1);
-    const cutoffDate = oneYearAgo > DASHBOARD_MIN_EMISSAO_DATE ? oneYearAgo : DASHBOARD_MIN_EMISSAO_DATE;
-
-    return items
-      .filter((item) => new Date(item.createdAt) >= cutoffDate)
-      .reduce((sum, item) => sum + getNfseValor(item), 0);
+    return nfseQuery.data?.totals?.somaValorServico || 0;
   }, [nfseQuery.data]);
 
   const safeRbt12 = rbt12 > 0 ? rbt12 : 180000;
@@ -67,13 +68,20 @@ const Dash2Page = () => {
     ? ((kpis.faturamentoMes - mesAnterior.faturamento) / mesAnterior.faturamento) * 100
     : 0;
 
-  const topClientes = analiseClientes.slice(0, 5);
-  const ultimasNotas = [...notas]
-    .sort((a, b) => new Date(b.data_emissao).getTime() - new Date(a.data_emissao).getTime())
-    .slice(0, 5);
+  const topClientes = useMemo(() => analiseClientes.slice(0, 5), [analiseClientes]);
+  const ultimasNotas = useMemo(
+    () =>
+      [...notas]
+        .sort((a, b) => new Date(b.data_emissao).getTime() - new Date(a.data_emissao).getTime())
+        .slice(0, 5),
+    [notas],
+  );
 
   const maiorCliente = topClientes[0];
-  const alertasCriticos = alertas.filter((item) => item.tipo === 'danger');
+  const alertasCriticos = useMemo(
+    () => alertas.filter((item) => item.tipo === 'danger'),
+    [alertas],
+  );
 
   if ((empresasQuery.isLoading && nfseQuery.isLoading) || loading) return <LoadingState />;
   if (empresasQuery.isError && !empresa) return <ErrorState onRetry={() => empresasQuery.refetch()} />;

@@ -5,7 +5,6 @@ import ErrorState from '@/components/ErrorState';
 import GestorAiTabela from '@/components/dashboard/GestorAiTabela';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { empresasApi, nfseApi } from '@/services/api';
-import { getNfseValor } from '@/lib/nfse';
 
 const DASHBOARD_MIN_EMISSAO_DATE = new Date(2026, 1, 11, 0, 0, 0, 0); // 11/02/2026
 
@@ -18,22 +17,24 @@ const GestorAiPage = () => {
 
   const nfseQuery = useQuery({
     queryKey: ['nfse', 'gestor-ai-rbt12'],
-    queryFn: () => nfseApi.list({ page: 1, limit: 1000 }),
+    queryFn: () => {
+      const now = new Date();
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+      const cutoffDate = oneYearAgo > DASHBOARD_MIN_EMISSAO_DATE ? oneYearAgo : DASHBOARD_MIN_EMISSAO_DATE;
+
+      return nfseApi.biSummary({
+        dateFrom: cutoffDate.toISOString().slice(0, 10),
+        dateTo: now.toISOString().slice(0, 10),
+      });
+    },
     staleTime: 60_000,
   });
 
   const empresa = (empresasQuery.data || [])[0];
 
   const rbt12 = useMemo(() => {
-    const items = nfseQuery.data?.data || [];
-    const now = new Date();
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setFullYear(now.getFullYear() - 1);
-    const cutoffDate = oneYearAgo > DASHBOARD_MIN_EMISSAO_DATE ? oneYearAgo : DASHBOARD_MIN_EMISSAO_DATE;
-
-    return items
-      .filter((item) => new Date(item.createdAt) >= cutoffDate)
-      .reduce((sum, item) => sum + getNfseValor(item), 0);
+    return nfseQuery.data?.totals?.somaValorServico || 0;
   }, [nfseQuery.data]);
 
   const { loading, notas, tomadores, kpis } = useDashboardData(

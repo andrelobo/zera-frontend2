@@ -69,13 +69,23 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
       }))
       .sort((a, b) => b.totalEmitido - a.totalEmitido);
 
+    let quantidadeNotas = 0;
+    let totalEmitido = 0;
+    let percentual = 0;
+    let somaTicketMedio = 0;
+
+    rows.forEach((item) => {
+      quantidadeNotas += item.quantidadeNotas;
+      totalEmitido += item.totalEmitido;
+      percentual += item.percentual;
+      somaTicketMedio += item.ticketMedio;
+    });
+
     const sums = {
-      quantidadeNotas: rows.reduce((acc, item) => acc + item.quantidadeNotas, 0),
-      totalEmitido: rows.reduce((acc, item) => acc + item.totalEmitido, 0),
-      percentual: rows.reduce((acc, item) => acc + item.percentual, 0),
-      ticketMedio: rows.length > 0
-        ? rows.reduce((acc, item) => acc + item.ticketMedio, 0) / rows.length
-        : 0,
+      quantidadeNotas,
+      totalEmitido,
+      percentual,
+      ticketMedio: rows.length > 0 ? somaTicketMedio / rows.length : 0,
     };
 
     return { linhas: rows, totais: sums };

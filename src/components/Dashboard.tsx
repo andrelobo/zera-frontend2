@@ -1,18 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Shield, DollarSign, Users } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Shield, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import {
-  PieChart as RechartsPie, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
-  BarChart, Bar,
-} from 'recharts';
-import { formatCurrency, formatPercent, FAIXAS_ANEXO_III, calcularSimplesAnexoIII } from '@/utils/simples-nacional';
+import { formatCurrency, formatPercent, calcularSimplesAnexoIII } from '@/utils/simples-nacional';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import SimplesNacionalDashboard from '@/components/dashboard/SimplesNacionalDashboard';
 import DashboardCard from '@/components/dashboard/DashboardCard';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 
 interface DashboardProps {
   prestadorId: string | null;
@@ -22,12 +16,6 @@ interface DashboardProps {
   regime: string | null;
   configOperacionais?: { id: string; natureza: string; descricao: string }[];
 }
-
-const PIE_COLORS = [
-  'hsl(160, 60%, 45%)', 'hsl(160, 40%, 60%)', 'hsl(160, 30%, 72%)',
-  'hsl(38, 80%, 55%)', 'hsl(220, 60%, 55%)', 'hsl(280, 50%, 55%)',
-  'hsl(340, 60%, 55%)', 'hsl(200, 50%, 55%)',
-];
 
 const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, cnaeAnexo, regime, configOperacionais = [] }) => {
   const { loading, notas, tomadores: tomadoresMap, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa, splits } = useDashboardData(prestadorId, rbt12, cnaeAnexo);
@@ -56,13 +44,6 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
       </div>
     );
   }
-
-  // Revenue by client pie data
-  const pieClientes = analiseClientes.slice(0, 6).map(c => ({
-    name: c.nome.length > 18 ? c.nome.substring(0, 18) + '…' : c.nome,
-    value: c.faturamento,
-    percentual: c.percentual,
-  }));
 
   // Smart alerts
   const smartAlerts: { tipo: string; mensagem: string; icon: React.ReactNode }[] = [];

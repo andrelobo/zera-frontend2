@@ -1,21 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { DollarSign, TrendingDown, Percent, ShieldCheck, Scale, Receipt, Landmark, ChevronDown, ChevronUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import type { NotaDashboard } from '@/hooks/useDashboardData';
-import {
-  PieChart as RechartsPie, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
-  Bar, BarChart, Line, ComposedChart,
-} from 'recharts';
-import { FAIXAS_ANEXO_III, formatCurrency, formatPercent, calcularSimplesAnexoIII } from '@/utils/simples-nacional';
+import { formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import type { CalculoSimplesResult } from '@/utils/simples-nacional';
 import type { MesData } from '@/hooks/useDashboardData';
 import DashboardCard from './DashboardCard';
 import FaixaThermometer from './FaixaThermometer';
-import SimuladorCenario from './SimuladorCenario';
 import EmissoesResumoMini from './EmissoesResumoMini';
 import ParticipacaoClientes from './ParticipacaoClientes';
-import ServicosExecutados from './ServicosExecutados';
 import type { ClienteAnalise } from '@/hooks/useDashboardData';
 
 interface Props {
@@ -41,12 +33,16 @@ interface Props {
   splitPaymentContent?: React.ReactNode;
 }
 
-const CHART_GREEN = 'hsl(160, 60%, 45%)';
-
 const PIE_COLORS = [
   'hsl(160, 60%, 45%)', 'hsl(160, 40%, 60%)', 'hsl(160, 30%, 72%)',
   'hsl(38, 80%, 55%)', 'hsl(220, 60%, 55%)', 'hsl(280, 50%, 55%)',
 ];
+
+function resolveCompetenciaKey(dataEmissao?: string): string | null {
+  const d = new Date(dataEmissao || '');
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
 
 const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, notas, tomadores, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
   const monthLabelFromYearMonth = (yearMonth: string): string => {
@@ -54,6 +50,18 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     const [year, month] = yearMonth.split('-');
     return `${month}/${year}`;
   };
+
+  const notasPorCompetencia = useMemo(() => {
+    const map = new Map<string, NotaDashboard[]>();
+    notas.forEach((nota) => {
+      const key = resolveCompetenciaKey(nota.data_emissao);
+      if (!key) return;
+      const current = map.get(key);
+      if (current) current.push(nota);
+      else map.set(key, [nota]);
+    });
+    return map;
+  }, [notas]);
 
   const competenciaOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -64,11 +72,7 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
         map.set(item.mes, item.label || monthLabelFromYearMonth(item.mes));
       });
 
-    notas.forEach((nota) => {
-      const raw = nota.data_emissao || '';
-      const d = new Date(raw);
-      if (Number.isNaN(d.getTime())) return;
-      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    notasPorCompetencia.forEach((_, mes) => {
       if (!map.has(mes)) map.set(mes, monthLabelFromYearMonth(mes));
     });
 
@@ -82,7 +86,7 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       return [{ mes: kpis.mesCompetencia, label: kpis.competenciaLabel }];
     }
     return [];
-  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia, notas]);
+  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia, notasPorCompetencia]);
 
   const [mesSelecionado, setMesSelecionado] = useState<string>(
     competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
@@ -104,13 +108,8 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
 
   const notasMesSelecionado = useMemo(() => {
     if (!mesSelecionado) return notas;
-    return notas.filter((nota) => {
-      const d = new Date(nota.data_emissao || '');
-      if (Number.isNaN(d.getTime())) return false;
-      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return mes === mesSelecionado;
-    });
-  }, [mesSelecionado, notas]);
+    return notasPorCompetencia.get(mesSelecionado) || [];
+  }, [mesSelecionado, notas, notasPorCompetencia]);
 
   const kpisMesSelecionado = useMemo(() => {
     const mesData = dadosMensais.find((item) => item.mes === mesSelecionado);
@@ -258,10 +257,9 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
             </div>
           )}
           <EmissoesResumoMini
-            notas={notas}
+            notas={notasMesSelecionado}
             tomadores={tomadores}
             aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
-            mesCompetencia={mesSelecionado || kpis.mesCompetencia}
           />
         </DashboardCard>
         <DashboardCard title="Participação por Cliente" headerColor="blue">
