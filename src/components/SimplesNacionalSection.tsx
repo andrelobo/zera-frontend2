@@ -53,7 +53,7 @@ const SimplesNacionalSection: React.FC<Props> = ({
     <div className="section-card p-3">
       <h2 className="section-title text-sm mb-2">
         <Calculator className="w-4 h-4 text-primary" />
-        Simples Nacional – Anexo III
+        Apuração Snë.
       </h2>
 
       {/* RBT12 Input */}

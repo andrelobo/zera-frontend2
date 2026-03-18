@@ -289,39 +289,41 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
       </div>
 
       {/* Lista de CNAEs adicionados */}
-      <div className="mt-3">
-        <p className="section-title text-sm mb-1.5"><Briefcase className="w-4 h-4 text-primary" />Lista Cnae</p>
-        <div className="border border-border rounded-lg divide-y divide-border">
-          {manualActivities.map((atividade) => {
-            const codigo = String(atividade.codigo);
-            const isSelected = cnaeEscolhido === codigo;
-            return (
-              <div key={codigo} className={`group flex items-center gap-2 px-2.5 py-1.5 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
-                <button type="button" onClick={() => handleSelect(atividade)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                  <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-primary' : 'border-muted-foreground/40'}`}>
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                  </div>
-                  <p className="text-xs text-foreground leading-snug truncate">
-                    {atividade.isManual && <span className="text-muted-foreground font-medium">Manual </span>}
-                    <span className="font-semibold text-primary font-mono">{formatCNAECode(atividade.codigo)}</span>
-                    <span className="text-muted-foreground"> - </span>
-                    <span>{atividade.descricao}</span>
-                    {atividade.anexoLoading && <span className="text-muted-foreground"> - <Loader2 className="w-3 h-3 animate-spin inline" /></span>}
-                    {!atividade.anexoLoading && atividade.anexo !== undefined && (
-                      <span className={atividade.anexo?.toUpperCase().includes('III') ? 'text-green-600' : 'text-destructive'}>
-                        {' - '}{atividade.anexo ? `Anexo ${atividade.anexo}` : 'Não encontrado'}
-                      </span>
-                    )}
-                  </p>
-                </button>
-                <button type="button" onClick={(e) => handleRemove(e, codigo)} title="Remover" className="shrink-0 p-1 rounded text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            );
-          })}
+      {manualActivities.length > 0 && (
+        <div className="mt-3">
+          <p className="section-title text-sm mb-1.5"><Briefcase className="w-4 h-4 text-primary" />Cnae Anexo</p>
+          <div className="border border-border rounded-lg divide-y divide-border">
+            {manualActivities.map((atividade) => {
+              const codigo = String(atividade.codigo);
+              const isSelected = cnaeEscolhido === codigo;
+              return (
+                <div key={codigo} className={`group flex items-center gap-2 px-2.5 py-1.5 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                  <button type="button" onClick={() => handleSelect(atividade)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-primary' : 'border-muted-foreground/40'}`}>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                    </div>
+                    <p className="text-xs text-foreground leading-snug truncate">
+                      {atividade.isManual && <span className="text-muted-foreground font-medium">Manual </span>}
+                      <span className="font-semibold text-primary font-mono">{formatCNAECode(atividade.codigo)}</span>
+                      <span className="text-muted-foreground"> - </span>
+                      <span>{atividade.descricao}</span>
+                      {atividade.anexoLoading && <span className="text-muted-foreground"> - <Loader2 className="w-3 h-3 animate-spin inline" /></span>}
+                      {!atividade.anexoLoading && atividade.anexo !== undefined && (
+                        <span className={atividade.anexo?.toUpperCase().includes('III') ? 'text-green-600' : 'text-destructive'}>
+                          {' - '}{atividade.anexo ? `Anexo ${atividade.anexo}` : 'Não encontrado'}
+                        </span>
+                      )}
+                    </p>
+                  </button>
+                  <button type="button" onClick={(e) => handleRemove(e, codigo)} title="Remover" className="shrink-0 p-1 rounded text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

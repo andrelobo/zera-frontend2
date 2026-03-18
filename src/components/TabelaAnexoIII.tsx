@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table as TableIcon, ChevronDown } from 'lucide-react';
+import { Scale, ChevronDown } from 'lucide-react';
 import { FAIXAS_ANEXO_III, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 
 interface Props {
@@ -17,7 +17,7 @@ const TabelaAnexoIII: React.FC<Props> = ({ faixaAtual }) => {
         className="flex items-center justify-between w-full text-left"
       >
         <h2 className="section-title text-sm mb-0 flex items-center gap-1.5">
-          <TableIcon className="w-4 h-4 text-primary" />
+          <Scale className="w-4 h-4 text-primary" />
           Tabela Anexo III
         </h2>
         <ChevronDown
