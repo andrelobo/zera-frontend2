@@ -3,6 +3,8 @@ import type { User } from '@/types/api';
 import { authApi } from '@/services/api';
 import { isTokenExpired } from '@/lib/auth-token';
 
+const DASHBOARD_CACHE_STORAGE_KEY = 'zera_dashboard_cache_v1';
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -26,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initialToken = storedToken && !isTokenExpired(storedToken) ? storedToken : null;
   if (storedToken && !initialToken) {
     localStorage.removeItem('zera_token');
+    localStorage.removeItem(DASHBOARD_CACHE_STORAGE_KEY);
   }
 
   const [user, setUser] = useState<User | null>(null);
@@ -43,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setToken(null);
       localStorage.removeItem('zera_token');
+      localStorage.removeItem(DASHBOARD_CACHE_STORAGE_KEY);
     }
   }, []);
 
@@ -52,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(null);
         setUser(null);
         localStorage.removeItem('zera_token');
+        localStorage.removeItem(DASHBOARD_CACHE_STORAGE_KEY);
         setIsLoading(false);
         return;
       }
@@ -73,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('zera_token');
+    localStorage.removeItem(DASHBOARD_CACHE_STORAGE_KEY);
     setToken(null);
     setUser(null);
   };
