@@ -25,15 +25,15 @@ const LoadingState = ({ message = 'Carregando...' }: LoadingStateProps) => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+    <div className="flex min-h-[55vh] flex-col items-center justify-center rounded-xl border border-sidebar-border bg-sidebar py-16 text-sidebar-foreground">
       <div className="mb-3 flex items-center gap-2">
-        <Loader2 className={`h-8 w-8 animate-spin ${theme === 'pn' ? 'stroke-[2.25]' : ''}`} />
-        <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]">
+        <Loader2 className={`h-8 w-8 animate-spin text-sidebar-primary-foreground ${theme === 'pn' ? 'stroke-[2.25]' : ''}`} />
+        <span className="rounded-full border border-sidebar-border bg-sidebar-accent px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-sidebar-accent-foreground">
           {theme}
         </span>
       </div>
-      <p className={`text-sm ${theme === 'pn' ? 'font-medium tracking-[0.08em]' : ''}`}>{message}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground/80">
+      <p className={`text-sm text-sidebar-primary-foreground ${theme === 'pn' ? 'font-medium tracking-[0.08em]' : ''}`}>{message}</p>
+      <p className="mt-1 text-[11px] text-sidebar-foreground/80">
         {theme === 'pn' ? 'Sincronizando no estilo pn...' : 'Carregando no estilo zera...'}
       </p>
     </div>
