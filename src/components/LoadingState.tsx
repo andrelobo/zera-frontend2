@@ -1,5 +1,3 @@
-import { Loader2 } from 'lucide-react';
-
 interface LoadingStateProps {
   message?: string;
 }
@@ -10,9 +8,12 @@ const LoadingState = ({ message = 'Carregando...' }: LoadingStateProps) => {
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <div className="mb-3 flex items-center">
-        <Loader2
-          className="h-8 w-8 animate-spin"
-          style={{ color: navBlue }}
+        <span
+          className="inline-block h-8 w-8 animate-spin rounded-full border-2"
+          style={{
+            borderColor: `${navBlue}44`,
+            borderTopColor: navBlue,
+          }}
         />
       </div>
       <p className="text-sm font-medium" style={{ color: navBlue }}>{message}</p>
