@@ -1119,7 +1119,7 @@ const EmpresaFormPage = () => {
   const handlePrestadorChange = (field: string, value: string) => {
     if (field !== 'cnpj') {
       if (field === 'whatsapp' || field === 'telefone') {
-        update(field as keyof EmpresaFormData, formatPhone(value));
+        update(field as keyof EmpresaFormData, value);
         return;
       }
       if (field === 'numero') {
