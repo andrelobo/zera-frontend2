@@ -16,6 +16,7 @@ import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/
 import { useAuth } from '@/contexts/AuthContext';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
+const THEME_STORAGE_KEY = 'zera_theme_preview_v1';
 
 type HeaderSnapshot = {
   rbt12: number;
@@ -66,6 +67,10 @@ const AppLayout = () => {
     if (typeof window === 'undefined') return FALLBACK_SNAPSHOT;
     return parseSnapshot(window.localStorage.getItem(TICKER_STORAGE_KEY)) || FALLBACK_SNAPSHOT;
   });
+  const [themePreview, setThemePreview] = useState<'zera' | 'pn'>(() => {
+    if (typeof window === 'undefined') return 'zera';
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === 'pn' ? 'pn' : 'zera';
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -89,6 +94,15 @@ const AppLayout = () => {
       window.removeEventListener('zera:ticker:update', syncFromStorage as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.classList.toggle('theme-pn', themePreview === 'pn');
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, themePreview);
+      window.dispatchEvent(new Event('zera:theme:update'));
+    }
+  }, [themePreview]);
 
   const receitaMes = snapshot.rbt12 / 12;
   const aRecolher = receitaMes * snapshot.aliquotaEfetiva;
@@ -133,6 +147,22 @@ const AppLayout = () => {
               ))}
             </div>
             <div className="ml-auto flex items-center gap-3 shrink-0">
+              <div className="flex items-center rounded-full border border-white/15 bg-white/5 p-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
+                <button
+                  type="button"
+                  onClick={() => setThemePreview('zera')}
+                  className={`rounded-full px-2 py-1 transition-colors ${themePreview === 'zera' ? 'bg-white text-[hsl(216,60%,16%)]' : 'text-white/75'}`}
+                >
+                  zera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setThemePreview('pn')}
+                  className={`rounded-full px-2 py-1 transition-colors ${themePreview === 'pn' ? 'bg-white text-[hsl(216,60%,16%)]' : 'text-white/75'}`}
+                >
+                  pn
+                </button>
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
