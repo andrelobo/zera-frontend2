@@ -5,9 +5,10 @@ interface Props {
   email: string;
   whatsapp: string;
   onFieldChange: (field: string, value: string) => void;
+  onFieldBlur?: (field: string, value: string) => void;
 }
 
-const ContatoCard: React.FC<Props> = ({ email, whatsapp, onFieldChange }) => (
+const ContatoCard: React.FC<Props> = ({ email, whatsapp, onFieldChange, onFieldBlur }) => (
   <div className="section-card">
     <h2 className="section-title">
       <Mail className="w-5 h-5 text-primary" />
@@ -20,7 +21,7 @@ const ContatoCard: React.FC<Props> = ({ email, whatsapp, onFieldChange }) => (
       </div>
       <div>
         <label className="field-label">WhatsApp</label>
-        <input className="field-input" placeholder="(00) 00000-0000" value={whatsapp} onChange={(e) => onFieldChange('whatsapp', e.target.value)} maxLength={15} />
+        <input className="field-input" placeholder="(00) 00000-0000" value={whatsapp} onChange={(e) => onFieldChange('whatsapp', e.target.value)} onBlur={(e) => onFieldBlur?.('whatsapp', e.target.value)} />
       </div>
     </div>
   </div>

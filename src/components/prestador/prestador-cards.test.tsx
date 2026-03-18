@@ -76,6 +76,7 @@ describe('prestador cards', () => {
         email="contato@empresa.com.br"
         whatsapp=""
         onFieldChange={onFieldChange}
+        onFieldBlur={vi.fn()}
       />,
     );
 
@@ -94,6 +95,7 @@ describe('prestador cards', () => {
         email=""
         whatsapp=""
         onFieldChange={onFieldChange}
+        onFieldBlur={vi.fn()}
       />,
     );
 
@@ -106,5 +108,44 @@ describe('prestador cards', () => {
 
     expect(onFieldChange).toHaveBeenCalledWith('email', 'contato@empresa.com.br');
     expect(onFieldChange).toHaveBeenCalledWith('whatsapp', ' 92991594210 ');
+  });
+
+  it('does not auto-insert 9 while typing whatsapp', () => {
+    const onFieldChange = vi.fn();
+
+    render(
+      <ContatoCard
+        email=""
+        whatsapp=""
+        onFieldChange={onFieldChange}
+        onFieldBlur={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('(00) 00000-0000'), {
+      target: { value: '9291234567' },
+    });
+
+    expect(onFieldChange).toHaveBeenCalledWith('whatsapp', '9291234567');
+  });
+
+  it('formats whatsapp on blur only', () => {
+    const onFieldChange = vi.fn();
+    const onFieldBlur = vi.fn();
+
+    render(
+      <ContatoCard
+        email=""
+        whatsapp="9291234567"
+        onFieldChange={onFieldChange}
+        onFieldBlur={onFieldBlur}
+      />,
+    );
+
+    fireEvent.blur(screen.getByPlaceholderText('(00) 00000-0000'), {
+      target: { value: '9291234567' },
+    });
+
+    expect(onFieldBlur).toHaveBeenCalledWith('whatsapp', '9291234567');
   });
 });

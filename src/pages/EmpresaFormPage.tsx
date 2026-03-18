@@ -1269,6 +1269,11 @@ const EmpresaFormPage = () => {
               email={form.email}
               whatsapp={form.whatsapp}
               onFieldChange={(field, value) => handlePrestadorChange(field, value)}
+              onFieldBlur={(field, value) => {
+                if (field === 'whatsapp') {
+                  update('whatsapp', formatPhone(value));
+                }
+              }}
             />
 
             <CertificadoDigitalCard
