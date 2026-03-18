@@ -50,7 +50,6 @@ const GestorAiPage = () => {
       <GestorAiTabela
         notas={notas}
         tomadores={tomadores}
-        aliquotaEfetiva={kpis.aliquotaEfetiva}
       />
     </div>
   );
