@@ -2,6 +2,17 @@
 
 Aplicação frontend do projeto ZERA, construída com React, TypeScript e Vite.
 
+## Premissa Canônica
+
+Este frontend deve ser tratado como **aplicação já em produção**.
+
+Implicações práticas:
+- mudanças em UI e fluxo impactam operação real
+- `ajustes`, `rollout` e `homologação` em docs de contexto não significam app "só em dev"; significam evolução controlada sobre uma base produtiva
+- a prioridade padrão é preservar contrato com a API e evitar regressão em fluxos críticos
+
+➡️ Antes de alterar telas, parta da premissa: **o ZERA já roda em PROD**.
+
 ## Requisitos
 
 - Node.js 18+

@@ -2,6 +2,10 @@
 
 Este checklist existe para reduzir regressao em `Prestador`, `Tomador`, `Emissao` e `Certificado`.
 
+Premissa canonica:
+- este checklist protege fluxos de um frontend **ja em producao**
+- trate toda release como mudanca sobre operacao real, e nao como experimento isolado
+
 ## Regras
 
 1. Nao misturar refactor visual com regra de negocio nas areas criticas.

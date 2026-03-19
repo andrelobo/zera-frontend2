@@ -5,6 +5,28 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Premissa Canonica de Operacao
+
+- o `zera-frontend` deve ser tratado como **frontend ja em producao**
+- qualquer alteracao em dashboard, prestador, tomador, emissao, certificado ou polling visual deve assumir:
+  - usuarios reais
+  - dados reais
+  - risco real de regressao
+- quando houver duvida entre "fluxo em ajuste" e "produto ainda nao produtivo", a leitura canonica correta e:
+  - **o ZERA ja esta em PROD**
+
+Regra de trabalho:
+- a UI nao e laboratorio isolado; ela e camada ativa de uma operacao fiscal real
+- por isso, toda mudanca deve priorizar:
+  - preservacao de contrato com backend
+  - estabilidade dos fluxos criticos
+  - leitura correta do estado real da API
+  - reducao de regressao visual/comportamental
+
+Leitura correta dos updates deste arquivo:
+- melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
+- homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
+
 ## 0. Atualizacao de Contexto (2026-03-17)
 Fonte: `codigo local` + `execucao local`.
 
