@@ -199,6 +199,22 @@ describe('new API flows', () => {
     });
   });
 
+  it('sanitizes empresaCnpj in NFSe list filters', async () => {
+    const { nfseApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: {
+        items: [],
+        meta: { total: 0, page: 1, limit: 1, totalPages: 1 },
+      },
+    });
+
+    await nfseApi.list({ empresaCnpj: '43.521.115/0001-34', limit: 1 });
+
+    expect(mockGet).toHaveBeenCalledWith('/nfse', {
+      params: { empresaCnpj: '43521115000134', limit: 1 },
+    });
+  });
+
   it('applies NFSe list defaults when backend omits meta and items', async () => {
     const { nfseApi } = await import('@/services/api');
     mockGet.mockResolvedValue({ data: {} });

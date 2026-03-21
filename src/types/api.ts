@@ -290,10 +290,14 @@ export interface NfseAddress {
 export interface Nfse {
   id: string;
   numero?: string;
+  numeroNfse?: string | null;
+  dpsNum?: string | null;
+  serieDpsNum?: string | null;
   status: NfseStatus;
   provider: NfseProvider | string;
   externalId?: string;
   empresaId?: string;
+  empresaCnpj?: string | null;
   empresa?: Empresa;
   tomador?: {
     cpfCnpj?: string;
@@ -451,6 +455,7 @@ export interface NfseFilters {
   limit?: number;
   status?: NfseStatus;
   provider?: NfseProvider;
+  empresaCnpj?: string;
   dateFrom?: string;
   dateTo?: string;
   sort?: string;

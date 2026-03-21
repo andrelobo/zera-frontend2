@@ -346,6 +346,7 @@ export const nfseApi = {
     const params = {
       ...filters,
       provider: filters.provider ? String(filters.provider).toLowerCase() : undefined,
+      empresaCnpj: filters.empresaCnpj ? String(filters.empresaCnpj).replace(/\D/g, '') : undefined,
     };
     return api.get<{ items: Nfse[]; meta: { total: number; page: number; limit: number; totalPages: number } }>('/nfse', { params })
       .then(r => ({

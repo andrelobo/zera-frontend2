@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi } from '@/services/api';
+import { nfseApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
@@ -948,6 +949,7 @@ const EmpresaFormPage = () => {
   }, [searchParams]);
 
   const cepDigits = useMemo(() => normalizeCep(form.cep), [form.cep]);
+  const empresaCnpjDigits = useMemo(() => form.cnpj.replace(/\D/g, ''), [form.cnpj]);
   const currentCnaeContext = useMemo(() => String(form.cnaeFiscal || '').replace(/\D/g, ''), [form.cnaeFiscal]);
   const configOperacionaisContextMismatch = useMemo(
     () => hasConfigOperacionaisContextMismatch(configOperacionais, configOperacionaisContextCnae, currentCnaeContext),
@@ -964,6 +966,21 @@ const EmpresaFormPage = () => {
     enabled: cepDigits.length === 8,
     staleTime: 60 * 60 * 1000,
   });
+
+  const ultimaEmissaoQuery = useQuery({
+    queryKey: ['empresa-form', 'ultima-emissao', empresaCnpjDigits],
+    queryFn: () => nfseApi.list({ empresaCnpj: empresaCnpjDigits, limit: 1 }),
+    enabled: empresaCnpjDigits.length === 14,
+    staleTime: 60_000,
+  });
+
+  const ultimaEmissao = ultimaEmissaoQuery.data?.data?.[0];
+  const nfseNumSincronizado = String(ultimaEmissao?.numeroNfse ?? ultimaEmissao?.numero ?? nfseNum ?? '');
+  const dpsNumSincronizado = String(ultimaEmissao?.dpsNum ?? dpsNum ?? '');
+  const serieDpsNumSincronizado = String(ultimaEmissao?.serieDpsNum ?? serieDpsNum ?? '');
+  const portalNacionalSincronizado = Boolean(
+    ultimaEmissao?.numeroNfse || ultimaEmissao?.numero || ultimaEmissao?.dpsNum || ultimaEmissao?.serieDpsNum,
+  );
 
   useEffect(() => {
     if (!cepLookupQuery.data) return;
@@ -983,9 +1000,9 @@ const EmpresaFormPage = () => {
   const mutation = useMutation({
     mutationFn: () => {
       const payload = buildEmpresaUpdatePayload(form, cnaesRegime, cnaesParam, configOperacionaisAtivos, {
-        nfseNum,
-        dpsNum,
-        serieDpsNum,
+        nfseNum: nfseNumSincronizado,
+        dpsNum: dpsNumSincronizado,
+        serieDpsNum: serieDpsNumSincronizado,
       });
       return isEdit ? empresasApi.update(id!, {
       razaoSocial: payload.razaoSocial,
@@ -1312,12 +1329,14 @@ const EmpresaFormPage = () => {
             />
 
             <IdentificacaoDocumentoCard
-              nfseNum={nfseNum}
+              nfseNum={nfseNumSincronizado}
               onNfseNumChange={setNfseNum}
-              dpsNum={dpsNum}
+              dpsNum={dpsNumSincronizado}
               onDpsNumChange={setDpsNum}
-              serieDpsNum={serieDpsNum}
+              serieDpsNum={serieDpsNumSincronizado}
               onSerieDpsNumChange={setSerieDpsNum}
+              readOnly={portalNacionalSincronizado}
+              description={portalNacionalSincronizado ? 'Campos sincronizados automaticamente com a ultima emissao desta empresa.' : undefined}
             />
 
           </div>

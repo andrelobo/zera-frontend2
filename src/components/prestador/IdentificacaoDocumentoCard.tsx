@@ -9,6 +9,7 @@ interface Props {
   serieDpsNum: string;
   onSerieDpsNumChange?: (v: string) => void;
   readOnly?: boolean;
+  description?: string;
 }
 
 const IdentificacaoDocumentoCard: React.FC<Props> = ({
@@ -16,6 +17,7 @@ const IdentificacaoDocumentoCard: React.FC<Props> = ({
   dpsNum, onDpsNumChange,
   serieDpsNum, onSerieDpsNumChange,
   readOnly = false,
+  description,
 }) => {
   return (
     <div className="section-card">
@@ -23,6 +25,9 @@ const IdentificacaoDocumentoCard: React.FC<Props> = ({
         <FileText className="w-5 h-5 text-primary" />
         Portal Nacional
       </h2>
+      {description ? (
+        <p className="mb-3 text-xs text-muted-foreground">{description}</p>
+      ) : null}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="field-label">NFS-e Nº</label>
