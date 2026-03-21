@@ -27,6 +27,132 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-03-21)
+Fonte: `codigo local` + `pull remoto` + `docs locais`.
+
+### Leitura consolidada do estado atual
+
+- o `zera-frontend` continua devendo ser lido como **frontend em producao**
+- a rodada consolidada mais recente combinou:
+  - melhoria de infraestrutura/percepcao de velocidade
+  - ajustes visuais de baixo risco
+  - reorganizacao de UX da DANFSe
+  - reforco do `Gestor AI`
+  - protecoes explicitas contra regressao em fluxos criticos
+
+Leitura operacional correta de agora:
+1. a UX melhorou sem troca de regra fiscal
+2. a performance percebida melhorou por:
+   - infra melhor
+   - front menos custoso em pontos pesados
+3. `Prestador`, `Tomador`, `Emissao` e `Certificado` seguem sendo areas sensiveis e protegidas por checklist/manual + testes
+
+### DANFSe
+
+Arquivos principais:
+- `src/pages/NfseListPage.tsx`
+- `src/pages/NfseDetailPage.tsx`
+
+Estado consolidado:
+- listagem passou a concentrar acoes rapidas de uso operacional
+- tela detalhada passou a concentrar acoes principais no topo
+- downloads locais e acoes de visualizacao/impressao foram reorganizados para reduzir duplicidade e friccao
+- polling visual de status continua relevante:
+  - detalhe da NFSe com `refetch` automatico enquanto houver status ativo
+  - listagem com `refetch` automatico quando houver emissoes ainda em processamento
+
+Regra operacional:
+- nenhuma mudanca dessa frente deve inventar estado proprio divergente da API
+- o frontend apenas melhora leitura e acompanhamento do estado real da emissao
+
+### Gestor AI
+
+Arquivos principais:
+- `src/pages/GestorAiPage.tsx`
+- `src/components/dashboard/GestorAiTabela.tsx`
+- `src/hooks/useDashboardData.ts`
+
+Estado consolidado:
+- o `Gestor AI` esta orientado a **visao por tomador**
+- a tabela representa:
+  - tomador
+  - quantidade de notas
+  - valores das notas emitidas
+  - total emitido
+  - ticket medio
+  - percentual do faturamento
+
+Leitura operacional:
+- esta rota nao deve sacrificar leitura de negocio para "ganho tecnico" pequeno
+- quando houver disputa entre performance e visibilidade do faturamento por tomador, a prioridade correta e:
+  - preservar leitura do negocio
+  - sem perder notas legadas/sem metadata perfeita
+
+### Performance conservadora
+
+Arquivos/areas relacionados:
+- `src/App.tsx`
+- `src/hooks/useDashboardData.ts`
+- `src/components/LoadingState.tsx`
+
+Estado consolidado:
+- rotas pesadas passaram por alivio conservador de carregamento
+- o app ganhou melhor percepcao de resposta, especialmente em dashboard e modulos grandes
+- o `LoadingState` atual foi simplificado e mantido neutro, sem inventar nova regra visual de negocio
+
+Leitura operacional:
+- ainda existe espaco para evolucao comparando com apps de mercado
+- mas a linha correta continua sendo:
+  - otimizar sem quebrar
+  - otimizar sem esconder dado real
+  - otimizar sem regressao em dashboard/Gestor AI/cadastro
+
+### Cadastro de Prestador
+
+Arquivos principais:
+- `src/pages/EmpresaFormPage.tsx`
+- `src/components/prestador/ContatoCard.tsx`
+- `src/components/prestador/EnderecoCard.tsx`
+- `src/components/prestador/CertificadoDigitalCard.tsx`
+
+Estado consolidado da frente:
+- houve historico recente de bugs comportamentais em campos do cadastro
+- o projeto agora documenta claramente que esses campos devem ser tratados como fluxo critico de producao
+- a direcao correta e:
+  - nao misturar ajuste visual com regra
+  - nao remascarar campo sensivel durante digitacao se isso gerar travamento
+  - nao sobrescrever input manual do usuario indevidamente
+
+Campos sensiveis explicitamente reconhecidos:
+- `WhatsApp`
+- `Localidade / UF`
+- `CEP`
+- `Numero`
+- `Inscricao Municipal`
+- `Certificado`
+- `NFS-e Nº`
+- `DPS Nº`
+- `Serie DPS Nº`
+
+### Release safety
+
+Documento novo e importante:
+- `docs/FRONT_RELEASE_CHECKLIST.md`
+
+Leitura canonica:
+- esse checklist nao e opcional em mudanca de `Prestador`, `Tomador`, `Emissao` e `Certificado`
+- a release correta nessas areas exige:
+  - `test:critical`
+  - `build`
+  - checklist manual de fluxo real
+
+Regra consolidada:
+- nao liberar mudanca nessas areas se:
+  - autocomplete quebrar
+  - logradouro/localidade/CEP/WhatsApp travarem
+  - save/reload voltar incoerente
+  - favorito/lista servico reaproveitar residuo antigo
+
 ## 0. Atualizacao de Contexto (2026-03-17)
 Fonte: `codigo local` + `execucao local`.
 
