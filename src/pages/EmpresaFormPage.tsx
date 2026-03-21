@@ -975,6 +975,12 @@ const EmpresaFormPage = () => {
   });
 
   const ultimaEmissao = ultimaEmissaoQuery.data?.data?.[0];
+  const ultimaEmissaoNeedsProviderResponse = Boolean(
+    ultimaEmissao
+    && ((!ultimaEmissao.numeroNfse && !ultimaEmissao.numero)
+      || !ultimaEmissao.dpsNum
+      || !ultimaEmissao.serieDpsNum),
+  );
   const ultimaEmissaoProviderQuery = useQuery({
     queryKey: [
       'empresa-form',
@@ -988,32 +994,46 @@ const EmpresaFormPage = () => {
     ),
     enabled: Boolean(
       (ultimaEmissao?.externalId || ultimaEmissao?.id)
-      && (!ultimaEmissao.numeroNfse && !ultimaEmissao.numero
-        || !ultimaEmissao.dpsNum
-        || !ultimaEmissao.serieDpsNum),
+      && ultimaEmissaoNeedsProviderResponse,
     ),
     staleTime: 60_000,
     retry: 0,
   });
   const ultimaEmissaoInferida = inferNfseDataFromProvider(ultimaEmissaoProviderQuery.data);
+  const portalNacionalSyncPending = Boolean(
+    isEdit
+    && empresaCnpjDigits.length === 14
+    && (
+      ultimaEmissaoQuery.isLoading
+      || ultimaEmissaoQuery.isFetching
+      || (ultimaEmissaoNeedsProviderResponse
+        && (ultimaEmissaoProviderQuery.isLoading || ultimaEmissaoProviderQuery.isFetching))
+    ),
+  );
   const nfseNumSincronizado = String(
-    ultimaEmissao?.numeroNfse
-      ?? ultimaEmissao?.numero
-      ?? ultimaEmissaoInferida.numeroNfse
-      ?? nfseNum
-      ?? '',
+    portalNacionalSyncPending
+      ? ''
+      : (ultimaEmissao?.numeroNfse
+        ?? ultimaEmissao?.numero
+        ?? ultimaEmissaoInferida.numeroNfse
+        ?? nfseNum
+        ?? ''),
   );
   const dpsNumSincronizado = String(
-    ultimaEmissao?.dpsNum
-      ?? ultimaEmissaoInferida.dpsNum
-      ?? dpsNum
-      ?? '',
+    portalNacionalSyncPending
+      ? ''
+      : (ultimaEmissao?.dpsNum
+        ?? ultimaEmissaoInferida.dpsNum
+        ?? dpsNum
+        ?? ''),
   );
   const serieDpsNumSincronizado = String(
-    ultimaEmissao?.serieDpsNum
-      ?? ultimaEmissaoInferida.serieDpsNum
-      ?? serieDpsNum
-      ?? '',
+    portalNacionalSyncPending
+      ? ''
+      : (ultimaEmissao?.serieDpsNum
+        ?? ultimaEmissaoInferida.serieDpsNum
+        ?? serieDpsNum
+        ?? ''),
   );
   const portalNacionalSincronizado = Boolean(
     ultimaEmissao?.numeroNfse
