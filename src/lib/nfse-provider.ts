@@ -7,6 +7,8 @@ interface NfseInferredData {
   tomadorCpfCnpj?: string;
   codigoServico?: string;
   numeroNfse?: string;
+  dpsNum?: string;
+  serieDpsNum?: string;
 }
 
 const asRecord = (value: unknown): Record<string, unknown> | null => {
@@ -61,6 +63,7 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
   const responseServico = asRecord(firstFromArray(providerResponseRoot?.servico));
   const responseServicoValor = asRecord(responseServico?.valor);
   const responseRetorno = asRecord(providerResponseRoot?.retorno);
+  const responseDps = asRecord(providerResponseRoot?.dps);
 
   const valor =
     toNumber(payloadServicoValor?.servico) ??
@@ -88,6 +91,16 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
     typeof numeroNfseRaw === 'string'
       ? numeroNfseRaw
       : (typeof numeroNfseRaw === 'number' ? String(numeroNfseRaw) : undefined);
+  const dpsNumRaw = responseDps?.numero;
+  const dpsNum =
+    typeof dpsNumRaw === 'string'
+      ? dpsNumRaw
+      : (typeof dpsNumRaw === 'number' ? String(dpsNumRaw) : undefined);
+  const serieDpsRaw = responseDps?.serie;
+  const serieDpsNum =
+    typeof serieDpsRaw === 'string'
+      ? serieDpsRaw
+      : (typeof serieDpsRaw === 'number' ? String(serieDpsRaw) : undefined);
 
   return {
     valor,
@@ -96,5 +109,7 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
     tomadorCpfCnpj,
     codigoServico,
     numeroNfse,
+    dpsNum,
+    serieDpsNum,
   };
 };

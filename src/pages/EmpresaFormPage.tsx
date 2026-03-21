@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { empresasApi } from '@/services/api';
-import { nfseApi } from '@/services/api';
+import { empresasApi, nfseApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
@@ -24,6 +23,7 @@ import { getDefaultVinculosForCnae, getLC116Item, shouldRepairLegacyVinculos } f
 import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
 import { formatPhone, normalizeLogradouro, sanitizeAddressNumber } from '@/utils/validators';
+import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import type { Empresa } from '@/types/api';
 
 interface EmpresaFormData {
@@ -975,11 +975,46 @@ const EmpresaFormPage = () => {
   });
 
   const ultimaEmissao = ultimaEmissaoQuery.data?.data?.[0];
-  const nfseNumSincronizado = String(ultimaEmissao?.numeroNfse ?? ultimaEmissao?.numero ?? nfseNum ?? '');
-  const dpsNumSincronizado = String(ultimaEmissao?.dpsNum ?? dpsNum ?? '');
-  const serieDpsNumSincronizado = String(ultimaEmissao?.serieDpsNum ?? serieDpsNum ?? '');
+  const ultimaEmissaoProviderQuery = useQuery({
+    queryKey: ['empresa-form', 'ultima-emissao-provider', ultimaEmissao?.id],
+    queryFn: () => nfseApi.providerResponse(ultimaEmissao!.id),
+    enabled: Boolean(
+      ultimaEmissao?.id
+      && (!ultimaEmissao.numeroNfse && !ultimaEmissao.numero
+        || !ultimaEmissao.dpsNum
+        || !ultimaEmissao.serieDpsNum),
+    ),
+    staleTime: 60_000,
+    retry: 0,
+  });
+  const ultimaEmissaoInferida = inferNfseDataFromProvider(ultimaEmissaoProviderQuery.data);
+  const nfseNumSincronizado = String(
+    ultimaEmissao?.numeroNfse
+      ?? ultimaEmissao?.numero
+      ?? ultimaEmissaoInferida.numeroNfse
+      ?? nfseNum
+      ?? '',
+  );
+  const dpsNumSincronizado = String(
+    ultimaEmissao?.dpsNum
+      ?? ultimaEmissaoInferida.dpsNum
+      ?? dpsNum
+      ?? '',
+  );
+  const serieDpsNumSincronizado = String(
+    ultimaEmissao?.serieDpsNum
+      ?? ultimaEmissaoInferida.serieDpsNum
+      ?? serieDpsNum
+      ?? '',
+  );
   const portalNacionalSincronizado = Boolean(
-    ultimaEmissao?.numeroNfse || ultimaEmissao?.numero || ultimaEmissao?.dpsNum || ultimaEmissao?.serieDpsNum,
+    ultimaEmissao?.numeroNfse
+    || ultimaEmissao?.numero
+    || ultimaEmissao?.dpsNum
+    || ultimaEmissao?.serieDpsNum
+    || ultimaEmissaoInferida.numeroNfse
+    || ultimaEmissaoInferida.dpsNum
+    || ultimaEmissaoInferida.serieDpsNum,
   );
 
   useEffect(() => {
