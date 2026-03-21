@@ -976,10 +976,18 @@ const EmpresaFormPage = () => {
 
   const ultimaEmissao = ultimaEmissaoQuery.data?.data?.[0];
   const ultimaEmissaoProviderQuery = useQuery({
-    queryKey: ['empresa-form', 'ultima-emissao-provider', ultimaEmissao?.id],
-    queryFn: () => nfseApi.providerResponse(ultimaEmissao!.id),
+    queryKey: [
+      'empresa-form',
+      'ultima-emissao-provider',
+      ultimaEmissao?.externalId || ultimaEmissao?.id,
+    ],
+    queryFn: () => (
+      ultimaEmissao?.externalId
+        ? nfseApi.providerResponseByExternalId(ultimaEmissao.externalId)
+        : nfseApi.providerResponse(ultimaEmissao!.id)
+    ),
     enabled: Boolean(
-      ultimaEmissao?.id
+      (ultimaEmissao?.externalId || ultimaEmissao?.id)
       && (!ultimaEmissao.numeroNfse && !ultimaEmissao.numero
         || !ultimaEmissao.dpsNum
         || !ultimaEmissao.serieDpsNum),

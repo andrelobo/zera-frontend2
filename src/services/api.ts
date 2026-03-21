@@ -411,6 +411,24 @@ export const nfseApi = {
         receivedAt: (data.updatedAt as string | undefined) || new Date().toISOString(),
       } as ProviderResponse;
     }),
+  providerResponseByExternalId: (externalId: string) =>
+    api.get<Record<string, unknown>>(`/nfse/external/${externalId}/provider-response`).then(r => {
+      const data = r.data;
+      return {
+        id: String(data.id || externalId),
+        provider: (data.provider as string | undefined) || undefined,
+        externalId: (data.externalId as string | null | undefined) ?? null,
+        status: (data.status as ProviderResponse['status']) || undefined,
+        providerRequest: data.providerRequest,
+        providerResponse: data.providerResponse,
+        error: (data.error as string | null | undefined) ?? null,
+        createdAt: (data.createdAt as string | null | undefined) ?? null,
+        updatedAt: (data.updatedAt as string | null | undefined) ?? null,
+        raw: data.providerResponse || data,
+        protocol: (data.externalId as string | undefined) || (data.protocol as string | undefined),
+        receivedAt: (data.updatedAt as string | undefined) || new Date().toISOString(),
+      } as ProviderResponse;
+    }),
   artifacts: (id: string) =>
     api.get<NfseArtifactsStatus>(`/nfse/${id}/artifacts`).then(r => r.data),
   downloadXml: (id: string) =>

@@ -264,6 +264,40 @@ describe('new API flows', () => {
     });
   });
 
+  it('maps provider response by externalId envelope to normalized shape', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const payload = {
+      id: 'prov-2',
+      provider: 'PLUGNOTAS',
+      externalId: 'ext-2',
+      status: 'AUTHORIZED',
+      providerRequest: { sent: true },
+      providerResponse: [{ retorno: { numeroNfse: '25' }, dps: { numero: 38, serie: '01' } }],
+      error: null,
+      createdAt: '2026-03-18T00:49:48.000Z',
+      updatedAt: '2026-03-18T00:49:56.000Z',
+    };
+    mockGet.mockResolvedValue({ data: payload });
+
+    const result = await nfseApi.providerResponseByExternalId('ext-2');
+
+    expect(mockGet).toHaveBeenCalledWith('/nfse/external/ext-2/provider-response');
+    expect(result).toEqual({
+      id: 'prov-2',
+      provider: 'PLUGNOTAS',
+      externalId: 'ext-2',
+      status: 'AUTHORIZED',
+      providerRequest: { sent: true },
+      providerResponse: [{ retorno: { numeroNfse: '25' }, dps: { numero: 38, serie: '01' } }],
+      error: null,
+      createdAt: '2026-03-18T00:49:48.000Z',
+      updatedAt: '2026-03-18T00:49:56.000Z',
+      raw: [{ retorno: { numeroNfse: '25' }, dps: { numero: 38, serie: '01' } }],
+      protocol: 'ext-2',
+      receivedAt: '2026-03-18T00:49:56.000Z',
+    });
+  });
+
   it('normalizes empresa id from _id fallback', async () => {
     const { empresasApi } = await import('@/services/api');
     mockGet.mockResolvedValue({
