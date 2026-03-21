@@ -1399,7 +1399,7 @@ const EmpresaFormPage = () => {
               serieDpsNum={serieDpsNumSincronizado}
               onSerieDpsNumChange={setSerieDpsNum}
               readOnly={portalNacionalSincronizado}
-              description={portalNacionalSincronizado ? 'Campos sincronizados automaticamente com a ultima emissao desta empresa.' : undefined}
+              description={portalNacionalSincronizado ? 'Campos sincronizados automaticamente com a última emissão desta empresa.' : undefined}
             />
 
           </div>

@@ -27,6 +27,67 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-03-21) - prestador, portal nacional e limpeza de UX
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+### Cadastro de Prestador - Portal Nacional
+
+Arquivos principais:
+- `src/pages/EmpresaFormPage.tsx`
+- `src/lib/nfse-provider.ts`
+- `src/services/api.ts`
+- `src/components/prestador/IdentificacaoDocumentoCard.tsx`
+
+Leitura consolidada:
+- os campos do card `Portal Nacional`
+  - `NFS-e Nº`
+  - `DPS Nº`
+  - `Serie DPS Nº`
+  deixaram de ser tratados como fonte primaria do cadastro
+- a leitura correta agora e:
+  - espelhar a **ultima emissao** da empresa
+  - priorizando resposta/protocolo real da NFSe
+  - sem depender dos valores antigos persistidos "so para constar" no cadastro
+
+Protecoes aplicadas:
+- o frontend passou a buscar `provider-response` pelo `externalId/protocolo` da emissao quando necessario
+- o card nao deve mais exibir por alguns instantes os valores antigos do banco antes da sincronizacao correta
+- durante a sincronizacao do `Portal Nacional`, o formulario evita piscar o valor legado e so mostra o valor correto quando a fonte real responder
+
+Leitura operacional:
+- esses campos **nao mudam a emissao**
+- eles sao apenas reflexo/espelho do retorno do provider
+- qualquer nova emissao autorizada tende a substituir esses numeros pelos dados reais mais recentes
+
+### DANFSe - botoes simplificados
+
+Arquivos principais:
+- `src/pages/NfseListPage.tsx`
+- `src/pages/NfseDetailPage.tsx`
+
+Ajuste consolidado:
+- os botoes `Imprimir` foram removidos da UX principal
+- a direcao correta passou a ser:
+  - `Detalhes da DANFSE`
+  - `Visualizar PDF`
+  - `Baixar PDF`
+- justificativa:
+  - o PDF ja permite impressao pelo viewer/navegador
+  - remover botao redundante reduz ruido e evita promessa ambigua
+
+Leitura operacional:
+- `Visualizar` generico foi considerado ambiguidade ruim
+- a UX correta agora separa melhor:
+  - tela interna da nota
+  - abertura do PDF/DANFSe
+
+### Validacao executada nesta rodada
+
+- `npm test -- src/services/api.new-flows.test.ts src/lib/nfse-provider.test.ts src/pages/empresa-form.save-reload.test.ts src/components/prestador/prestador-cards.test.tsx`
+  - `30/30` testes passando
+- `npm run build`
+  - passando
+
 ## 0. Atualizacao de Contexto (2026-03-21)
 Fonte: `codigo local` + `pull remoto` + `docs locais`.
 
