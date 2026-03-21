@@ -7,7 +7,7 @@ import ErrorState from '@/components/ErrorState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, Printer, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -239,18 +239,7 @@ const NfseDetailPage = () => {
             onClick={openPdfPreview}
           >
             <Eye className="mr-2 h-4 w-4" />
-            Visualizar
-          </Button>
-          <Button
-            variant="outline"
-            className="rounded-full border-violet-200 bg-violet-50 text-violet-900 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
-            onClick={async () => {
-              await openPdfPreview();
-              window.setTimeout(() => window.print(), 350);
-            }}
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            Imprimir
+            Visualizar PDF
           </Button>
           <Button
             variant="outline"

@@ -9,7 +9,7 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ChevronLeft, ChevronRight, Zap, Eye, Printer, Download } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Zap, Eye, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -223,18 +223,18 @@ const NfseListPage = () => {
                             event.stopPropagation();
                             navigate(`/nfse/${nfse.id}`);
                           }}
-                          title="Visualizar DANFSE"
+                          title="Detalhes da DANFSE"
                         >
-                          <Eye className="h-4 w-4" />
+                          <FileText className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full border border-violet-200 bg-violet-50 text-violet-800 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
                           onClick={(event) => handleOpenPdf(event, nfse.id)}
-                          title="Abrir PDF"
+                          title="Visualizar PDF"
                         >
-                          <Printer className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
