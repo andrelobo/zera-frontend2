@@ -24,7 +24,7 @@ const INITIAL_DATA: PrestacaoServicoData = {
 };
 
 describe('PrestacaoServicoSection logic', () => {
-  it('picks first favorite when no codigoServico is set', () => {
+  it('does not force a favorite when codigoServico is empty', () => {
     const favoritos = [
       {
         codigo: '6920601',
@@ -35,6 +35,20 @@ describe('PrestacaoServicoSection logic', () => {
     ];
 
     const favorito = resolveFavoritoSelecionado(favoritos, '');
+    expect(favorito).toBeNull();
+  });
+
+  it('resolves the matching favorite when codigoServico already exists', () => {
+    const favoritos = [
+      {
+        codigo: '6920601',
+        cnaeDescricao: 'Atividades de contabilidade',
+        lc116Item: '17.19',
+        vinculos: [{ ctn: '171901', ctnDescricao: 'Contabilidade, inclusive serviços técnicos e auxiliares.' }],
+      },
+    ];
+
+    const favorito = resolveFavoritoSelecionado(favoritos, '171901');
     expect(favorito?.codigo).toBe('6920601');
   });
 

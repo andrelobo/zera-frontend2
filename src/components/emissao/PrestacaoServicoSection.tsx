@@ -49,14 +49,15 @@ export function resolveFavoritoSelecionado(
 ): FavoritoItem | null {
   const codigoAtual = String(codigoServico || '').replace(/\D/g, '').slice(0, 6);
   if (!favoritos.length) return null;
+  if (!codigoAtual) return null;
 
   const favoritoCorrespondente = codigoAtual
     ? favoritos.find((fav) =>
         fav.vinculos.some((vinculo) => String(vinculo.ctn || '').replace(/\D/g, '').slice(0, 6) === codigoAtual),
       )
-    : favoritos[0];
+    : null;
 
-  return favoritoCorrespondente || favoritos[0] || null;
+  return favoritoCorrespondente || null;
 }
 
 export function resolvePrestacaoFromFavorito(
@@ -122,6 +123,10 @@ function formatCTNDisplay(codigo: string) {
     return `${codigo.slice(0, 2)}.${codigo.slice(2, 4)}.${codigo.slice(4, 6)}`;
   }
   return codigo;
+}
+
+function normalizeCTNInput(value: string) {
+  return value.replace(/\D/g, '').slice(0, 6);
 }
 
 const UF_LIST = [
@@ -280,6 +285,42 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     setFavoritoSelecionado(null);
   };
 
+  const commitManualCTNInput = useCallback((rawValue: string) => {
+    const trimmed = String(rawValue || '').trim();
+    const normalized = normalizeCTNInput(rawValue);
+
+    if (!trimmed) {
+      onChange({
+        ...data,
+        codigoServico: '',
+      });
+      setCtnDescricaoSelecionada('');
+      setCtnQuery('');
+      setShowCtnDropdown(false);
+      setFavoritoSelecionado(null);
+      return;
+    }
+
+    if (normalized.length !== 6) {
+      setCtnQuery('');
+      setShowCtnDropdown(false);
+      return;
+    }
+
+    const entry = getCTNByCode(normalized);
+    const descricaoTecnica = String(entry?.descricao || '').trim();
+
+    onChange({
+      ...data,
+      codigoServico: normalized,
+      descricaoServico: data.descricaoServico || descricaoTecnica,
+    });
+    setCtnDescricaoSelecionada(descricaoTecnica);
+    setCtnQuery(formatCTNDisplay(normalized));
+    setShowCtnDropdown(false);
+    setFavoritoSelecionado(null);
+  }, [data, onChange]);
+
   const handleSelectMunicipio = (nome: string) => {
     update('localPrestacao', `${nome} - ${ufSelecionada}`);
     setMunicipioQuery('');
@@ -379,6 +420,13 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
                 setShowCtnDropdown(true);
               }}
               onFocus={() => { setCtnQuery(''); setShowCtnDropdown(true); }}
+              onBlur={(e) => commitManualCTNInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  commitManualCTNInput((e.target as HTMLInputElement).value);
+                }
+              }}
             />
             <button
               type="button"

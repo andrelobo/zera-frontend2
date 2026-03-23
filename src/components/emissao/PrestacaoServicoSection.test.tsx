@@ -52,7 +52,7 @@ function renderHarness({
 }
 
 describe('PrestacaoServicoSection UI', () => {
-  it('autofills CTN and description from saved favorite config', async () => {
+  it('keeps favoritos only as suggestion on an empty emission', async () => {
     renderHarness({
       favoritos: [
         {
@@ -70,6 +70,42 @@ describe('PrestacaoServicoSection UI', () => {
         },
       ],
     });
+
+    const favoritosInput = screen.getByPlaceholderText('Buscar entre 1 serviço(s)...');
+    const ctnInput = screen.getByPlaceholderText('Buscar código ou descrição...');
+    const descricaoInput = screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...');
+
+    expect(favoritosInput).toHaveValue('');
+    expect(ctnInput).toHaveValue('');
+    expect(descricaoInput).toHaveValue('');
+  });
+
+  it('autofills CTN and description after selecting a favorite', async () => {
+    renderHarness({
+      favoritos: [
+        {
+          codigo: '6920601',
+          cnaeDescricao: 'Atividades de contabilidade',
+          lc116Item: '17.19',
+          vinculos: [
+            {
+              ctn: '171901',
+              ctnDescricao: 'Contabilidade, inclusive serviços técnicos e auxiliares.',
+              nbs: '1.1302.21.00',
+              nbsDescricao: 'Serviços de contabilidade.',
+            },
+          ],
+        },
+      ],
+    });
+
+    const favoritosInput = screen.getByPlaceholderText('Buscar entre 1 serviço(s)...');
+    fireEvent.focus(favoritosInput);
+
+    const favoritoOption = await screen.findByRole('button', {
+      name: /171901/i,
+    });
+    fireEvent.click(favoritoOption);
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Buscar entre 1 serviço(s)...')).toHaveValue(
@@ -113,5 +149,62 @@ describe('PrestacaoServicoSection UI', () => {
     expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
       'Serviço contábil mensal',
     );
+  });
+
+  it('accepts manual CTN typing on blur without locking the field', async () => {
+    renderHarness({
+      favoritos: [],
+    });
+
+    const ctnInput = screen.getByPlaceholderText('Buscar código ou descrição...') as HTMLInputElement;
+
+    fireEvent.focus(ctnInput);
+    fireEvent.change(ctnInput, { target: { value: '171901' } });
+    expect(ctnInput.value).toBe('171901');
+
+    fireEvent.blur(ctnInput, { target: { value: '171901' } });
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
+        getCTNByCode('171901')?.descricao ?? '',
+      );
+    });
+  });
+
+  it('keeps descricao do servico editable after autopreenchimento', async () => {
+    renderHarness({
+      favoritos: [
+        {
+          codigo: '6920601',
+          cnaeDescricao: 'Atividades de contabilidade',
+          lc116Item: '17.19',
+          vinculos: [
+            {
+              ctn: '171901',
+              ctnDescricao: 'Contabilidade, inclusive serviços técnicos e auxiliares.',
+            },
+          ],
+        },
+      ],
+    });
+
+    const favoritosInput = screen.getByPlaceholderText('Buscar entre 1 serviço(s)...');
+    fireEvent.focus(favoritosInput);
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: /171901/i,
+      }),
+    );
+
+    const descricaoInput = screen.getByPlaceholderText(
+      'Descreva o serviço prestado conforme a NFS-e...',
+    ) as HTMLTextAreaElement;
+
+    await waitFor(() => {
+      expect(descricaoInput.value.toLowerCase()).toContain('contabilidade');
+    });
+
+    fireEvent.change(descricaoInput, { target: { value: 'Descrição ajustada manualmente' } });
+    expect(descricaoInput.value).toBe('Descrição ajustada manualmente');
   });
 });
