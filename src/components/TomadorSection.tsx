@@ -185,9 +185,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   const update = (field: keyof TomadorSectionData, value: string) => {
     const normalizedValue = field === 'logradouro'
       ? normalizeLogradouro(value)
-      : field === 'whatsapp'
-        ? formatPhone(value)
-        : field === 'numero'
+      : field === 'numero'
           ? sanitizeAddressNumber(value)
         : value;
     onChange({ ...data, [field]: normalizedValue });

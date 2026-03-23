@@ -195,7 +195,7 @@ const TomadorFormPage = () => {
       ...nextData,
       cnpjCpf: formatDoc(nextData.cnpjCpf || ''),
       cep: formatCep(nextData.cep || ''),
-      whatsapp: formatPhone(nextData.whatsapp || ''),
+      whatsapp: nextData.whatsapp || '',
       logradouro: normalizeLogradouro(nextData.logradouro || ''),
       nomeEmpresarial: toUpperTrimmed(nextData.nomeEmpresarial),
       nomeFantasia: toUpperTrimmed(nextData.nomeFantasia),

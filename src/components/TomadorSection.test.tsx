@@ -117,6 +117,11 @@ describe('TomadorSection UI', () => {
     await act(async () => {
       fireEvent.change(whatsappInput, { target: { value: '92981234567' } });
     });
+    expect(whatsappInput.value).toBe('92981234567');
+
+    await act(async () => {
+      fireEvent.blur(whatsappInput, { target: { value: '92981234567' } });
+    });
     expect(whatsappInput.value).toBe('(92) 98123-4567');
   });
 });
