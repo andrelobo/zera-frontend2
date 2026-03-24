@@ -5,15 +5,25 @@ export interface FaixaAnexoIII {
   limiteSuperior: number;
   aliquotaNominal: number;
   parcelaDeduzir: number;
+  percentualIss: number;
+}
+
+const PERCENTUAL_ISS_ANEXO_III = 0.335; // 33,5% da alíquota efetiva/nominal
+
+function faixaAnexoIII(input: Omit<FaixaAnexoIII, 'percentualIss'>): FaixaAnexoIII {
+  return {
+    ...input,
+    percentualIss: input.aliquotaNominal * PERCENTUAL_ISS_ANEXO_III,
+  };
 }
 
 export const FAIXAS_ANEXO_III: FaixaAnexoIII[] = [
-  { faixa: 1, limiteInferior: 0, limiteSuperior: 180000, aliquotaNominal: 0.06, parcelaDeduzir: 0 },
-  { faixa: 2, limiteInferior: 180000.01, limiteSuperior: 360000, aliquotaNominal: 0.112, parcelaDeduzir: 9360 },
-  { faixa: 3, limiteInferior: 360000.01, limiteSuperior: 720000, aliquotaNominal: 0.135, parcelaDeduzir: 17640 },
-  { faixa: 4, limiteInferior: 720000.01, limiteSuperior: 1800000, aliquotaNominal: 0.16, parcelaDeduzir: 35640 },
-  { faixa: 5, limiteInferior: 1800000.01, limiteSuperior: 3600000, aliquotaNominal: 0.21, parcelaDeduzir: 125640 },
-  { faixa: 6, limiteInferior: 3600000.01, limiteSuperior: 4800000, aliquotaNominal: 0.33, parcelaDeduzir: 648000 },
+  faixaAnexoIII({ faixa: 1, limiteInferior: 0, limiteSuperior: 180000, aliquotaNominal: 0.06, parcelaDeduzir: 0 }),
+  faixaAnexoIII({ faixa: 2, limiteInferior: 180000.01, limiteSuperior: 360000, aliquotaNominal: 0.112, parcelaDeduzir: 9360 }),
+  faixaAnexoIII({ faixa: 3, limiteInferior: 360000.01, limiteSuperior: 720000, aliquotaNominal: 0.135, parcelaDeduzir: 17640 }),
+  faixaAnexoIII({ faixa: 4, limiteInferior: 720000.01, limiteSuperior: 1800000, aliquotaNominal: 0.16, parcelaDeduzir: 35640 }),
+  faixaAnexoIII({ faixa: 5, limiteInferior: 1800000.01, limiteSuperior: 3600000, aliquotaNominal: 0.21, parcelaDeduzir: 125640 }),
+  faixaAnexoIII({ faixa: 6, limiteInferior: 3600000.01, limiteSuperior: 4800000, aliquotaNominal: 0.33, parcelaDeduzir: 648000 }),
 ];
 
 export interface CalculoSimplesResult {
@@ -23,8 +33,6 @@ export interface CalculoSimplesResult {
   alertas: string[];
   valido: boolean;
 }
-
-const PERCENTUAL_ISS_ANEXO_III = 0.335; // 33,5% da alíquota efetiva
 
 export function calcularSimplesAnexoIII(rbt12: number, anexo: string): CalculoSimplesResult {
   const alertas: string[] = [];
