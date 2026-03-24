@@ -1,6 +1,84 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **17/03/2026**.
+Snapshot operacional do frontend em **24/03/2026**.
+
+## 0. Atualizacao rapida (24/03/2026) - autocomplete consolidado, emissao assistida e dashboard mais rapido
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- o frontend foi consolidado como camada produtiva, nao como espelho literal do `novastelas`
+- a direcao correta ficou explicita:
+  - equivalencia funcional de preenchimento
+  - uso prioritario da nossa API
+  - menor atrito operacional para o usuario
+- o dashboard recebeu mais uma rodada de aceleracao da primeira pintura apos login
+
+### Autocomplete
+
+Documentos principais:
+- `docs/AUTOCOMPLETE_COMPARATIVO_NOVASTELAS.md`
+- `docs/PARECER_AUTOCOMPLETE_FLUXO_FISCAL.md`
+
+Estado atual:
+- `Prestador` cadastro/update: alinhado no preenchimento principal
+- `Tomador` cadastro/update: alinhado no preenchimento principal
+- `Tomador` manual na `Nova DANFSE`: autocomplete por CNPJ restaurado usando nossa API
+- `Local da Prestacao`: nossa API primeiro, fallback ao IBGE
+- `Servico Prestado`: segue mais assistido que o `novastelas`, sem travar campos
+
+Leitura correta:
+- o `zera-frontend` pode divergir de forma controlada do `novastelas` quando isso reduz digitacao e erro, sem perder editabilidade
+
+### Nova DANFSE
+
+Arquivos principais:
+- `src/pages/NfseEmitPage.tsx`
+- `src/pages/nfseEmit.tributacao.ts`
+- `src/components/emissao/PrestacaoServicoSection.tsx`
+- `src/components/emissao/TomadorEmissao.tsx`
+- `src/components/emissao/ParametrosTributariosSNCard.tsx`
+
+Estado atual:
+- automacao de ISS ficou mais proxima do `novastelas`
+- `Parametro Tributario Aplicado` agora fica visivel na emissao
+- `Codigo Tributacao Nacional` continua editavel
+- `Descricao do Servico` continua editavel mesmo com autopreenchimento
+
+### Simples Nacional
+
+Arquivos principais:
+- `src/utils/simples-nacional.ts`
+- `src/components/SimplesNacionalSection.tsx`
+- `src/components/TabelaAnexoIII.tsx`
+
+Estado atual:
+- calculo de Simples / Anexo III alinhado ao `novastelas`
+- card de apuracao de Simples deve ser lido como 100% alinhado
+- tabela do Anexo III voltou a renderizar o `% ISS` corretamente
+
+### Dashboard e pos-login
+
+Arquivos principais:
+- `src/App.tsx`
+- `src/pages/LoginPage.tsx`
+- `src/pages/DashboardPage.tsx`
+- `src/hooks/useDashboardData.ts`
+- `src/components/Dashboard.tsx`
+- `src/components/dashboard/SimplesNacionalDashboard.tsx`
+
+Estado atual:
+- snapshot persistido reforcado
+- rota do dashboard pre-aquecida na tela de login
+- queries principais do dashboard prefetch apos autenticacao
+- shell e topo aparecem antes
+- blocos secundarios abaixo da dobra ficaram menos criticos para a primeira pintura
+- competencias historicas continuam existindo e nao podem ser sacrificadas por performance
+
+Regra operacional consolidada:
+1. sem quebrar
+2. sem regressao
+3. uma coisa de cada vez
 
 ## 0. Delta critico de hoje (17/03/2026) - refetch automatico de NFSe
 

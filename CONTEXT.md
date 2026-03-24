@@ -27,6 +27,101 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-03-24) - autocomplete, emissao e primeira pintura do dashboard
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+### Autocomplete - leitura comparativa com `novastelas`
+
+Documentos principais:
+- `docs/AUTOCOMPLETE_COMPARATIVO_NOVASTELAS.md`
+- `docs/PARECER_AUTOCOMPLETE_FLUXO_FISCAL.md`
+
+Leitura consolidada:
+- o `zera-frontend` nao replica o `novastelas` de forma cega
+- a regra correta passou a ser:
+  - usar nossa API e nosso backend sempre que possivel
+  - manter equivalencia funcional de preenchimento
+  - preservar editabilidade dos campos
+- conclusao consolidada da rodada:
+  - `Prestador` cadastro/update: aderente ao fluxo esperado
+  - `Tomador` cadastro/update: aderente ao fluxo esperado
+  - `Tomador` manual na `Nova DANFSE`: autocomplete restaurado usando nossa API
+  - `Local da Prestacao`: API propria primeiro, com fallback ao IBGE
+  - `Servico Prestado`: permanece mais assistido que o `novastelas`, sem bloquear edicao
+
+Direcao de produto assumida:
+- manter a UX mais assistida do `zera-frontend`
+- explicar ao P.O e ao contador senior que o objetivo nao e copiar fonte de dados, e sim garantir preenchimento correto com menos atrito operacional
+
+### Nova DANFSE - emissao e parametro tributario
+
+Arquivos principais:
+- `src/pages/NfseEmitPage.tsx`
+- `src/pages/nfseEmit.tributacao.ts`
+- `src/components/emissao/PrestacaoServicoSection.tsx`
+- `src/components/emissao/TomadorEmissao.tsx`
+- `src/components/emissao/ParametrosTributariosSNCard.tsx`
+
+Leitura consolidada:
+- `CTN` e `Descricao do Servico` continuam assistidos, mas sem travar o usuario
+- `Codigo Tributacao Nacional` aceita digitacao manual real
+- o favorito continua como sugestao forte, nao como bloqueio
+- o tomador manual voltou a preencher corretamente por CNPJ na emissao
+- a camada de emissao passou a expor visualmente o `Parametro Tributario Aplicado`
+
+Leitura operacional:
+- o `zera-frontend` ficou mais proximo do `novastelas` na automacao de ISS da `Nova DANFSE`
+- ao mesmo tempo, preservou a linha correta do produto:
+  - sem criar campo novo no form
+  - sem mudar layout principal
+  - sem tirar liberdade de edicao
+
+### Simples Nacional - alinhamento com `novastelas`
+
+Arquivos principais:
+- `src/utils/simples-nacional.ts`
+- `src/components/SimplesNacionalSection.tsx`
+- `src/components/TabelaAnexoIII.tsx`
+
+Leitura consolidada:
+- o nucleo de calculo do Simples / Anexo III foi alinhado aos percentuais do `novastelas`
+- o card de apuracao de Simples Nacional deve ser lido como 100% alinhado ao `novastelas`
+- a tabela do Anexo III voltou a renderizar corretamente o percentual de ISS da faixa, sem `NaN%`
+
+Regra de interpretacao:
+- no card acima, `% ISS (ref.)` representa a referencia efetiva
+- na tabela, `% ISS` continua significando percentual da faixa, como ja ocorre no `novastelas`
+
+### Dashboard - primeira pintura apos login
+
+Arquivos principais:
+- `src/App.tsx`
+- `src/pages/LoginPage.tsx`
+- `src/pages/DashboardPage.tsx`
+- `src/components/Dashboard.tsx`
+- `src/components/dashboard/SimplesNacionalDashboard.tsx`
+- `src/components/dashboard/EmissoesResumoMini.tsx`
+- `src/hooks/useDashboardData.ts`
+
+Leitura consolidada:
+- o dashboard passou a priorizar primeira pintura e percepcao de velocidade
+- o shell da tela aparece antes
+- o topo recebeu skeleton mais intencional
+- o snapshot persistido do dashboard foi reforcado
+- a rota e as queries principais passaram a ser aquecidas ja na tela de login
+- a terceira linha do dashboard foi empurrada para depois da primeira pintura
+
+Protecao importante aplicada:
+- a otimizacao nao pode sumir com competencias historicas
+- meses antigos continuam sendo montados a partir da historia de NFSe, em background
+
+Leitura operacional:
+- a tela logo apos login deve ficar "na cara do cliente" mais rapido
+- qualquer futura otimizacao do dashboard deve preservar:
+  - competencias historicas
+  - leitura de negocio do `Gestor AI`
+  - integridade dos dados reais
+
 ## 0. Atualizacao de Contexto (2026-03-21) - prestador, portal nacional e limpeza de UX
 Fonte: `codigo local` + `testes locais` + `build local`.
 
