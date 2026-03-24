@@ -24,14 +24,14 @@ Situação geral:
 - `Prestador` no cadastro/update: aderente e mais robusto no `zera-frontend`
 - `Tomador` no cadastro/update: aderente e mais robusto no `zera-frontend`
 - `CNAE` e `CTN/NBS` em parâmetros municipais: funcionalmente equivalentes, com adaptação maior no `zera-frontend`
-- `Local da Prestação` na emissão: equivalente em UX, mas com dependência diferente de infraestrutura
+- `Local da Prestação` na emissão: aderente ao `novastelas` em comportamento
 - `Serviço Prestado` na emissão: não é literal 1:1; em vários pontos o `zera-frontend` está mais assistido
-- `Tomador` na `Nova DANFSE`: não está 100% equivalente ao `novastelas`; aqui existe a principal divergência real de autocomplete manual
+- `Tomador` na `Nova DANFSE`: o autocomplete manual por CNPJ agora está alinhado no núcleo do fluxo
 
 Conclusão curta:
 - o `zera-frontend` está bem aderente ao padrão do `novastelas` nos fluxos centrais de cadastro
 - na emissão, o comportamento está mais adaptado ao backend real e em alguns trechos mais produtivo
-- o principal gap objetivo hoje é o autocomplete manual do tomador dentro da `Nova DANFSE`
+- os gaps que restam hoje são mais de comportamento fino do `Serviço Prestado` do que de ausência de autocomplete core
 
 ## Metodologia
 
@@ -208,8 +208,8 @@ Veredito:
 ### 6. Tomador na Nova DANFSE
 
 Status:
-- Não equivalente
-- Principal gap atual
+- Aderente no núcleo do fluxo
+- Ainda mais enxuto visualmente do que o cadastro
 
 `novastelas`
 - carrega tomadores cadastrados via Supabase
@@ -221,15 +221,12 @@ Status:
 - carrega tomadores pela nossa API
 - permite selecionar um tomador existente
 - detecta se o documento digitado já corresponde a tomador cadastrado
-- hoje não replica o mesmo autocomplete remoto manual de CNPJ/CEP dentro do componente de emissão
-
-Impacto:
-- se o usuário escolhe um tomador existente, a experiência é boa
-- se ele digita manualmente um tomador novo na emissão, o `zera-frontend` hoje está menos assistido que o `novastelas`
+- agora também faz autocomplete manual por CNPJ na emissão usando a nossa API
+- faz preenchimento interno dos dados do tomador a partir desse lookup
 
 Veredito:
-- não está equivalente
-- este é o ponto mais importante a corrigir se a meta for aderência plena ao `novastelas`
+- aderente no que importa para autocomplete do documento
+- a diferença restante é mais de composição visual do bloco do que de falta de preenchimento
 
 ### 7. Serviço Prestado na Nova DANFSE
 
@@ -286,23 +283,20 @@ Veredito geral do bloco:
 ### 8. Local da Prestação na Nova DANFSE
 
 Status:
-- Equivalente em UX
-- Dependência diferente no backend
+- Aderente ao `novastelas`
+- API primeiro, fallback externo depois
 
 `novastelas`
 - busca municípios diretamente no serviço do IBGE
 
 `zera-frontend`
 - usa `listMunicipiosByUf`
-- que consulta o endpoint do backend `/empresas/lookup/municipios`
-
-Impacto:
-- se o endpoint do backend estiver disponível, a experiência é equivalente
-- se o endpoint não existir ou falhar, o `zera-frontend` pode ficar sem sugestões onde o `novastelas` ainda teria
+- consulta primeiro o endpoint do backend `/empresas/lookup/municipios`
+- se vier vazio ou indisponível, faz fallback direto ao IBGE
 
 Veredito:
-- equivalente quando a infraestrutura está completa
-- não tão autossuficiente quanto o `novastelas`
+- aderente em comportamento
+- preserva a preferência pela nossa API sem perder o fallback do `novastelas`
 
 ## Conclusão Final
 
@@ -325,18 +319,16 @@ Situação consolidada:
 - `Tomador` cadastro/update: adequado
 - `CNAE` e `CTN/NBS`: adequados
 - `Prestador` na emissão: adequado
+- `Tomador` na emissão: adequado no núcleo do autocomplete
+- `Local da Prestação`: adequado
 - `Serviço Prestado` na emissão: diferente, porém em vários pontos melhor para o usuário
-- `Tomador` na emissão: ainda abaixo do `novastelas` em autocomplete manual e precisa de atenção
 
 ## Recomendação Objetiva
 
 Prioridade 1:
-- alinhar o autocomplete manual de `Tomador` na `Nova DANFSE` ao comportamento do `novastelas`
-
-Prioridade 2:
 - decidir conscientemente se o comportamento mais assistido de `Serviço Prestado` no `zera-frontend` será mantido como melhoria oficial de UX
 
-Prioridade 3:
+Prioridade 2:
 - manter a regra atual do projeto:
   - usar a nossa API sempre que possível
   - preservar edição manual
@@ -345,4 +337,4 @@ Prioridade 3:
 
 ## Parecer para o P.O
 
-O `zera-frontend` já está bem alinhado ao padrão funcional do `novastelas` nos fluxos principais de cadastro e boa parte da emissão, mesmo usando fontes de dados diferentes. Onde ele difere, na maior parte dos casos, a diferença vem da adaptação necessária ao backend real e, em alguns pontos, melhora a experiência do usuário. O principal ponto que ainda merece correção para aderência plena é o autocomplete manual de tomador na `Nova DANFSE`.
+O `zera-frontend` já está bem alinhado ao padrão funcional do `novastelas` nos fluxos principais de cadastro e emissão, mesmo usando fontes de dados diferentes. Onde ele difere, na maior parte dos casos, a diferença vem da adaptação necessária ao backend real e, em alguns pontos, melhora a experiência do usuário. O ponto que ainda merece decisão consciente não é ausência de autocomplete principal, e sim se o comportamento mais assistido do bloco `Serviço Prestado` será mantido como melhoria oficial do produto.

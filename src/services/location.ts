@@ -7,6 +7,24 @@ export interface MunicipioOption {
   uf: string;
 }
 
+interface IbgeMunicipioOption {
+  id: number;
+  nome: string;
+}
+
+const fetchMunicipiosFromIbge = async (uf: string): Promise<MunicipioOption[]> => {
+  const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`);
+  if (!response.ok) {
+    throw new Error('Falha ao consultar municipios.');
+  }
+  const rows = (await response.json()) as IbgeMunicipioOption[];
+  return rows.map((item) => ({
+    id: item.id,
+    nome: item.nome,
+    uf,
+  }));
+};
+
 export const listMunicipiosByUf = async (ufRaw: string): Promise<MunicipioOption[]> => {
   const uf = String(ufRaw || '').trim().toUpperCase();
   if (uf.length !== 2) return [];
@@ -15,12 +33,17 @@ export const listMunicipiosByUf = async (ufRaw: string): Promise<MunicipioOption
       params: { uf },
       skipGlobalErrorToast: true,
     });
-    return response.data || [];
+    const rows = response.data || [];
+    if (rows.length > 0) return rows;
+    return await fetchMunicipiosFromIbge(uf);
   } catch (error) {
-    // Some backend versions don't expose this endpoint yet.
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return [];
+    try {
+      return await fetchMunicipiosFromIbge(uf);
+    } catch (fallbackError) {
+      if (axios.isAxiosError(error) && error.response?.status && error.response.status !== 404) {
+        throw error;
+      }
+      throw fallbackError;
     }
-    throw error;
   }
 };
