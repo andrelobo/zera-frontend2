@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ArrowLeft, AlertCircle, Printer, Loader2, FileOutput } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Printer, Loader2, FileOutput, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -7,6 +7,7 @@ import PrestadorSection from '@/components/emissao/PrestadorSection';
 import TomadorEmissao, { INITIAL_TOMADOR, type TomadorEmissaoData } from '@/components/emissao/TomadorEmissao';
 import PrestacaoServicoSection, { type PrestacaoServicoData, type ListaServicoItem } from '@/components/emissao/PrestacaoServicoSection';
 import LocalPrestacaoSection, { type LocalPrestacaoData } from '@/components/emissao/LocalPrestacaoSection';
+import ParametrosTributariosSNCard from '@/components/emissao/ParametrosTributariosSNCard';
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
@@ -14,7 +15,7 @@ import { getCTNByCode } from '@/utils/ctn-data';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
-import { resolveEmpresaTributacao, resolveIssAutomation } from './nfseEmit.tributacao';
+import { resolveEmpresaTributacao, resolveIssAutomation, resolveParametroIssLabel } from './nfseEmit.tributacao';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -197,6 +198,19 @@ const NfseEmitPage: React.FC = () => {
   const listaServico = useMemo<ListaServicoItem[]>(() => {
     return listaServicoConfig;
   }, [listaServicoConfig]);
+  const simplesParametroIss = useMemo(
+    () =>
+      resolveIssAutomation({
+        ...empresaTributacao,
+        tomadorSubstituto,
+        localMunicipio: localPrestacao.municipio,
+        localUf: localPrestacao.uf,
+        aliquotaAtual: prestacao.aliquota,
+      }).parametroIssAplicado,
+    [empresaTributacao, tomadorSubstituto, localPrestacao.municipio, localPrestacao.uf, prestacao.aliquota],
+  );
+  const parametroIssLabel = useMemo(() => resolveParametroIssLabel(simplesParametroIss), [simplesParametroIss]);
+  const showParametroCard = empresaTributacao.optanteSimples && empresaTributacao.simplesAnexo === 'III';
 
   useEffect(() => {
     if (!empresaAtual) return;
@@ -358,6 +372,7 @@ const NfseEmitPage: React.FC = () => {
     const tomadorLocal = splitLocalidadeUf(tomador.localidadeUf);
 
     const payload: EmitirNfseRequest = {
+      parametroIssAplicado: simplesParametroIss || undefined,
       localPrestacao: {
         pais: localPrestacao.pais || undefined,
         uf: localPrestacao.uf || undefined,
@@ -492,6 +507,22 @@ const NfseEmitPage: React.FC = () => {
           favoritos={favoritosCombinados}
           listaServico={listaServico}
         />
+
+        {showParametroCard && (
+          <ParametrosTributariosSNCard
+            value={simplesParametroIss}
+            disabled={false}
+          />
+        )}
+
+        {parametroIssLabel && (
+          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-primary shrink-0" />
+            <span className="text-sm text-foreground">
+              <span className="font-medium">Parametro Tributario Aplicado:</span> {parametroIssLabel}
+            </span>
+          </div>
+        )}
 
         <ValoresTotaisSection
           valorBruto={valores.valorBruto}

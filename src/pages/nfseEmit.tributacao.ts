@@ -7,6 +7,16 @@ export type ParametroIssEmissao =
   | 'iss_proprio_municipio'
   | 'iss_retencao_substituicao';
 
+export function resolveParametroIssLabel(value: ParametroIssEmissao): string {
+  const map: Record<Exclude<ParametroIssEmissao, ''>, string> = {
+    iss_outro_municipio: 'Anexo III – ISS devido a outro(s) Municipio(s)',
+    iss_proprio_municipio: 'Anexo III – ISS devido ao proprio Municipio',
+    iss_retencao_substituicao: 'Anexo III – Com retencao/substituicao tributaria de ISS',
+  };
+
+  return value ? map[value] || '' : '';
+}
+
 interface EmpresaTributacao {
   optanteSimples: boolean;
   simplesAnexo: string;

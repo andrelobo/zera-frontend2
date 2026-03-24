@@ -293,6 +293,7 @@ export interface Nfse {
   numeroNfse?: string | null;
   dpsNum?: string | null;
   serieDpsNum?: string | null;
+  parametroIssAplicado?: string | null;
   status: NfseStatus;
   provider: NfseProvider | string;
   externalId?: string;
@@ -345,6 +346,7 @@ export interface EmitirNfseRequest {
   numeroNfse?: string;
   competencia?: string;
   dataEmissao?: string;
+  parametroIssAplicado?: string;
   localPrestacao?: {
     pais?: string;
     uf?: string;

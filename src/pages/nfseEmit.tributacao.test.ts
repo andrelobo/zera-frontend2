@@ -5,6 +5,7 @@ import {
   formatIssPercentForSimples,
   resolveEmpresaTributacao,
   resolveIssAutomation,
+  resolveParametroIssLabel,
 } from './nfseEmit.tributacao';
 
 const baseEmpresa = (overrides: Partial<Empresa>): Empresa => ({
@@ -108,5 +109,12 @@ describe('nfseEmit tributacao', () => {
       issRetido: true,
       aliquota: '5,00',
     });
+  });
+
+  it('resolves parametro ISS labels for display', () => {
+    expect(resolveParametroIssLabel('iss_outro_municipio')).toContain('outro(s) Municipio(s)');
+    expect(resolveParametroIssLabel('iss_proprio_municipio')).toContain('proprio Municipio');
+    expect(resolveParametroIssLabel('iss_retencao_substituicao')).toContain('retencao/substituicao');
+    expect(resolveParametroIssLabel('')).toBe('');
   });
 });
