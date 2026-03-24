@@ -44,11 +44,10 @@ function resolveCompetenciaKey(dataEmissao?: string): string | null {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function resolveCompetenciaRange(competencia: string): { dateFrom: string; dateTo: string } | null {
-  if (!/^\d{4}-\d{2}$/.test(competencia)) return null;
-  const [year, month] = competencia.split('-').map(Number);
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0);
+function resolveDashboardDateRange() {
+  const end = new Date();
+  const start = new Date(end);
+  start.setFullYear(end.getFullYear() - 1);
   return {
     dateFrom: start.toISOString().slice(0, 10),
     dateTo: end.toISOString().slice(0, 10),
@@ -62,6 +61,38 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     return `${month}/${year}`;
   };
 
+  const dashboardRange = useMemo(() => resolveDashboardDateRange(), []);
+
+  const notasHistoricoQuery = useQuery({
+    queryKey: ['nfse-dashboard-history-v1', dashboardRange.dateFrom, dashboardRange.dateTo],
+    queryFn: () => nfseApi.list({
+      page: 1,
+      limit: 1000,
+      dateFrom: dashboardRange.dateFrom,
+      dateTo: dashboardRange.dateTo,
+      sort: 'dataEmissao',
+      order: 'DESC',
+    }),
+    staleTime: 60_000,
+  });
+
+  const notasHistoricas = useMemo(
+    () => mapNfseItemsToDashboardNotas(notasHistoricoQuery.data?.data || []),
+    [notasHistoricoQuery.data?.data],
+  );
+
+  const notasPorCompetencia = useMemo(() => {
+    const map = new Map<string, typeof notasHistoricas>();
+    notasHistoricas.forEach((nota) => {
+      const key = resolveCompetenciaKey(nota.data_emissao);
+      if (!key) return;
+      const current = map.get(key);
+      if (current) current.push(nota);
+      else map.set(key, [nota]);
+    });
+    return map;
+  }, [notasHistoricas]);
+
   const competenciaOptions = useMemo(() => {
     const map = new Map<string, string>();
 
@@ -70,6 +101,10 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       .forEach((item) => {
         map.set(item.mes, item.label || monthLabelFromYearMonth(item.mes));
       });
+
+    notasPorCompetencia.forEach((_, mes) => {
+      if (!map.has(mes)) map.set(mes, monthLabelFromYearMonth(mes));
+    });
 
     const valid = Array.from(map.entries())
       .map(([mes, label]) => ({ mes, label }))
@@ -81,7 +116,7 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       return [{ mes: kpis.mesCompetencia, label: kpis.competenciaLabel }];
     }
     return [];
-  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia]);
+  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia, notasPorCompetencia]);
 
   const [mesSelecionado, setMesSelecionado] = useState<string>(
     competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
@@ -101,29 +136,10 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     return 'MÊS ATUAL';
   }, [competenciaOptions, kpis.competenciaLabel, mesSelecionado]);
 
-  const competenciaRange = useMemo(
-    () => resolveCompetenciaRange(mesSelecionado),
-    [mesSelecionado],
-  );
-
-  const notasCompetenciaQuery = useQuery({
-    queryKey: ['nfse-dashboard-competencia-v1', mesSelecionado, competenciaRange?.dateFrom, competenciaRange?.dateTo],
-    queryFn: () => nfseApi.list({
-      page: 1,
-      limit: 1000,
-      dateFrom: competenciaRange?.dateFrom,
-      dateTo: competenciaRange?.dateTo,
-      sort: 'dataEmissao',
-      order: 'DESC',
-    }),
-    staleTime: 60_000,
-    enabled: Boolean(competenciaRange),
-  });
-
-  const notasMesSelecionado = useMemo(
-    () => mapNfseItemsToDashboardNotas(notasCompetenciaQuery.data?.data || []),
-    [notasCompetenciaQuery.data?.data],
-  );
+  const notasMesSelecionado = useMemo(() => {
+    if (!mesSelecionado) return notasHistoricas;
+    return notasPorCompetencia.get(mesSelecionado) || [];
+  }, [mesSelecionado, notasHistoricas, notasPorCompetencia]);
 
   const tomadoresMesSelecionado = useMemo(
     () => buildDashboardTomadoresMap(notasMesSelecionado),
@@ -279,7 +295,7 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
             notas={notasMesSelecionado}
             tomadores={tomadoresMesSelecionado}
             aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
-            loading={notasCompetenciaQuery.isLoading}
+            loading={notasHistoricoQuery.isLoading}
           />
         </DashboardCard>
         <DashboardCard title="Participação por Cliente" headerColor="blue">
