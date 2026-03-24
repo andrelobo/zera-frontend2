@@ -58,4 +58,25 @@ describe('CTNSection logic', () => {
 
     expect(seed).toBeNull();
   });
+
+  it('does not override manual editing in progress even when the typed CNAE is not yet in the list', () => {
+    const cnaes: CnaeAdicionado[] = [
+      {
+        codigo: '6920601',
+        cnaeDescricao: 'Atividades de contabilidade',
+        lc116Descricao: 'Contabilidade, inclusive serviços técnicos e auxiliares.',
+        lc116Item: '17.19',
+        isPrincipal: true,
+        vinculos: [{ id: 'v1', ctn: '171901', nbs: '1.1302.21.00' }],
+      },
+    ];
+
+    const seed = resolveEditorSeed(cnaes, {
+      manualCnae: '6201',
+      manualCtn: '',
+      manualNbs: '',
+    });
+
+    expect(seed).toBeNull();
+  });
 });

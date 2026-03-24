@@ -58,13 +58,14 @@ export function resolveEditorSeed(
   if (cnaes.length === 0) return null;
 
   const selectedCnaeForEditor = cnaes.find((item) => item.isPrincipal) || cnaes[0];
-  const currentManualCode = manualState.manualCnae.replace(/\D/g, '');
-  const hasManualSelection = !!currentManualCode || !!manualState.manualCtn || !!manualState.manualNbs;
-  const manualStillExists = currentManualCode
-    ? cnaes.some((item) => item.codigo === currentManualCode)
-    : false;
+  const hasManualSelection =
+    manualState.manualCnae.trim().length > 0 ||
+    manualState.manualCtn.trim().length > 0 ||
+    manualState.manualNbs.trim().length > 0;
 
-  if (hasManualSelection && manualStillExists) return null;
+  // Se o usuario ja comecou a digitar/ajustar o editor superior,
+  // nao reidratar automaticamente por cima do que ele esta fazendo.
+  if (hasManualSelection) return null;
 
   const firstVinculo = selectedCnaeForEditor.vinculos[0];
   return {
