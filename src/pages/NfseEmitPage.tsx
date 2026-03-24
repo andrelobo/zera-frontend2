@@ -14,6 +14,7 @@ import { getCTNByCode } from '@/utils/ctn-data';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
+import { resolveEmpresaTributacao, resolveIssAutomation } from './nfseEmit.tributacao';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -191,6 +192,7 @@ const NfseEmitPage: React.FC = () => {
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const favoritosCadastro = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
+  const empresaTributacao = useMemo(() => resolveEmpresaTributacao(empresaAtual), [empresaAtual]);
 
   const listaServico = useMemo<ListaServicoItem[]>(() => {
     return listaServicoConfig;
@@ -293,6 +295,7 @@ const NfseEmitPage: React.FC = () => {
     if (!prestacao.codigoServico) erros.push('Código do serviço é obrigatório.');
     if (!prestacao.descricaoServico) erros.push('Descrição do serviço é obrigatória.');
     if (!prestacao.valorServico || parseCurrency(prestacao.valorServico) <= 0) erros.push('Valor do serviço deve ser maior que zero.');
+    if (!prestacao.aliquota && !(empresaTributacao.optanteSimples && !tomadorSubstituto)) erros.push('Alíquota é obrigatória.');
     return erros;
   };
 
@@ -311,8 +314,13 @@ const NfseEmitPage: React.FC = () => {
     setTomadorSubstituto(substituto);
     setPrestacao((prev) => ({
       ...prev,
-      issRetido: substituto ? true : false,
-      aliquota: substituto ? prev.aliquota : '',
+      ...resolveIssAutomation({
+        ...empresaTributacao,
+        tomadorSubstituto: substituto,
+        localMunicipio: localPrestacao.municipio,
+        localUf: localPrestacao.uf,
+        aliquotaAtual: prev.aliquota,
+      }),
     }));
     setTomador((prev) => ({
       ...prev,
@@ -336,7 +344,7 @@ const NfseEmitPage: React.FC = () => {
         }))
         .filter((item) => item.codigoServico && item.descricaoServico),
     );
-  }, []);
+  }, [empresaTributacao, localPrestacao.municipio, localPrestacao.uf]);
 
   const handleEmitir = async () => {
     const erros = validar();
