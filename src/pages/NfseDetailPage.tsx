@@ -113,6 +113,18 @@ const readFromRawProvider = (raw: unknown) => {
   };
 };
 
+const formatParametroIssAplicado = (value?: string | null) => {
+  if (!value) return '—';
+
+  const map: Record<string, string> = {
+    iss_outro_municipio: 'Anexo III - ISS devido a outro(s) Municipio(s)',
+    iss_proprio_municipio: 'Anexo III - ISS devido ao proprio Municipio',
+    iss_retencao_substituicao: 'Anexo III - Com retencao/substituicao tributaria de ISS',
+  };
+
+  return map[value] || value;
+};
+
 const NfseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -277,6 +289,7 @@ const NfseDetailPage = () => {
             <Row label="Valor" value={valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
             <Row label="Alíquota ISS" value={nfse.aliquotaIss ? `${nfse.aliquotaIss}%` : '—'} />
             <Row label="Valor ISS" value={nfse.valorIss?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || '—'} />
+            <Row label="Parâmetro Tributário" value={formatParametroIssAplicado(nfse.parametroIssAplicado)} />
             <Row label="Cód. Serviço" value={codigoServico} />
             <Row label="Provedor" value={nfse.provider} />
             <Row label="Tomador" value={tomador} />

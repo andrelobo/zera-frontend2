@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ArrowLeft, AlertCircle, Printer, Loader2, FileOutput, Shield } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, FileOutput, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -445,10 +445,6 @@ const NfseEmitPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => window.print()} className="btn-outline flex items-center gap-2 text-sm py-2">
-              <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">Visualizar</span>
-            </button>
             <button onClick={handleEmitir} disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
               {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileOutput className="w-4 h-4" />}
               <span className="hidden sm:inline">Emitir</span>
