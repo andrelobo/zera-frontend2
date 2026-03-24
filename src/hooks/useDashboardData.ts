@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { nfseApi } from '@/services/api';
 import { getNfseValor } from '@/lib/nfse';
 import { calcularSimplesAnexoIII } from '@/utils/simples-nacional';
+import type { Nfse } from '@/types/api';
 
 export interface NotaDashboard {
   id: string;
@@ -99,7 +100,80 @@ export function selectDashboardItems<T extends { provider?: string | null }>(ite
   return plugNotasItems.length > 0 ? plugNotasItems : items;
 }
 
-export function useDashboardData(prestadorId: string | null, rbt12: number, cnaeAnexo: string) {
+export function mapNfseItemsToDashboardNotas(items: Nfse[]): NotaDashboard[] {
+  const baseItems = selectDashboardItems(items);
+  return baseItems.map((item) => {
+    const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
+    const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
+    const baseCalculo = typeof item.baseCalculo === 'number'
+      ? item.baseCalculo
+      : Math.max(0, valorServico - desconto);
+    const issValor = typeof item.valorIss === 'number' ? item.valorIss : 0;
+    const aliquota = baseCalculo > 0 ? ((issValor / baseCalculo) * 100) : 0;
+    const tomadorNome = resolveTomadorNome(item);
+    const tomadorDoc = item.tomadorCnpjCpf || item.tomador?.cpfCnpj || '';
+
+    return {
+      id: item.id,
+      tomador_id: tomadorDoc || tomadorNome,
+      tomador_nome: tomadorNome,
+      valor_servico: valorServico,
+      desconto,
+      base_calculo: baseCalculo,
+      iss_valor: issValor,
+      iss_retido: issValor > 0 && aliquota <= 0,
+      valor_liquido: Math.max(
+        0,
+        valorServico -
+          issValor -
+          (item.retPis || 0) -
+          (item.retCofins || 0) -
+          (item.retCsll || 0) -
+          (item.retIr || 0) -
+          (item.retInss || 0),
+      ),
+      ret_pis: typeof item.retPis === 'number' ? item.retPis : 0,
+      ret_cofins: typeof item.retCofins === 'number' ? item.retCofins : 0,
+      ret_csll: typeof item.retCsll === 'number' ? item.retCsll : 0,
+      ret_ir: typeof item.retIr === 'number' ? item.retIr : 0,
+      ret_inss: typeof item.retInss === 'number' ? item.retInss : 0,
+      aliquota,
+      data_emissao: item.dataEmissao || item.createdAt,
+      status: item.status,
+    };
+  });
+}
+
+export function buildDashboardTomadoresMap(notas: NotaDashboard[]): Record<string, { nome: string; subTrib: boolean }> {
+  const map: Record<string, { nome: string; subTrib: boolean }> = {};
+  notas.forEach((nota) => {
+    const key = nota.tomador_id || '';
+    if (!key) return;
+    if (!map[key]) {
+      map[key] = {
+        nome: nota.tomador_nome || 'Emissão expressa',
+        subTrib: false,
+      };
+    }
+  });
+  return map;
+}
+
+export function resolveDashboardRbt12(
+  fallbackRbt12: number,
+  biSummary?: { totals?: { somaValorServico?: number } } | null,
+): number {
+  const valorBi = biSummary?.totals?.somaValorServico;
+  return typeof valorBi === 'number' && valorBi > 0 ? valorBi : fallbackRbt12;
+}
+
+export function useDashboardData(
+  prestadorId: string | null,
+  rbt12: number,
+  cnaeAnexo: string,
+  options?: { includeNotas?: boolean },
+) {
+  const includeNotas = options?.includeNotas ?? true;
   const now = useMemo(() => new Date(), []);
   const oneYearAgo = useMemo(() => {
     const date = new Date(now);
@@ -116,59 +190,29 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   });
 
   const nfseQuery = useQuery({
-    queryKey: ['nfse-dashboard-list-v3', prestadorId, dateFrom, dateTo],
+    queryKey: ['nfse-dashboard-list-v4', prestadorId, dateFrom, dateTo, includeNotas],
     // Mantem dataset bruto, mas recortado ao mesmo periodo do BI para reduzir carga sem mudar a leitura.
     queryFn: () => nfseApi.list({ page: 1, limit: 1000, dateFrom, dateTo }),
     staleTime: 60_000,
+    enabled: includeNotas,
   });
 
-  const notas = useMemo<NotaDashboard[]>(() => {
-    const baseItems = selectDashboardItems(nfseQuery.data?.data || []);
-    return baseItems.map((item) => {
-      const valorServico = typeof item.valorServico === 'number' ? item.valorServico : getNfseValor(item);
-      const desconto = typeof item.desconto === 'number' ? item.desconto : 0;
-      const baseCalculo = typeof item.baseCalculo === 'number'
-        ? item.baseCalculo
-        : Math.max(0, valorServico - desconto);
-      const issValor = typeof item.valorIss === 'number' ? item.valorIss : 0;
-      const aliquota = baseCalculo > 0 ? ((issValor / baseCalculo) * 100) : 0;
-      const tomadorNome = resolveTomadorNome(item);
-      const tomadorDoc = item.tomadorCnpjCpf || item.tomador?.cpfCnpj || '';
+  const rbt12Efetivo = useMemo(
+    () => resolveDashboardRbt12(rbt12, biQuery.data),
+    [biQuery.data, rbt12],
+  );
 
-      return {
-        id: item.id,
-        tomador_id: tomadorDoc || tomadorNome,
-        tomador_nome: tomadorNome,
-        valor_servico: valorServico,
-        desconto,
-        base_calculo: baseCalculo,
-        iss_valor: issValor,
-        iss_retido: issValor > 0 && aliquota <= 0,
-        valor_liquido: Math.max(
-          0,
-          valorServico -
-            issValor -
-            (item.retPis || 0) -
-            (item.retCofins || 0) -
-            (item.retCsll || 0) -
-            (item.retIr || 0) -
-            (item.retInss || 0),
-        ),
-        ret_pis: typeof item.retPis === 'number' ? item.retPis : 0,
-        ret_cofins: typeof item.retCofins === 'number' ? item.retCofins : 0,
-        ret_csll: typeof item.retCsll === 'number' ? item.retCsll : 0,
-        ret_ir: typeof item.retIr === 'number' ? item.retIr : 0,
-        ret_inss: typeof item.retInss === 'number' ? item.retInss : 0,
-        aliquota,
-        data_emissao: item.dataEmissao || item.createdAt,
-        status: item.status,
-      };
-    });
-  }, [nfseQuery.data?.data]);
+  const notas = useMemo<NotaDashboard[]>(() => {
+    if (!includeNotas) return [];
+    return mapNfseItemsToDashboardNotas(nfseQuery.data?.data || []);
+  }, [includeNotas, nfseQuery.data?.data]);
 
   const splits = useMemo<SplitPaymentRow[]>(() => [], []);
 
-  const calculo = useMemo(() => calcularSimplesAnexoIII(rbt12, cnaeAnexo || 'III'), [rbt12, cnaeAnexo]);
+  const calculo = useMemo(
+    () => calcularSimplesAnexoIII(rbt12Efetivo, cnaeAnexo || 'III'),
+    [rbt12Efetivo, cnaeAnexo],
+  );
 
   const dadosMensais = useMemo<MesData[]>(() => {
     const series = biQuery.data?.seriesCompetencia || [];
@@ -223,7 +267,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
       mesCompetencia: mesReferencia,
       mesReferenciaLabel,
       competenciaLabel: mesReferenciaLabel,
-      rbt12,
+      rbt12: rbt12Efetivo,
       totalNotas: totals?.totalEmissoes ?? notas.length,
       totalNotasMes,
       dasEstimado,
@@ -298,18 +342,7 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
   }, [biQuery.data?.topTomadores, notas]);
 
   const tomadores = useMemo<Record<string, { nome: string; subTrib: boolean }>>(() => {
-    const map: Record<string, { nome: string; subTrib: boolean }> = {};
-    notas.forEach((nota) => {
-      const key = nota.tomador_id || '';
-      if (!key) return;
-      if (!map[key]) {
-        map[key] = {
-          nome: nota.tomador_nome || 'Emissão expressa',
-          subTrib: false,
-        };
-      }
-    });
-    return map;
+    return buildDashboardTomadoresMap(notas);
   }, [notas]);
 
   const alertas = useMemo(() => {
@@ -330,7 +363,22 @@ export function useDashboardData(prestadorId: string | null, rbt12: number, cnae
     return { operacional, tributario, saldo: operacional - tributario };
   }, [kpis]);
 
-  const loading = biQuery.isLoading || nfseQuery.isLoading;
+  const loadingNotas = includeNotas ? nfseQuery.isLoading : false;
+  const loading = biQuery.isLoading || loadingNotas;
 
-  return { loading, notas, splits, tomadores, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa };
+  return {
+    loading,
+    loadingCore: biQuery.isLoading,
+    loadingNotas,
+    rbt12Efetivo,
+    notas,
+    splits,
+    tomadores,
+    kpis,
+    calculo,
+    dadosMensais,
+    analiseClientes,
+    alertas,
+    fluxoCaixa,
+  };
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { DollarSign, TrendingDown, Percent, ShieldCheck, Scale, Receipt, Landmark, ChevronDown, ChevronUp } from 'lucide-react';
-import type { NotaDashboard } from '@/hooks/useDashboardData';
+import { buildDashboardTomadoresMap, mapNfseItemsToDashboardNotas } from '@/hooks/useDashboardData';
 import { formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import type { CalculoSimplesResult } from '@/utils/simples-nacional';
 import type { MesData } from '@/hooks/useDashboardData';
@@ -9,6 +10,7 @@ import FaixaThermometer from './FaixaThermometer';
 import EmissoesResumoMini from './EmissoesResumoMini';
 import ParticipacaoClientes from './ParticipacaoClientes';
 import type { ClienteAnalise } from '@/hooks/useDashboardData';
+import { nfseApi } from '@/services/api';
 
 interface Props {
   rbt12: number;
@@ -25,8 +27,6 @@ interface Props {
     mesCompetencia: string;
   };
   dadosMensais: MesData[];
-  notas: NotaDashboard[];
-  tomadores: Record<string, { nome: string; subTrib: boolean }>;
   analiseClientes: ClienteAnalise[];
   configOperacionais?: { id: string; natureza: string; descricao: string }[];
   simuladorContent?: React.ReactNode;
@@ -44,24 +44,23 @@ function resolveCompetenciaKey(dataEmissao?: string): string | null {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, notas, tomadores, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
+function resolveCompetenciaRange(competencia: string): { dateFrom: string; dateTo: string } | null {
+  if (!/^\d{4}-\d{2}$/.test(competencia)) return null;
+  const [year, month] = competencia.split('-').map(Number);
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0);
+  return {
+    dateFrom: start.toISOString().slice(0, 10),
+    dateTo: end.toISOString().slice(0, 10),
+  };
+}
+
+const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, kpis, dadosMensais, analiseClientes, configOperacionais = [], simuladorContent, splitPaymentContent }) => {
   const monthLabelFromYearMonth = (yearMonth: string): string => {
     if (!/^\d{4}-\d{2}$/.test(yearMonth)) return yearMonth;
     const [year, month] = yearMonth.split('-');
     return `${month}/${year}`;
   };
-
-  const notasPorCompetencia = useMemo(() => {
-    const map = new Map<string, NotaDashboard[]>();
-    notas.forEach((nota) => {
-      const key = resolveCompetenciaKey(nota.data_emissao);
-      if (!key) return;
-      const current = map.get(key);
-      if (current) current.push(nota);
-      else map.set(key, [nota]);
-    });
-    return map;
-  }, [notas]);
 
   const competenciaOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -71,10 +70,6 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       .forEach((item) => {
         map.set(item.mes, item.label || monthLabelFromYearMonth(item.mes));
       });
-
-    notasPorCompetencia.forEach((_, mes) => {
-      if (!map.has(mes)) map.set(mes, monthLabelFromYearMonth(mes));
-    });
 
     const valid = Array.from(map.entries())
       .map(([mes, label]) => ({ mes, label }))
@@ -86,7 +81,7 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       return [{ mes: kpis.mesCompetencia, label: kpis.competenciaLabel }];
     }
     return [];
-  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia, notasPorCompetencia]);
+  }, [dadosMensais, kpis.competenciaLabel, kpis.mesCompetencia]);
 
   const [mesSelecionado, setMesSelecionado] = useState<string>(
     competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
@@ -106,10 +101,34 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
     return 'MÊS ATUAL';
   }, [competenciaOptions, kpis.competenciaLabel, mesSelecionado]);
 
-  const notasMesSelecionado = useMemo(() => {
-    if (!mesSelecionado) return notas;
-    return notasPorCompetencia.get(mesSelecionado) || [];
-  }, [mesSelecionado, notas, notasPorCompetencia]);
+  const competenciaRange = useMemo(
+    () => resolveCompetenciaRange(mesSelecionado),
+    [mesSelecionado],
+  );
+
+  const notasCompetenciaQuery = useQuery({
+    queryKey: ['nfse-dashboard-competencia-v1', mesSelecionado, competenciaRange?.dateFrom, competenciaRange?.dateTo],
+    queryFn: () => nfseApi.list({
+      page: 1,
+      limit: 1000,
+      dateFrom: competenciaRange?.dateFrom,
+      dateTo: competenciaRange?.dateTo,
+      sort: 'dataEmissao',
+      order: 'DESC',
+    }),
+    staleTime: 60_000,
+    enabled: Boolean(competenciaRange),
+  });
+
+  const notasMesSelecionado = useMemo(
+    () => mapNfseItemsToDashboardNotas(notasCompetenciaQuery.data?.data || []),
+    [notasCompetenciaQuery.data?.data],
+  );
+
+  const tomadoresMesSelecionado = useMemo(
+    () => buildDashboardTomadoresMap(notasMesSelecionado),
+    [notasMesSelecionado],
+  );
 
   const kpisMesSelecionado = useMemo(() => {
     const mesData = dadosMensais.find((item) => item.mes === mesSelecionado);
@@ -187,8 +206,8 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         <div className="flex flex-col gap-3">
           <DashboardCard title={`A Recolher ${kpisMesSelecionado.competenciaLabel}`} headerColor="red">
-            {competenciaOptions.length > 0 && (
-              <div className="mb-2">
+      {competenciaOptions.length > 0 && (
+            <div className="mb-2">
                 <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Competência
                 </label>
@@ -258,8 +277,9 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
           )}
           <EmissoesResumoMini
             notas={notasMesSelecionado}
-            tomadores={tomadores}
+            tomadores={tomadoresMesSelecionado}
             aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
+            loading={notasCompetenciaQuery.isLoading}
           />
         </DashboardCard>
         <DashboardCard title="Participação por Cliente" headerColor="blue">

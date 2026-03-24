@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectDashboardItems } from './useDashboardData';
+import { resolveDashboardRbt12, selectDashboardItems } from './useDashboardData';
 
 describe('selectDashboardItems', () => {
   it('prefers PLUGNOTAS items when they exist', () => {
@@ -23,5 +23,16 @@ describe('selectDashboardItems', () => {
     ];
 
     expect(selectDashboardItems(items)).toEqual(items);
+  });
+});
+
+describe('resolveDashboardRbt12', () => {
+  it('prefers bi summary total when available', () => {
+    expect(resolveDashboardRbt12(180000, { totals: { somaValorServico: 244481.63 } })).toBe(244481.63);
+  });
+
+  it('falls back to provided rbt12 when summary total is absent', () => {
+    expect(resolveDashboardRbt12(180000, { totals: {} })).toBe(180000);
+    expect(resolveDashboardRbt12(180000, null)).toBe(180000);
   });
 });

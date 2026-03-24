@@ -18,7 +18,17 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, cnaeAnexo, regime, configOperacionais = [] }) => {
-  const { loading, notas, tomadores: tomadoresMap, kpis, calculo, dadosMensais, analiseClientes, alertas, fluxoCaixa, splits } = useDashboardData(prestadorId, rbt12, cnaeAnexo);
+  const {
+    loadingCore,
+    kpis,
+    calculo,
+    dadosMensais,
+    analiseClientes,
+    alertas,
+    fluxoCaixa,
+    splits,
+    rbt12Efetivo,
+  } = useDashboardData(prestadorId, rbt12, cnaeAnexo, { includeNotas: false });
   const [simulacaoExtra, setSimulacaoExtra] = useState<string>('');
 
   const formatCurrencyInput = (value: string) => {
@@ -33,7 +43,7 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
     return parseFloat(formatted.replace(/\./g, '').replace(',', '.')) || 0;
   };
 
-  if (loading) {
+  if (loadingCore) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-16 rounded-lg" />
@@ -97,14 +107,12 @@ const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, 
       )}
 
       {/* SIMPLES NACIONAL SECTION */}
-      <SimplesNacionalDashboard
-        rbt12={rbt12}
+        <SimplesNacionalDashboard
+        rbt12={rbt12Efetivo}
         cnaeAnexo={cnaeAnexo}
         calculo={calculo}
         kpis={kpis}
         dadosMensais={dadosMensais}
-        notas={notas}
-        tomadores={tomadoresMap}
         analiseClientes={analiseClientes}
         configOperacionais={configOperacionais}
         simuladorContent={

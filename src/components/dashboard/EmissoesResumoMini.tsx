@@ -1,17 +1,19 @@
 import React, { useMemo } from 'react';
 import type { NotaDashboard } from '@/hooks/useDashboardData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Props {
   notas: NotaDashboard[];
   tomadores: Record<string, { nome: string; subTrib: boolean }>;
   aliquotaEfetiva: number;
+  loading?: boolean;
 }
 
 function fmt(v: number) {
   return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva }) => {
+const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva, loading = false }) => {
   const linhas = useMemo(() => {
     const totalGeral = notas.reduce((s, n) => s + n.valor_servico, 0);
 
@@ -31,6 +33,24 @@ const EmissoesResumoMini: React.FC<Props> = ({ notas, tomadores, aliquotaEfetiva
       return { dataFmt, nome, subTrib, vs, issRet, aliqIss, simples, das, percentual };
     });
   }, [notas, tomadores, aliquotaEfetiva]);
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <Skeleton className="h-3 w-10 rounded-sm" />
+            <Skeleton className="h-3 flex-1 rounded-sm" />
+            <Skeleton className="h-3 w-10 rounded-sm" />
+            <Skeleton className="h-3 w-16 rounded-sm" />
+            <Skeleton className="h-3 w-14 rounded-sm" />
+            <Skeleton className="h-3 w-12 rounded-sm" />
+            <Skeleton className="h-3 w-16 rounded-sm" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (linhas.length === 0) return null;
 
