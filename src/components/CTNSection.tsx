@@ -45,7 +45,7 @@ interface Props {
 export type { CnaeAdicionado, CtnNbsVinculo };
 export function resolveEditorSeed(
   cnaes: CnaeAdicionado[],
-  manualState: { manualCnae: string; manualCtn: string; manualNbs: string },
+  editorTouched: boolean,
 ): {
   manualCnae: string;
   manualCtn: string;
@@ -56,17 +56,9 @@ export function resolveEditorSeed(
   detectedNbsPrefix: string | null;
 } | null {
   if (cnaes.length === 0) return null;
+  if (editorTouched) return null;
 
   const selectedCnaeForEditor = cnaes.find((item) => item.isPrincipal) || cnaes[0];
-  const hasManualSelection =
-    manualState.manualCnae.trim().length > 0 ||
-    manualState.manualCtn.trim().length > 0 ||
-    manualState.manualNbs.trim().length > 0;
-
-  // Se o usuario ja comecou a digitar/ajustar o editor superior,
-  // nao reidratar automaticamente por cima do que ele esta fazendo.
-  if (hasManualSelection) return null;
-
   const firstVinculo = selectedCnaeForEditor.vinculos[0];
   return {
     manualCnae: formatCNAECode(selectedCnaeForEditor.codigo),
@@ -174,6 +166,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
   const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
   const [showCtnDropdown, setShowCtnDropdown] = useState(false);
   const [showNbsDropdown, setShowNbsDropdown] = useState(false);
+  const [editorTouched, setEditorTouched] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const cnaeDropdownRef = useRef<HTMLDivElement>(null);
   const ctnDropdownRef = useRef<HTMLDivElement>(null);
@@ -251,7 +244,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
   }, []);
 
   useEffect(() => {
-    const seed = resolveEditorSeed(cnaes, { manualCnae, manualCtn, manualNbs });
+    const seed = resolveEditorSeed(cnaes, editorTouched);
     if (!seed) return;
     setManualCnae(seed.manualCnae);
     setManualCtn(seed.manualCtn);
@@ -262,9 +255,10 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     setDetectedNbsPrefix(seed.detectedNbsPrefix);
     setCtnQuery('');
     setNbsQuery('');
-  }, [cnaes, manualCnae, manualCtn, manualNbs]);
+  }, [cnaes, editorTouched]);
 
   const handleManualCnaeChange = (value: string) => {
+    setEditorTouched(true);
     setManualCnae(value);
     setShowCnaeDropdown(value.trim().length > 0);
     const digits = value.replace(/\D/g, '');
@@ -472,6 +466,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     setManualCnaeDescricaoIBGE('');
     setManualIsPrincipal(false);
     setManualVincularSN(false);
+    setEditorTouched(false);
     setCtnQuery('');
     setNbsQuery('');
     setShowManualForm(false);
@@ -513,6 +508,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                       key={entry.codigo}
                       type="button"
                       onClick={() => {
+                        setEditorTouched(true);
                         handleManualCnaeChange(entry.codigo);
                         setShowCnaeDropdown(false);
                       }}
@@ -562,7 +558,8 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                         key={entry.codigo}
                         type="button"
                         title={`${formatCTNDisplay(entry.codigo)} (${entry.itemFormatado}) — ${entry.descricao}`}
-                        onClick={() => {
+                      onClick={() => {
+                          setEditorTouched(true);
                           setManualCtn(entry.codigo);
                           setCtnQuery('');
                           setShowCtnDropdown(false);
@@ -617,7 +614,8 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                         key={entry.codigo}
                         type="button"
                         title={`${entry.codigo} — ${entry.descricao}`}
-                        onClick={() => {
+                      onClick={() => {
+                          setEditorTouched(true);
                           setManualNbs(entry.codigo);
                           setNbsQuery('');
                           setShowNbsDropdown(false);
