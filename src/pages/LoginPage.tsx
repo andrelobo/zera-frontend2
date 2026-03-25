@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { authApi, empresasApi, nfseApi } from '@/services/api';
+import { authApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,16 +25,6 @@ const LOADING_STEPS = [
 const WARMUP_PING_INTERVAL_MS = 12_000;
 const preloadDashboardRoute = () => import('@/pages/DashboardPage');
 
-const resolveDashboardRange = () => {
-  const end = new Date();
-  const start = new Date(end);
-  start.setFullYear(end.getFullYear() - 1);
-  return {
-    dateFrom: start.toISOString().slice(0, 10),
-    dateTo: end.toISOString().slice(0, 10),
-  };
-};
-
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +34,6 @@ const LoginPage = () => {
   const [stepIndex, setStepIndex] = useState(0);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     let active = true;
@@ -148,37 +136,6 @@ const LoginPage = () => {
     throw lastError;
   };
 
-  const primeDashboardData = async () => {
-    const empresas = await queryClient.fetchQuery({
-      queryKey: ['empresas', 'dashboard-header'],
-      queryFn: () => empresasApi.list({ limit: 1 }),
-      staleTime: 60_000,
-    });
-
-    const empresa = (empresas || [])[0];
-    const { dateFrom, dateTo } = resolveDashboardRange();
-
-    await Promise.allSettled([
-      queryClient.prefetchQuery({
-        queryKey: ['nfse-dashboard-bi-summary-v1', empresa?.id || null, dateFrom, dateTo],
-        queryFn: () => nfseApi.biSummary({ dateFrom, dateTo }),
-        staleTime: 60_000,
-      }),
-      queryClient.prefetchQuery({
-        queryKey: ['nfse-dashboard-history-v1', dateFrom, dateTo],
-        queryFn: () => nfseApi.list({
-          page: 1,
-          limit: 1000,
-          dateFrom,
-          dateTo,
-          sort: 'dataEmissao',
-          order: 'DESC',
-        }),
-        staleTime: 60_000,
-      }),
-    ]);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -195,7 +152,6 @@ const LoginPage = () => {
       }
       void preloadDashboardRoute();
       await login(token);
-      void primeDashboardData();
       navigate('/');
     } catch (error) {
       let message = 'Não foi possível autenticar. Verifique os dados e tente novamente.';
