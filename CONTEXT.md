@@ -27,6 +27,44 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-03-24) - incidente em PROD no frontend e regressao visual no Prestador
+Fonte: `codigo local` + `erro observado em producao` + `validacao visual manual`.
+
+Leitura consolidada:
+- houve incidente real em producao no frontend durante a rodada de ajustes de performance e prestador
+- o erro `e.then is not a function` / cache quebrado no boot e o erro `empresaQuery is not defined` confirmaram que:
+  - alteracoes em `App.tsx`, `LoginPage.tsx` e `EmpresaFormPage.tsx` exigem cautela maxima
+  - correcao ampla em cadeia durante incidente piora risco em vez de reduzi-lo
+- a regra operacional correta a partir desta rodada e:
+  - primeiro estabilizar producao
+  - depois aplicar patch minimo, isolado e verificavel
+
+O que ficou canonico:
+- o cache persistido do dashboard no frontend pode derrubar o boot se vier invalido
+- referencias soltas a hooks/queries inexistentes em `EmpresaFormPage.tsx` sao risco real de quebra total da tela de prestador
+- correcoes visuais no card do prestador devem ficar restritas a `src/components/prestador/EmpresaCard.tsx`
+- nao misturar no mesmo passo:
+  - layout do prestador
+  - remocao de CNAE
+  - hidratacao/reidratação
+  - regras de save
+
+Leitura correta do estado atual:
+- o problema do Simples Nacional nao estava na matematica, e sim na semantica dos labels
+- `% ISS (ref.)` e o ISS efetivo estimado
+- `% ISS` na tabela do anexo representa participacao do ISS dentro do DAS da faixa, nao a aliquota efetiva final
+- o card `Prestador(a)` teve regressao visual real na linha de `Nome Fantasia` + `Optante Simples`
+- a correcao final dessa regressao deve ser lida como ajuste de grid/layout, nao como mudanca funcional
+
+Regra de trabalho reforcada por evidencia:
+- sem quebrar
+- sem regredir
+- uma coisa de cada vez
+- em incidente de producao:
+  - evitar revert amplo com multiplos conflitos
+  - evitar mexer em mais de um arquivo por rodada
+  - preferir patch minimo no ponto exato do sintoma
+
 ## 0. Atualizacao de Contexto (2026-03-24) - autocomplete, emissao e primeira pintura do dashboard
 Fonte: `codigo local` + `testes locais` + `build local`.
 
