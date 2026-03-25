@@ -268,21 +268,9 @@ const TomadorFormPage = () => {
         <form onSubmit={handleSubmit} className="space-y-2">
           <TomadorSection data={form} onChange={handleSectionChange} onAutosave={() => undefined} />
 
-          <div className="section-card">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              {tomadorDuplicado && (
-                <div className="flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="w-4 h-4" />
-                  Tomador já cadastrado: {tomadorDuplicado.razaoSocial}
-                </div>
-              )}
-              {configValida && (
-                <div className="alert-success flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Dados do tomador válidos
-                </div>
-              )}
-              <div className="flex items-center gap-3 ml-auto no-print">
+          <div className="mt-4 pt-4 border-t border-border no-print">
+            <div className="flex justify-end">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => navigate('/tomadores')}
