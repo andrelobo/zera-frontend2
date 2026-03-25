@@ -34,12 +34,7 @@ const DASHBOARD_CACHE_MAX_AGE_MS = 1000 * 60 * 15;
 const isDashboardQueryKey = (queryKey: readonly unknown[]) => {
   const [first, second] = queryKey;
 
-  if (
-    first === 'nfse-dashboard-bi-summary-v1' ||
-    first === 'nfse-dashboard-list-v3' ||
-    first === 'nfse-dashboard-list-v4' ||
-    first === 'nfse-dashboard-history-v1'
-  ) {
+  if (first === 'nfse-dashboard-bi-summary-v1' || first === 'nfse-dashboard-list-v3') {
     return true;
   }
 

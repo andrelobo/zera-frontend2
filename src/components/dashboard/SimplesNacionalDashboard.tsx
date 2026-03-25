@@ -11,7 +11,6 @@ import EmissoesResumoMini from './EmissoesResumoMini';
 import ParticipacaoClientes from './ParticipacaoClientes';
 import type { ClienteAnalise } from '@/hooks/useDashboardData';
 import { nfseApi } from '@/services/api';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface Props {
   rbt12: number;
@@ -122,7 +121,6 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
   const [mesSelecionado, setMesSelecionado] = useState<string>(
     competenciaOptions[0]?.mes || kpis.mesCompetencia || '',
   );
-  const [showSecondaryRow, setShowSecondaryRow] = useState(false);
 
   useEffect(() => {
     const existe = competenciaOptions.some((item) => item.mes === mesSelecionado);
@@ -130,27 +128,6 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
       setMesSelecionado(competenciaOptions[0]?.mes || kpis.mesCompetencia || '');
     }
   }, [competenciaOptions, kpis.mesCompetencia, mesSelecionado]);
-
-  useEffect(() => {
-    const win = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-
-    if (showSecondaryRow) return;
-
-    if (typeof win.requestIdleCallback === 'function') {
-      const idleId = win.requestIdleCallback(() => setShowSecondaryRow(true));
-      return () => {
-        if (typeof win.cancelIdleCallback === 'function') {
-          win.cancelIdleCallback(idleId);
-        }
-      };
-    }
-
-    const timeoutId = window.setTimeout(() => setShowSecondaryRow(true), 180);
-    return () => window.clearTimeout(timeoutId);
-  }, [showSecondaryRow]);
 
   const competenciaSelecionadaLabel = useMemo(() => {
     const selected = competenciaOptions.find((item) => item.mes === mesSelecionado);
@@ -295,72 +272,35 @@ const SimplesNacionalDashboard: React.FC<Props> = ({ rbt12, cnaeAnexo, calculo, 
 
       {/* Row 3: Emitidas + Participação Clientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-        {showSecondaryRow ? (
-          <>
-            <DashboardCard title={`EMITIDAS NFSE ${competenciaSelecionadaLabel.toUpperCase()}`} headerColor="green">
-              {competenciaOptions.length > 0 && (
-                <div className="mb-2">
-                  <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Competência
-                  </label>
-                  <select
-                    className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs"
-                    value={mesSelecionado}
-                    onChange={(event) => setMesSelecionado(event.target.value)}
-                  >
-                    {competenciaOptions.map((item) => (
-                      <option key={item.mes} value={item.mes}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <EmissoesResumoMini
-                notas={notasMesSelecionado}
-                tomadores={tomadoresMesSelecionado}
-                aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
-                loading={notasHistoricoQuery.isLoading}
-              />
-            </DashboardCard>
-            <DashboardCard title="Participação por Cliente" headerColor="blue">
-              <ParticipacaoClientes analiseClientes={analiseClientes} aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva} />
-            </DashboardCard>
-          </>
-        ) : (
-          <>
-            <DashboardCard title={`EMITIDAS NFSE ${competenciaSelecionadaLabel.toUpperCase()}`} headerColor="green">
-              <div className="space-y-2">
-                <Skeleton className="h-7 w-40 rounded-md" />
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Skeleton className="h-3 w-10 rounded-sm" />
-                    <Skeleton className="h-3 flex-1 rounded-sm" />
-                    <Skeleton className="h-3 w-10 rounded-sm" />
-                    <Skeleton className="h-3 w-16 rounded-sm" />
-                    <Skeleton className="h-3 w-14 rounded-sm" />
-                    <Skeleton className="h-3 w-12 rounded-sm" />
-                    <Skeleton className="h-3 w-16 rounded-sm" />
-                  </div>
+        <DashboardCard title={`EMITIDAS NFSE ${competenciaSelecionadaLabel.toUpperCase()}`} headerColor="green">
+          {competenciaOptions.length > 0 && (
+            <div className="mb-2">
+              <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Competência
+              </label>
+              <select
+                className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs"
+                value={mesSelecionado}
+                onChange={(event) => setMesSelecionado(event.target.value)}
+              >
+                {competenciaOptions.map((item) => (
+                  <option key={item.mes} value={item.mes}>
+                    {item.label}
+                  </option>
                 ))}
-              </div>
-            </DashboardCard>
-            <DashboardCard title="Participação por Cliente" headerColor="blue">
-              <div className="space-y-2">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <Skeleton className="h-3 w-28 rounded-sm" />
-                      <Skeleton className="h-3 w-10 rounded-sm" />
-                    </div>
-                    <Skeleton className="h-2 w-full rounded-sm" />
-                    <Skeleton className="h-2 w-4/5 rounded-sm" />
-                  </div>
-                ))}
-              </div>
-            </DashboardCard>
-          </>
-        )}
+              </select>
+            </div>
+          )}
+          <EmissoesResumoMini
+            notas={notasMesSelecionado}
+            tomadores={tomadoresMesSelecionado}
+            aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva}
+            loading={notasHistoricoQuery.isLoading}
+          />
+        </DashboardCard>
+        <DashboardCard title="Participação por Cliente" headerColor="blue">
+          <ParticipacaoClientes analiseClientes={analiseClientes} aliquotaEfetiva={kpisMesSelecionado.aliquotaEfetiva} />
+        </DashboardCard>
       </div>
 
     </div>
