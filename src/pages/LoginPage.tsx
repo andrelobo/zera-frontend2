@@ -23,7 +23,6 @@ const LOADING_STEPS = [
   'Validando credenciais',
 ];
 const WARMUP_PING_INTERVAL_MS = 12_000;
-const preloadDashboardRoute = () => import('@/pages/DashboardPage');
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -64,29 +63,6 @@ const LoginPage = () => {
       active = false;
       clearInterval(pingTimer);
     };
-  }, []);
-
-  useEffect(() => {
-    const win = window as Window & {
-      requestIdleCallback?: (callback: IdleRequestCallback) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-
-    if (typeof win.requestIdleCallback === 'function') {
-      const idleId = win.requestIdleCallback(() => {
-        void preloadDashboardRoute();
-      });
-      return () => {
-        if (typeof win.cancelIdleCallback === 'function') {
-          win.cancelIdleCallback(idleId);
-        }
-      };
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void preloadDashboardRoute();
-    }, 200);
-    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -150,7 +126,6 @@ const LoginPage = () => {
         });
         return;
       }
-      void preloadDashboardRoute();
       await login(token);
       navigate('/');
     } catch (error) {
