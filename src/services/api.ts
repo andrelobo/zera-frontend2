@@ -38,6 +38,13 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     }
     return undefined;
   };
+  const pickStringOrNumberString = (...values: unknown[]) => {
+    for (const value of values) {
+      if (typeof value === 'string' && value.trim() !== '') return value;
+      if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+    }
+    return undefined;
+  };
   const pickStringArray = (...values: unknown[]) => {
     for (const value of values) {
       if (!Array.isArray(value)) continue;
@@ -256,19 +263,28 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
         ? 'simples_nacional'
         : undefined
     ),
-    aliquotaSimplesNacional: pickString(
-      legacy.aliquotaSimplesNacional,
-      legacy.aliquota_simples_nacional,
-      providerData.aliquota_simples_nacional,
-    ),
+    aliquotaSimplesNacional:
+      (
+        typeof simplesSnapshotRaw?.aliquotaEfetiva === 'number'
+          ? (simplesSnapshotRaw.aliquotaEfetiva * 100).toFixed(2).replace('.', ',')
+          : undefined
+      ) || pickString(
+        legacy.aliquotaSimplesNacional,
+        legacy.aliquota_simples_nacional,
+        providerData.aliquota_simples_nacional,
+      ),
     apuracaoSimplesNacional: pickString(
       legacy.apuracaoSimplesNacional,
       legacy.apuracao_simples_nacional,
       providerData.apuracao_simples_nacional,
     ),
-    rbt12: pickString(
+    rbt12: pickStringOrNumberString(
       legacy.rbt12,
       providerData.rbt12,
+    ) || (
+      typeof simplesSnapshotRaw?.rbt12 === 'number'
+        ? String(simplesSnapshotRaw.rbt12)
+        : undefined
     ),
     simplesSnapshot: simplesSnapshotRaw
       ? {

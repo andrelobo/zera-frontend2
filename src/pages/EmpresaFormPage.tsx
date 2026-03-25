@@ -177,6 +177,11 @@ const fromTelaRegime = (regime: RegimeTributarioTela): EmpresaFormData['regimeTr
 const formatPercentValue = (value: number): string =>
   (value * 100).toFixed(2).replace('.', ',');
 
+const formatPercentSnapshotValue = (value: number | undefined): string | undefined =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? formatPercentValue(value)
+    : undefined;
+
 const formatCnpj = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 14);
   return digits
@@ -319,18 +324,24 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || previous.regimeTributario,
     aliquotaSimplesNacional:
       String(
-        empresa.aliquotaSimplesNacional
-          || (legacy.aliquota_simples_nacional as string | undefined)
+        formatPercentSnapshotValue(empresa.simplesSnapshot?.aliquotaEfetiva)
+          || empresa.aliquotaSimplesNacional
+          || (empresa as unknown as { aliquota_simples_nacional?: string | number }).aliquota_simples_nacional
+          || legacy.aliquota_simples_nacional
           || previous.aliquotaSimplesNacional,
       ),
     apuracaoSimplesNacional:
       String(
         empresa.apuracaoSimplesNacional
-          || (legacy.apuracao_simples_nacional as string | undefined)
+          || (empresa as unknown as { apuracao_simples_nacional?: string | number }).apuracao_simples_nacional
+          || legacy.apuracao_simples_nacional
           || previous.apuracaoSimplesNacional,
       ),
     rbt12: String(
-      legacy.rbt12
+      empresa.rbt12
+      || empresa.simplesSnapshot?.rbt12
+      || (empresa as unknown as { rbt_12?: string | number }).rbt_12
+      || legacy.rbt12
       || providerData.rbt12
       || previous.rbt12,
     ),

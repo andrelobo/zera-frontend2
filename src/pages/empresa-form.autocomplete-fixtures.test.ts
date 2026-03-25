@@ -103,4 +103,25 @@ describe('EmpresaFormPage autocomplete fixtures', () => {
     expect(result.cnpj).toBe(fixtures[0].cnpj);
     expect(result.razaoSocial).toBe(fixtures[0].razaoSocial);
   });
+
+  it('prefers simples snapshot effective rate over legacy aliquota when available', () => {
+    const result = applyEmpresaAutocompleteMerge(emptyForm(), [
+      {
+        ...empresaFromFixture(fixtures[0]),
+        regimeTributario: 'simples_nacional',
+        aliquotaSimplesNacional: '6,00',
+        rbt12: '240000',
+        simplesSnapshot: {
+          anexo: 'III',
+          rbt12: 240000,
+          aliquotaEfetiva: 0.073715,
+          issReferencia: 0.023589,
+          valido: true,
+        },
+      } as Empresa,
+    ]);
+
+    expect(result.rbt12).toBe('240000');
+    expect(result.aliquotaSimplesNacional).toBe('7,37');
+  });
 });

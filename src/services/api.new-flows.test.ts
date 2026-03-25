@@ -402,6 +402,41 @@ describe('new API flows', () => {
     ]);
   });
 
+  it('normalizes simples snapshot and numeric rbt12 for empresa list', async () => {
+    const { empresasApi } = await import('@/services/api');
+    mockGet.mockResolvedValue({
+      data: [
+        {
+          id: 'empresa-1',
+          cnpj: '43521115000134',
+          razaoSocial: 'BURGUS LTDA',
+          rbt12: 240000,
+          aliquotaSimplesNacional: '6,00',
+          simplesSnapshot: {
+            anexo: 'III',
+            rbt12: 240000,
+            aliquotaEfetiva: 0.073715,
+            issReferencia: 0.023589,
+            valido: true,
+          },
+        },
+      ],
+    });
+
+    const result = await empresasApi.list();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].rbt12).toBe('240000');
+    expect(result[0].aliquotaSimplesNacional).toBe('7,37');
+    expect(result[0].simplesSnapshot).toEqual(expect.objectContaining({
+      anexo: 'III',
+      rbt12: 240000,
+      aliquotaEfetiva: 0.073715,
+      issReferencia: 0.023589,
+      valido: true,
+    }));
+  });
+
   it('propagates backend error on quick emission', async () => {
     const { nfseApi } = await import('@/services/api');
     const backendError = {
