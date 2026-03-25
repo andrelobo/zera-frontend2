@@ -137,4 +137,18 @@ describe('TomadorSection UI', () => {
     expect(screen.queryByPlaceholderText('Nome fantasia (opcional)')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText('Suframa')).not.toBeInTheDocument();
   });
+
+  it('renders substituto tributario toggle when document is still empty', () => {
+    render(
+      <TomadorSection
+        data={{ ...baseTomador(), cnpjCpf: '' }}
+        onChange={vi.fn()}
+        onAutosave={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Substituto Tributário')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sim' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Não' })).toBeInTheDocument();
+  });
 });

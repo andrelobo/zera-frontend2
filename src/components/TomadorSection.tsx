@@ -57,6 +57,11 @@ export function isCPF(value: string): boolean {
   return value.replace(/\D/g, '').length <= 11;
 }
 
+export function isRealCpf(value: string): boolean {
+  const digits = value.replace(/\D/g, '');
+  return digits.length > 0 && digits.length <= 11;
+}
+
 const formatSourceLabel = (source?: string) => {
   const normalized = String(source || '').trim().toLowerCase();
   if (!normalized) return 'Não informada';
@@ -268,7 +273,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     buscarCEP(formatted);
   };
 
-  const currentIsCPF = isCPF(data.cnpjCpf);
+  const currentIsCPF = isRealCpf(data.cnpjCpf);
 
   return (
     <div className="section-card">
