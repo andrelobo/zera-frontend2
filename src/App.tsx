@@ -28,7 +28,7 @@ const UsersPage = lazy(() => import("@/pages/UsersPage"));
 const UserFormPage = lazy(() => import("@/pages/UserFormPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
-const DASHBOARD_CACHE_STORAGE_KEY = "zera_dashboard_cache_v1";
+const DASHBOARD_CACHE_STORAGE_KEY = "zera_dashboard_cache_v2";
 const DASHBOARD_CACHE_MAX_AGE_MS = 1000 * 60 * 15;
 
 const isDashboardQueryKey = (queryKey: readonly unknown[]) => {
@@ -102,7 +102,13 @@ const queryClient = new QueryClient({
 
 const persistedDashboardState = loadDashboardCache();
 if (persistedDashboardState) {
-  hydrate(queryClient, persistedDashboardState);
+  try {
+    hydrate(queryClient, persistedDashboardState);
+  } catch {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(DASHBOARD_CACHE_STORAGE_KEY);
+    }
+  }
 }
 
 const Router = import.meta.env.VITE_ROUTER_MODE === "hash" ? HashRouter : BrowserRouter;
