@@ -104,16 +104,6 @@ const splitLocalidadeUf = (value: string) => {
   return { municipio: municipio || '', uf: (uf || '').toUpperCase() };
 };
 
-const pickServicoFromFavorito = (favorito?: { vinculos?: Array<{ ctn?: string; ctnDescricao?: string }> }) => {
-  const vinculo = favorito?.vinculos?.find((item) => Boolean(item?.ctn));
-  if (!vinculo?.ctn) return null;
-  const entry = getCTNByCode(vinculo.ctn);
-  return {
-    codigoServico: vinculo.ctn.replace(/\D/g, '').slice(0, 6),
-    descricaoServico: String(entry?.descricao || vinculo.ctnDescricao || '').trim(),
-  };
-};
-
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
@@ -191,7 +181,6 @@ const NfseEmitPage: React.FC = () => {
   });
 
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
-  const favoritosCadastro = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
   const empresaTributacao = useMemo(() => resolveEmpresaTributacao(empresaAtual), [empresaAtual]);
 
@@ -246,27 +235,6 @@ const NfseEmitPage: React.FC = () => {
     });
     return combined;
   }, [favoritosTomador, favoritos]);
-
-  const servicoFavoritoPadrao = useMemo(() => {
-    // Regra UX: autopreencher apenas com favorito REAL salvo em Parametros Municipais.
-    return pickServicoFromFavorito(favoritosCadastro[0]);
-  }, [favoritosCadastro]);
-
-  useEffect(() => {
-    if (!servicoFavoritoPadrao) return;
-    setPrestacao((prev) => {
-      const codigoAtual = String(prev.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-      const codigoFavorito = String(servicoFavoritoPadrao.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-      if (codigoAtual === codigoFavorito && String(prev.descricaoServico || '').trim() === String(servicoFavoritoPadrao.descricaoServico || '').trim()) {
-        return prev;
-      }
-      return {
-        ...prev,
-        codigoServico: servicoFavoritoPadrao.codigoServico,
-        descricaoServico: servicoFavoritoPadrao.descricaoServico,
-      };
-    });
-  }, [servicoFavoritoPadrao]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
