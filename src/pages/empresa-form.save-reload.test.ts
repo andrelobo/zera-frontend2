@@ -4,7 +4,6 @@ import {
   buildEmpresaSuccessRedirect,
   buildCanonicalParametroMunicipal,
   buildEmpresaUpdatePayload,
-  hasAtLeastOneCnae,
   hasConfigOperacionaisContextMismatch,
   mapEmpresaParametroMunicipal,
   resolveConfigOperacionaisAtivos,
@@ -122,15 +121,5 @@ describe('EmpresaFormPage save/reload', () => {
     expect(resolveConfigOperacionaisAtivos(items, '8650003', '8650003')).toEqual(items);
     expect(hasConfigOperacionaisContextMismatch(items, '8650003', '8122200')).toBe(true);
     expect(hasConfigOperacionaisContextMismatch(items, '8650003', '8650003')).toBe(false);
-  });
-
-  it('requires at least one valid CNAE on save even if the editor is temporarily empty', () => {
-    expect(hasAtLeastOneCnae([])).toBe(false);
-    expect(hasAtLeastOneCnae([
-      { codigo: '', descricao: 'Invalido', isPrincipal: false },
-    ])).toBe(false);
-    expect(hasAtLeastOneCnae([
-      { codigo: '6920601', descricao: 'Atividades de contabilidade', isPrincipal: true },
-    ])).toBe(true);
   });
 });

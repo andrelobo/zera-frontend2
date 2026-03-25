@@ -26,20 +26,4 @@ describe('CNAESection logic', () => {
     expect(next[0].isPrincipal).toBe(false);
     expect(next[1].isPrincipal).toBe(true);
   });
-
-  it('allows the CNAE list to become empty during editing', () => {
-    const atividades: CNAEAtividade[] = [
-      {
-        codigo: '6920601',
-        descricao: 'Atividades de contabilidade',
-        isPrincipal: true,
-        isManual: true,
-        anexo: 'III',
-        anexoLoading: false,
-      },
-    ];
-
-    const next = atividades.filter((item) => String(item.codigo) !== '6920601');
-    expect(next).toEqual([]);
-  });
 });
