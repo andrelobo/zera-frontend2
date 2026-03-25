@@ -783,7 +783,6 @@ const EmpresaFormPage = () => {
     if (cnaesRegime.length > 0) return;
     const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
     if (!codigo) return;
-    if (!empresaQuery.data) return;
     setCnaesRegime([
       {
         codigo,
@@ -794,7 +793,7 @@ const EmpresaFormPage = () => {
         anexoLoading: false,
       },
     ]);
-  }, [empresaQuery.data, cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
+  }, [cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
 
   useEffect(() => {
     if (cnaesParam.length > 0) return;
