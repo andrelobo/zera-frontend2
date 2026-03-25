@@ -14,7 +14,7 @@ import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEma
 import { getCTNByCode } from '@/utils/ctn-data';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
-import { hasFavoriteConfig, mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
+import { mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 import { resolveEmpresaTributacao, resolveIssAutomation, resolveParametroIssLabel } from './nfseEmit.tributacao';
 
 interface PrestadorData {
@@ -203,14 +203,14 @@ const NfseEmitPage: React.FC = () => {
 
   useEffect(() => {
     if (!empresaAtual) return;
-    if (hasFavoriteConfig(empresaAtual)) return;
+    if (favoritos.length > 0 || listaServico.length > 0) return;
     if (empresaQuery.isSuccess) {
       toast({
         title: 'Prestador sem parâmetros municipais',
         description: 'Cadastre em Prestador > Parâmetros Municipais para habilitar Serviços Favoritos/Lista Serviço.',
       });
     }
-  }, [empresaAtual, empresaQuery.isSuccess]);
+  }, [empresaAtual, empresaQuery.isSuccess, favoritos.length, listaServico.length]);
 
   const favoritosTomador = useMemo(() => {
     return tomadorServicos.map((item) => ({
