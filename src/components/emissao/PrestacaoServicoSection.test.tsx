@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import PrestacaoServicoSection, { type ListaServicoItem, type PrestacaoServicoData } from './PrestacaoServicoSection';
-import { getCTNByCode } from '@/utils/ctn-data';
 
 const INITIAL_DATA: PrestacaoServicoData = {
   codigoServico: '',
@@ -80,7 +79,7 @@ describe('PrestacaoServicoSection UI', () => {
     expect(descricaoInput).toHaveValue('');
   });
 
-  it('autofills CTN and description after selecting a favorite', async () => {
+  it('autofills CTN and keeps descricao vazia after selecting a favorite', async () => {
     renderHarness({
       favoritos: [
         {
@@ -114,12 +113,10 @@ describe('PrestacaoServicoSection UI', () => {
     });
 
     expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('17.19.01');
-    expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
-      getCTNByCode('171901')?.descricao ?? '',
-    );
+    expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue('');
   });
 
-  it('fills code and description from Lista Serviço selection', async () => {
+  it('appends descricao from Lista Serviço selection without replacing CTN', async () => {
     renderHarness({
       favoritos: [
         {
@@ -134,24 +131,19 @@ describe('PrestacaoServicoSection UI', () => {
           id: 'svc-1',
           natureza: 'Contabilidade',
           descricao: 'Serviço contábil mensal',
-          codigoServico: '171901',
-          aliquota: '5,00',
         },
       ],
     });
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'svc-1' } });
 
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('17.19.01');
-    });
-
     expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
       'Serviço contábil mensal',
     );
+    expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('');
   });
 
-  it('accepts manual CTN typing on blur without locking the field', async () => {
+  it('does not commit manual CTN typing on blur by itself', async () => {
     renderHarness({
       favoritos: [],
     });
@@ -164,11 +156,7 @@ describe('PrestacaoServicoSection UI', () => {
 
     fireEvent.blur(ctnInput, { target: { value: '171901' } });
 
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
-        getCTNByCode('171901')?.descricao ?? '',
-      );
-    });
+    expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue('');
   });
 
   it('keeps descricao do servico editable after autopreenchimento', async () => {
@@ -201,8 +189,10 @@ describe('PrestacaoServicoSection UI', () => {
     ) as HTMLTextAreaElement;
 
     await waitFor(() => {
-      expect(descricaoInput.value.toLowerCase()).toContain('contabilidade');
+      expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('17.19.01');
     });
+
+    expect(descricaoInput.value).toBe('');
 
     fireEvent.change(descricaoInput, { target: { value: 'Descrição ajustada manualmente' } });
     expect(descricaoInput.value).toBe('Descrição ajustada manualmente');

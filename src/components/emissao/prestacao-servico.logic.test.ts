@@ -62,10 +62,10 @@ describe('PrestacaoServicoSection logic', () => {
 
     const resolved = resolvePrestacaoFromFavorito(INITIAL_DATA, favoritoSelecionado);
     expect(resolved?.nextData.codigoServico).toBe('171901');
-    expect(resolved?.nextData.descricaoServico.toLowerCase()).toContain('contabilidade');
+    expect(resolved?.nextData.descricaoServico).toBe('');
   });
 
-  it('fills code, description and aliquota from lista servico', () => {
+  it('appends description from lista servico without changing CTN or aliquota', () => {
     const item: ListaServicoItem = {
       id: 'svc-1',
       natureza: 'Contabilidade',
@@ -74,13 +74,13 @@ describe('PrestacaoServicoSection logic', () => {
       aliquota: '5,00',
     };
 
-    const next = resolvePrestacaoFromListaServico(INITIAL_DATA, item, false, false);
-    expect(next.codigoServico).toBe('171901');
+    const next = resolvePrestacaoFromListaServico(INITIAL_DATA, item);
+    expect(next.codigoServico).toBe('');
     expect(next.descricaoServico).toBe('Serviço contábil mensal');
-    expect(next.aliquota).toBe('5,00');
+    expect(next.aliquota).toBe('');
   });
 
-  it('does not override aliquota from lista servico for optante simples', () => {
+  it('appends descricao mantendo texto anterior', () => {
     const item: ListaServicoItem = {
       id: 'svc-1',
       natureza: 'Contabilidade',
@@ -90,11 +90,9 @@ describe('PrestacaoServicoSection logic', () => {
     };
 
     const next = resolvePrestacaoFromListaServico(
-      { ...INITIAL_DATA, aliquota: '6,00' },
+      { ...INITIAL_DATA, descricaoServico: 'Linha inicial' },
       item,
-      true,
-      false,
     );
-    expect(next.aliquota).toBe('6,00');
+    expect(next.descricaoServico).toBe('Linha inicial\nServiço contábil mensal');
   });
 });

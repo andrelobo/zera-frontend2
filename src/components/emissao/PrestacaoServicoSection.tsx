@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Briefcase, Percent, ChevronDown, Search, MapPin, Star, List, Hash, FileText, DollarSign, Calculator, BadgePercent, Scissors, ShieldCheck, Receipt } from 'lucide-react';
 import { searchCTN, getCTNByCode } from '@/utils/ctn-data';
 
@@ -81,7 +81,7 @@ export function resolvePrestacaoFromFavorito(
     nextData: {
       ...data,
       codigoServico: primeiroVinculo.ctn,
-      descricaoServico: descricaoAtual,
+      descricaoServico: '',
     },
     ctnDescricao: descricaoAtual,
   };
@@ -90,18 +90,10 @@ export function resolvePrestacaoFromFavorito(
 export function resolvePrestacaoFromListaServico(
   data: PrestacaoServicoData,
   item: ListaServicoItem,
-  optanteSimples: boolean,
-  tomadorSubstituto: boolean,
 ): PrestacaoServicoData {
-  const codigoServico = String(item.codigoServico || '').replace(/\D/g, '').slice(0, 6);
-  const aliquota = String(item.aliquota || '').trim();
   return {
     ...data,
-    codigoServico: codigoServico || data.codigoServico,
-    descricaoServico: item.descricao || data.descricaoServico,
-    aliquota: !optanteSimples && !tomadorSubstituto && aliquota
-      ? formatPercent(aliquota)
-      : data.aliquota,
+    descricaoServico: data.descricaoServico ? `${data.descricaoServico}\n${item.descricao}` : item.descricao,
   };
 }
 
@@ -123,10 +115,6 @@ function formatCTNDisplay(codigo: string) {
     return `${codigo.slice(0, 2)}.${codigo.slice(2, 4)}.${codigo.slice(4, 6)}`;
   }
   return codigo;
-}
-
-function normalizeCTNInput(value: string) {
-  return value.replace(/\D/g, '').slice(0, 6);
 }
 
 const UF_LIST = [
@@ -153,7 +141,6 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
   const [showFavoritosDropdown, setShowFavoritosDropdown] = useState(false);
   const [favoritosQuery, setFavoritosQuery] = useState('');
   const [favoritoSelecionado, setFavoritoSelecionado] = useState<FavoritoItem | null>(null);
-  const [listaServicoSelecionada, setListaServicoSelecionada] = useState('');
   const favoritosDropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredFavoritos = useMemo(() => {
@@ -175,7 +162,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
       onChange({
         ...data,
         codigoServico: v.ctn,
-        descricaoServico: descricaoAtual,
+        descricaoServico: '',
       });
       setCtnDescricaoSelecionada(descricaoAtual);
     }
@@ -277,49 +264,12 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
     onChange({
       ...data,
       codigoServico: codigo,
-      descricaoServico: descricao,
     });
     setCtnDescricaoSelecionada(descricao);
     setCtnQuery('');
     setShowCtnDropdown(false);
     setFavoritoSelecionado(null);
   };
-
-  const commitManualCTNInput = useCallback((rawValue: string) => {
-    const trimmed = String(rawValue || '').trim();
-    const normalized = normalizeCTNInput(rawValue);
-
-    if (!trimmed) {
-      onChange({
-        ...data,
-        codigoServico: '',
-      });
-      setCtnDescricaoSelecionada('');
-      setCtnQuery('');
-      setShowCtnDropdown(false);
-      setFavoritoSelecionado(null);
-      return;
-    }
-
-    if (normalized.length !== 6) {
-      setCtnQuery('');
-      setShowCtnDropdown(false);
-      return;
-    }
-
-    const entry = getCTNByCode(normalized);
-    const descricaoTecnica = String(entry?.descricao || '').trim();
-
-    onChange({
-      ...data,
-      codigoServico: normalized,
-      descricaoServico: data.descricaoServico || descricaoTecnica,
-    });
-    setCtnDescricaoSelecionada(descricaoTecnica);
-    setCtnQuery(formatCTNDisplay(normalized));
-    setShowCtnDropdown(false);
-    setFavoritoSelecionado(null);
-  }, [data, onChange]);
 
   const handleSelectMunicipio = (nome: string) => {
     update('localPrestacao', `${nome} - ${ufSelecionada}`);
@@ -328,12 +278,12 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
   };
 
   return (
-    <div className="section-card">
-      <h2 className="section-title">
-        <Briefcase className="w-5 h-5 text-primary" />
+    <div className="section-card p-2">
+      <h2 className="section-title text-xs mb-1">
+        <Briefcase className="w-4 h-4 text-primary" />
         Serviço Prestado
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {/* Serviços Favoritos */}
         <div ref={favoritosDropdownRef} className="relative">
           <label className="field-label flex items-center gap-1.5" style={{ color: 'hsl(43, 80%, 45%)' }}><Star className="w-4 h-4" fill="currentColor" />Serviços Favoritos</label>
@@ -420,13 +370,6 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
                 setShowCtnDropdown(true);
               }}
               onFocus={() => { setCtnQuery(''); setShowCtnDropdown(true); }}
-              onBlur={(e) => commitManualCTNInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  commitManualCTNInput((e.target as HTMLInputElement).value);
-                }
-              }}
             />
             <button
               type="button"
@@ -467,12 +410,11 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
           <label className="field-label flex items-center gap-1.5"><List className="w-4 h-4 text-primary" />Lista Serviço</label>
           <select
             className="field-input"
-            value={listaServicoSelecionada}
+            value=""
             onChange={(e) => {
-              setListaServicoSelecionada(e.target.value);
               const item = listaServico.find(i => i.id === e.target.value);
               if (item) {
-                onChange(resolvePrestacaoFromListaServico(data, item, optanteSimples, tomadorSubstituto));
+                onChange(resolvePrestacaoFromListaServico(data, item));
               }
             }}
           >
@@ -484,10 +426,10 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
         </div>
       </div>
 
-      <div className="mt-3">
-        <label className="field-label flex items-center gap-1.5"><FileText className="w-4 h-4 text-primary" />Descrição do Serviço*</label>
+      <div className="mt-2">
+        <label className="field-label flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />Descrição do Serviço*</label>
         <textarea
-          className="field-input min-h-[60px] resize-y"
+          className="field-input min-h-[50px] resize-y"
           placeholder="Descreva o serviço prestado conforme a NFS-e..."
           value={data.descricaoServico}
           onChange={(e) => update('descricaoServico', e.target.value)}
@@ -496,7 +438,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
 
 
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
         <div>
           <label className="field-label flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-primary" />Valor do Serviço (R$)*</label>
           <input
