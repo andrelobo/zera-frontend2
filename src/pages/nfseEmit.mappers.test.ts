@@ -185,6 +185,19 @@ describe('nfseEmit mappers', () => {
     expect(hasFavoriteConfig(baseEmpresa({ configOperacionais: [{ id: 'x', natureza: 'Contabilidade', descricao: 'Serviço' }] }))).toBe(true);
   });
 
+  it('detects fallback favorites from ctn/nbs even when arrays are empty', () => {
+    const empresa = baseEmpresa({
+      cnaeFiscal: '6920601',
+      cnaeFiscalDescricao: 'Atividades de contabilidade',
+      ctnCodigo: '171901',
+      nbsCodigo: '1.1302.21.00',
+      parametroMunicipal: [],
+      configOperacionais: [],
+    });
+
+    expect(hasFavoriteConfig(empresa)).toBe(true);
+  });
+
   it('picks empresa com maior completude para emissao', () => {
     const empresaSemDados = baseEmpresa({
       id: 'empresa-sem',

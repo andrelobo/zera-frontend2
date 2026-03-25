@@ -206,7 +206,9 @@ export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[]
 };
 
 export const hasFavoriteConfig = (empresa: Empresa | null | undefined) =>
-  asArray(empresa?.parametroMunicipal).length > 0 || asArray(empresa?.configOperacionais).length > 0;
+  asArray(empresa?.parametroMunicipal).length > 0 ||
+  asArray(empresa?.configOperacionais).length > 0 ||
+  mapFavoritosFromParametroMunicipal(empresa).length > 0;
 
 export const pickEmpresaForEmissao = (empresas: Empresa[]): Empresa | null => {
   if (!Array.isArray(empresas) || empresas.length === 0) return null;
