@@ -170,10 +170,14 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
 
   const handleRemove = (e: React.MouseEvent, codigo: string) => {
     e.stopPropagation();
-    setManualActivities((prev) => prev.filter((a) => String(a.codigo) !== codigo));
+    const remaining = manualActivities.filter((a) => String(a.codigo) !== codigo);
+    setManualActivities(remaining);
     if (cnaeEscolhido === codigo) {
-      const remaining = manualActivities.filter((a) => String(a.codigo) !== codigo);
-      if (remaining.length > 0) onCnaeEscolhidoChange(String(remaining[0].codigo), remaining[0].descricao);
+      if (remaining.length > 0) {
+        onCnaeEscolhidoChange(String(remaining[0].codigo), remaining[0].descricao);
+        return;
+      }
+      onCnaeEscolhidoChange('', '');
     }
   };
 

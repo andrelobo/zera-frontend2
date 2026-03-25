@@ -573,6 +573,10 @@ export const buildEmpresaUpdatePayload = (
   };
 };
 
+export const hasAtLeastOneCnae = (cnaesRegime: CNAEAtividade[]) => {
+  return cnaesRegime.some((item) => String(item.codigo || '').replace(/\D/g, '').length > 0);
+};
+
 export const shouldResetConfigOperacionaisOnCnaeChange = (
   previousCnae: string,
   nextCnae: string,
@@ -779,6 +783,7 @@ const EmpresaFormPage = () => {
     if (cnaesRegime.length > 0) return;
     const codigo = String(form.cnaeFiscal || '').replace(/\D/g, '');
     if (!codigo) return;
+    if (!empresaQuery.data) return;
     setCnaesRegime([
       {
         codigo,
@@ -789,7 +794,7 @@ const EmpresaFormPage = () => {
         anexoLoading: false,
       },
     ]);
-  }, [cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
+  }, [empresaQuery.data, cnaesRegime.length, form.cnaeFiscal, form.cnaeFiscalDescricao]);
 
   useEffect(() => {
     if (cnaesParam.length > 0) return;
@@ -1062,6 +1067,15 @@ const EmpresaFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: () => {
+      if (!hasAtLeastOneCnae(cnaesRegime)) {
+        toast({
+          title: 'CNAE obrigatorio',
+          description: 'Adicione pelo menos 1 CNAE antes de salvar.',
+          variant: 'destructive',
+        });
+        throw new Error('CNAE_REQUIRED');
+      }
+
       const payload = buildEmpresaUpdatePayload(form, cnaesRegime, cnaesParam, configOperacionaisAtivos, {
         nfseNum: nfseNumSincronizado,
         dpsNum: dpsNumSincronizado,
@@ -1437,7 +1451,15 @@ const EmpresaFormPage = () => {
               onCnaesListaChange={(lista) => {
                 setCnaesRegime(lista);
                 const principal = lista.find((item) => item.isPrincipal) || lista[0];
-                if (!principal) return;
+                if (!principal) {
+                  lastPrincipalCnaeRef.current = '';
+                  setForm((prev) => ({
+                    ...prev,
+                    cnaeFiscal: '',
+                    cnaeFiscalDescricao: '',
+                  }));
+                  return;
+                }
                 lastPrincipalCnaeRef.current = updatePrincipalCnaeWithConfigReset(
                   lastPrincipalCnaeRef.current || String(form.cnaeFiscal || '').replace(/\D/g, ''),
                   String(principal.codigo),
