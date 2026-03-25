@@ -43,33 +43,6 @@ interface Props {
 }
 
 export type { CnaeAdicionado, CtnNbsVinculo };
-export function resolveEditorSeed(
-  cnaes: CnaeAdicionado[],
-  editorTouched: boolean,
-): {
-  manualCnae: string;
-  manualCtn: string;
-  manualNbs: string;
-  manualCnaeDescricaoIBGE: string;
-  manualDescricao: string;
-  detectedItem: string | null;
-  detectedNbsPrefix: string | null;
-} | null {
-  if (cnaes.length === 0) return null;
-  if (editorTouched) return null;
-
-  const selectedCnaeForEditor = cnaes.find((item) => item.isPrincipal) || cnaes[0];
-  const firstVinculo = selectedCnaeForEditor.vinculos[0];
-  return {
-    manualCnae: formatCNAECode(selectedCnaeForEditor.codigo),
-    manualCtn: firstVinculo?.ctn || '',
-    manualNbs: firstVinculo?.nbs || '',
-    manualCnaeDescricaoIBGE: selectedCnaeForEditor.cnaeDescricao || '',
-    manualDescricao: selectedCnaeForEditor.lc116Descricao || selectedCnaeForEditor.cnaeDescricao || '',
-    detectedItem: selectedCnaeForEditor.lc116Item ? selectedCnaeForEditor.lc116Item.split('.')[0].padStart(2, '0') : null,
-    detectedNbsPrefix: firstVinculo?.nbs ? firstVinculo.nbs.substring(0, 4) : null,
-  };
-}
 
 let vinculoIdCounter = 0;
 function nextVinculoId() {
@@ -166,7 +139,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
   const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
   const [showCtnDropdown, setShowCtnDropdown] = useState(false);
   const [showNbsDropdown, setShowNbsDropdown] = useState(false);
-  const [editorTouched, setEditorTouched] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const cnaeDropdownRef = useRef<HTMLDivElement>(null);
   const ctnDropdownRef = useRef<HTMLDivElement>(null);
@@ -243,22 +215,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  useEffect(() => {
-    const seed = resolveEditorSeed(cnaes, editorTouched);
-    if (!seed) return;
-    setManualCnae(seed.manualCnae);
-    setManualCtn(seed.manualCtn);
-    setManualNbs(seed.manualNbs);
-    setManualCnaeDescricaoIBGE(seed.manualCnaeDescricaoIBGE);
-    setManualDescricao(seed.manualDescricao);
-    setDetectedItem(seed.detectedItem);
-    setDetectedNbsPrefix(seed.detectedNbsPrefix);
-    setCtnQuery('');
-    setNbsQuery('');
-  }, [cnaes, editorTouched]);
-
   const handleManualCnaeChange = (value: string) => {
-    setEditorTouched(true);
     setManualCnae(value);
     setShowCnaeDropdown(value.trim().length > 0);
     const digits = value.replace(/\D/g, '');
@@ -466,7 +423,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     setManualCnaeDescricaoIBGE('');
     setManualIsPrincipal(false);
     setManualVincularSN(false);
-    setEditorTouched(false);
     setCtnQuery('');
     setNbsQuery('');
     setShowManualForm(false);
@@ -483,7 +439,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-stretch">
         {/* CNAE Card */}
-        <div ref={cnaeDropdownRef} className="radio-card flex flex-col items-start">
+        <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start ${manualCnae ? 'radio-card-selected' : ''}`}>
           <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>1. Código Cnae<span className="text-red-500">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
@@ -508,7 +464,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                       key={entry.codigo}
                       type="button"
                       onClick={() => {
-                        setEditorTouched(true);
                         handleManualCnaeChange(entry.codigo);
                         setShowCnaeDropdown(false);
                       }}
@@ -528,7 +483,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
         </div>
 
         {/* CTN Card */}
-        <div ref={ctnDropdownRef} className="radio-card flex flex-col items-start">
+        <div ref={ctnDropdownRef} className={`radio-card flex flex-col items-start ${manualCtn ? 'radio-card-selected' : ''}`}>
           <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>2. Código Tributação Nacional<span className="text-red-500">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
@@ -559,7 +514,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                         type="button"
                         title={`${formatCTNDisplay(entry.codigo)} (${entry.itemFormatado}) — ${entry.descricao}`}
                       onClick={() => {
-                          setEditorTouched(true);
                           setManualCtn(entry.codigo);
                           setCtnQuery('');
                           setShowCtnDropdown(false);
@@ -584,7 +538,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
         </div>
 
         {/* NBS Card */}
-        <div ref={nbsDropdownRef} className="radio-card flex flex-col items-start">
+        <div ref={nbsDropdownRef} className={`radio-card flex flex-col items-start ${manualNbs ? 'radio-card-selected' : ''}`}>
           <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>3. Nomenclatura Brasileira Serviços</div>
           <div className="w-full space-y-1">
             <div className="relative">
@@ -615,7 +569,6 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
                         type="button"
                         title={`${entry.codigo} — ${entry.descricao}`}
                       onClick={() => {
-                          setEditorTouched(true);
                           setManualNbs(entry.codigo);
                           setNbsQuery('');
                           setShowNbsDropdown(false);

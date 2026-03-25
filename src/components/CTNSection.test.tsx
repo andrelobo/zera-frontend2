@@ -1,12 +1,12 @@
 /** @vitest-environment jsdom */
 
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import CTNSection from './CTNSection';
 
 describe('CTNSection UI', () => {
-  it('rehydrates top editor fields from saved CNAE data', async () => {
+  it('keeps the top editor empty even when favorites are inherited from saved CNAEs', () => {
     render(
       <CTNSection
         ctnSelecionado={null}
@@ -33,15 +33,14 @@ describe('CTNSection UI', () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText('Ex: 6201-5/00 ou 6201500')).toHaveValue('6920-6/01');
-    });
-
-    expect(screen.getByPlaceholderText('Buscar CTN...')).toHaveValue('17.19.01');
-    expect(screen.getByPlaceholderText('Buscar NBS...')).toHaveValue('1.1302.21.00');
+    expect(screen.getByPlaceholderText('Ex: 6201-5/00 ou 6201500')).toHaveValue('');
+    expect(screen.getByPlaceholderText('Buscar CTN...')).toHaveValue('');
+    expect(screen.getByPlaceholderText('Buscar NBS...')).toHaveValue('');
+    expect(screen.getByText('Serviços Favoritos')).toBeInTheDocument();
+    expect(screen.getByText('Atividades de contabilidade')).toBeInTheDocument();
   });
 
-  it('keeps the CNAE field editable after hydrating from previous tab data', async () => {
+  it('keeps the CNAE field editable while favorites remain visible below', () => {
     render(
       <CTNSection
         ctnSelecionado={null}
@@ -68,11 +67,12 @@ describe('CTNSection UI', () => {
       />,
     );
 
-    const cnaeInput = await screen.findByPlaceholderText('Ex: 6201-5/00 ou 6201500');
-    expect(cnaeInput).toHaveValue('6920-6/01');
+    const cnaeInput = screen.getByPlaceholderText('Ex: 6201-5/00 ou 6201500');
+    expect(cnaeInput).toHaveValue('');
 
     fireEvent.change(cnaeInput, { target: { value: '6201' } });
 
     expect(cnaeInput).toHaveValue('6201');
+    expect(screen.getByText('Atividades de contabilidade')).toBeInTheDocument();
   });
 });
