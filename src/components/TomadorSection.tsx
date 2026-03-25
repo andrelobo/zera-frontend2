@@ -364,19 +364,6 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         </div>
       </div>
 
-      {!currentIsCPF && (
-        <div className="mt-5 pt-5 border-t border-border">
-          <label className="field-label">Nome Fantasia</label>
-          <input className="field-input" placeholder="Nome fantasia (opcional)" value={data.nomeFantasia} onChange={(e) => update('nomeFantasia', e.target.value)} />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="field-label">Suframa</label>
-              <input className="field-input" placeholder="Suframa" value={data.suframa} onChange={(e) => update('suframa', e.target.value)} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

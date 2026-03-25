@@ -124,4 +124,17 @@ describe('TomadorSection UI', () => {
     });
     expect(whatsappInput.value).toBe('(92) 98123-4567');
   });
+
+  it('does not render nome fantasia or suframa in tomador cadastro', () => {
+    render(
+      <TomadorSection
+        data={baseTomador()}
+        onChange={vi.fn()}
+        onAutosave={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByPlaceholderText('Nome fantasia (opcional)')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Suframa')).not.toBeInTheDocument();
+  });
 });
