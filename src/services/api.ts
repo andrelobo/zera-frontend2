@@ -445,6 +445,10 @@ export const nfseApi = {
         receivedAt: (data.updatedAt as string | undefined) || new Date().toISOString(),
       } as ProviderResponse;
     }),
+  webhookDiagnostics: () =>
+    api.get<Record<string, unknown>>('/nfse/webhook/diagnostico').then(r => r.data),
+  observabilityByExternalId: (externalId: string) =>
+    api.get<Record<string, unknown>>(`/nfse/external/${externalId}/observability`).then(r => r.data),
   artifacts: (id: string) =>
     api.get<NfseArtifactsStatus>(`/nfse/${id}/artifacts`).then(r => r.data),
   downloadXml: (id: string) =>

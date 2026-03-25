@@ -15,6 +15,7 @@ const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const Dash2Page = lazy(() => import("@/pages/Dash2Page"));
 const GestorAiPage = lazy(() => import("@/pages/GestorAiPage"));
 const MyAccountPage = lazy(() => import("@/pages/MyAccountPage"));
+const ObservabilidadeFiscalPage = lazy(() => import("@/pages/ObservabilidadeFiscalPage"));
 const NfseListPage = lazy(() => import("@/pages/NfseListPage"));
 const NfseDetailPage = lazy(() => import("@/pages/NfseDetailPage"));
 const NfseEmitPage = lazy(() => import("@/pages/NfseEmitPage"));
@@ -157,6 +158,7 @@ const App = () => (
                   <Route path="/dash2" element={<Dash2Page />} />
                   <Route path="/gestor-ai" element={<GestorAiPage />} />
                   <Route path="/account" element={<MyAccountPage />} />
+                  <Route path="/observabilidade-fiscal" element={<ObservabilidadeFiscalPage />} />
                   <Route path="/nfse" element={<NfseListPage />} />
                   <Route path="/nfse/nova" element={<NfseEmitPage />} />
                   <Route path="/nfse/rapida" element={<NfseQuickEmitPage />} />

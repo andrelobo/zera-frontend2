@@ -11,9 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { BotMessageSquare, ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { BotMessageSquare, ChevronDown, LogOut, RadioTower, UserRound } from 'lucide-react';
 import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeRole } from '@/lib/roles';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 const THEME_STORAGE_KEY = 'zera_theme_preview_v1';
@@ -109,6 +110,7 @@ const AppLayout = () => {
   const displayName = user?.name || user?.email || 'Usuário';
   const displayEmail = user?.email || '';
   const initials = getInitials(displayName);
+  const isAdmin = normalizeRole(user?.role || 'user') === 'admin';
   const headerKpis = useMemo(() => ([
     { label: 'Receita Jan 2026', value: formatCurrency(receitaMes) },
     { label: 'Aliq. Efetiva', value: formatPercent(snapshot.aliquotaEfetiva) },
@@ -188,6 +190,13 @@ const AppLayout = () => {
                     <UserRound className="mr-2 h-4 w-4" />
                     Minha Conta
                   </DropdownMenuItem>
+                  {isAdmin ? (
+                    <DropdownMenuItem onClick={() => navigate('/observabilidade-fiscal')}>
+                      <RadioTower className="mr-2 h-4 w-4" />
+                      Observabilidade Fiscal
+                    </DropdownMenuItem>
+                  ) : null}
+                  {isAdmin ? <DropdownMenuSeparator /> : null}
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
