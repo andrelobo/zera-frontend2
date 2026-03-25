@@ -61,17 +61,17 @@ const EmpresaCard: React.FC<Props> = ({
       </div>
     </div>
 
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-      <div className="md:col-span-2">
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] gap-4 items-end">
+      <div>
         <label className="field-label">Nome Empresarial</label>
         <input className="field-input" placeholder="Razão Social" value={data.nomeEmpresarial} onChange={(e) => onFieldChange('nomeEmpresarial', e.target.value)} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className="field-label">Nome Fantasia</label>
         <input className="field-input" placeholder="Nome Fantasia" value={data.nomeFantasia} onChange={(e) => onFieldChange('nomeFantasia', e.target.value)} />
       </div>
-      <div>
-        <div className="flex items-center gap-3">
+      <div className="min-w-fit">
+        <div className="flex items-center gap-3 pb-1">
           <label className="field-label whitespace-nowrap mb-0">Optante Simples</label>
           <div className="flex items-center gap-0">
             <button
