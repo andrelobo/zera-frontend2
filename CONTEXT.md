@@ -27,6 +27,70 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-03-25) - tomador CPF, `cadastropf` e criterio real de adocao
+Fonte: `codigo local` + `documentacao oficial do fornecedor` + `portal legacy do fornecedor` + `retorno do suporte` + `teste real manual`.
+
+Leitura consolidada:
+- havia confusao entre dois servicos diferentes do HUBDEV:
+  - `nome_cpf` / `cpf`
+  - `cadastropf`
+- a leitura correta agora e:
+  - `nome_cpf` / `cpf` servem para nome + data de nascimento + situacao cadastral
+  - `cadastropf` e o servico rico de enriquecimento de dados pessoais por CPF
+
+O que ficou comprovado:
+- o endpoint relevante para o caso de uso do ZERA e:
+  - `GET /v2/cadastropf/?cpf=...&token=...`
+- segundo a documentacao e o suporte, esse servico pode retornar:
+  - nome completo
+  - data de nascimento
+  - genero
+  - nome da mae
+  - telefones
+  - enderecos
+  - emails
+  - salario estimado
+- no teste real manual com token de validacao, o retorno trouxe de fato:
+  - `nomeCompleto`
+  - `dataDeNascimento`
+  - `listaTelefones`
+  - `listaEnderecos`
+  - `listaEmails`
+  - `nomeDaMae`
+  - `genero`
+  - `salarioEstimado`
+  - `lastUpdate`
+
+Limitacao critica comprovada:
+- no estado atual do plano/token, os dados vieram fortemente ofuscados por LGPD
+- exemplos observados:
+  - telefone mascarado
+  - endereco mascarado
+  - cidade/UF mascaradas
+  - CEP mascarado
+  - email mascarado
+- alem disso, ja houve suspeita operacional de desatualizacao em parte dos dados retornados
+
+Conclusao operacional correta:
+- o P.O estava certo sobre a existencia de uma API capaz de enriquecer tomador por CPF
+- porem, no estado atual do contrato/plano, o retorno ainda nao provou valor suficiente para autopreenchimento confiavel em producao
+- antes de qualquer integracao no fluxo do ZERA, ainda faltam:
+  - liberacao LGPD para campos completos
+  - novo teste real com dados legiveis
+  - validacao de atualidade/confiabilidade dos campos principais
+
+Regra de adocao definida:
+1. nao integrar `cadastropf` no frontend diretamente
+2. quando aprovado, integrar via backend do ZERA
+3. tratar como autocomplete assistido, nunca bloqueio de cadastro
+4. so promover para fluxo real apos prova de:
+   - legibilidade
+   - atualidade
+   - confiabilidade
+
+Documentacao local criada:
+- `docs/HUBDEV_CADASTROPF_SUPORTE_2026-03-25.md`
+
 ## 0. Atualizacao de Contexto (2026-03-24) - incidente em PROD no frontend e regressao visual no Prestador
 Fonte: `codigo local` + `erro observado em producao` + `validacao visual manual`.
 

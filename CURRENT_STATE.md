@@ -1,6 +1,50 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **24/03/2026**.
+Snapshot operacional do frontend em **25/03/2026**.
+
+## 0. Atualizacao rapida (25/03/2026) - tomador CPF e validacao real do `cadastropf`
+
+Fonte: `documentacao oficial do fornecedor` + `suporte do fornecedor` + `teste manual real`.
+
+Leitura consolidada:
+- o caso de uso de autocomplete rico para tomador por CPF foi analisado de ponta a ponta
+- a API simples `cpf` / `nome_cpf` nao resolve o cadastro completo
+- o servico correto do fornecedor para enriquecimento de PF e:
+  - `cadastropf`
+
+O que foi confirmado:
+- o `cadastropf` retorna estrutura rica de dados pessoais
+- no teste manual, vieram:
+  - nome completo
+  - data de nascimento
+  - nome da mae
+  - genero
+  - telefones
+  - enderecos
+  - emails
+  - salario estimado
+- isso confirma viabilidade tecnica **em tese** para enriquecer o cadastro de tomador CPF
+
+O que impediu a adocao imediata:
+- os campos vieram fortemente ofuscados por LGPD no plano/token atual
+- houve suspeita de desatualizacao em parte dos dados retornados
+- por isso, a utilidade pratica para autopreenchimento em producao ainda nao ficou comprovada
+
+Decisao operacional atual:
+1. nao integrar `cadastropf` no ZERA por enquanto
+2. registrar o achado como frente valida, mas dependente de:
+   - liberacao LGPD
+   - novo teste com campos legiveis
+   - validacao de atualidade dos dados
+3. quando houver prova suficiente, integrar via backend do ZERA, nao direto do frontend
+
+Tomador - direcao de tela atual:
+- `Substituto Tributario` continua sendo campo necessario no fluxo
+- `Inscricao Municipal` e `Inscricao Estadual` nao sao mais tratadas como requisito de equivalencia para o formulario atual de tomador
+- ajustes de layout nessa tela devem respeitar a regra:
+  - botoes embaixo
+  - sem inventar barra de acoes fora do padrao do front
+  - uma alteracao visual por vez
 
 ## 0. Atualizacao rapida (24/03/2026) - autocomplete consolidado, emissao assistida e dashboard mais rapido
 
