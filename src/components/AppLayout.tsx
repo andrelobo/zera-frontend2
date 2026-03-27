@@ -17,8 +17,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { normalizeRole } from '@/lib/roles';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
-const THEME_STORAGE_KEY = 'zera_theme_preview_v1';
-
 type HeaderSnapshot = {
   rbt12: number;
   issReferencia: number;
@@ -68,10 +66,6 @@ const AppLayout = () => {
     if (typeof window === 'undefined') return FALLBACK_SNAPSHOT;
     return parseSnapshot(window.localStorage.getItem(TICKER_STORAGE_KEY)) || FALLBACK_SNAPSHOT;
   });
-  const [themePreview, setThemePreview] = useState<'zera' | 'pn'>(() => {
-    if (typeof window === 'undefined') return 'zera';
-    return window.localStorage.getItem(THEME_STORAGE_KEY) === 'pn' ? 'pn' : 'zera';
-  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -96,15 +90,6 @@ const AppLayout = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    document.body.classList.toggle('theme-pn', themePreview === 'pn');
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(THEME_STORAGE_KEY, themePreview);
-      window.dispatchEvent(new Event('zera:theme:update'));
-    }
-  }, [themePreview]);
-
   const receitaMes = snapshot.rbt12 / 12;
   const aRecolher = receitaMes * snapshot.aliquotaEfetiva;
   const displayName = user?.name || user?.email || 'Usuário';
@@ -128,16 +113,16 @@ const AppLayout = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="bg-[hsl(216,60%,16%)] sticky top-0 z-10 px-4 sm:px-6 py-2.5 flex items-center gap-6">
-            <div className="flex items-center gap-4 shrink-0">
+          <header className="bg-[hsl(216,60%,16%)] sticky top-0 z-10 px-4 sm:px-6 py-2.5 flex items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <SidebarTrigger className="text-white hover:text-white/80" />
-              <div className="h-5 w-px bg-white/20" />
-              <span className="text-[10px] font-semibold text-white/50 tracking-widest flex items-center gap-1.5">
+              <div className="hidden sm:block h-5 w-px bg-white/20" />
+              <span className="hidden sm:flex text-[10px] font-semibold text-white/50 tracking-widest items-center gap-1.5">
                 <BotMessageSquare className="w-4 h-4 animate-[bounce_2s_ease-in-out_infinite]" />
                 Inteligência Fiscal IA
               </span>
             </div>
-            <div className="flex items-center gap-5">
+            <div className="hidden md:flex items-center gap-5 min-w-0">
               {headerKpis.map((kpi, index) => (
                 <div key={kpi.label} className="flex items-center gap-5">
                   {index > 0 && <div className="h-5 w-px bg-white/10" />}
@@ -149,22 +134,6 @@ const AppLayout = () => {
               ))}
             </div>
             <div className="ml-auto flex items-center gap-3 shrink-0">
-              <div className="flex items-center rounded-full border border-white/15 bg-white/5 p-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
-                <button
-                  type="button"
-                  onClick={() => setThemePreview('zera')}
-                  className={`rounded-full px-2 py-1 transition-colors ${themePreview === 'zera' ? 'bg-white text-[hsl(216,60%,16%)]' : 'text-white/75'}`}
-                >
-                  zera
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setThemePreview('pn')}
-                  className={`rounded-full px-2 py-1 transition-colors ${themePreview === 'pn' ? 'bg-white text-[hsl(216,60%,16%)]' : 'text-white/75'}`}
-                >
-                  pn
-                </button>
-              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
