@@ -9,15 +9,15 @@ import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ChevronLeft, ChevronRight, Zap, Eye, FileText, Download } from 'lucide-react';
+import { Plus, Zap, Eye, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
-// Mantemos o histórico no backend; a listagem operacional começa em 27/03/2026.
-const NFSE_LIST_DATE_FROM = '2026-03-27';
+// Mantemos o histórico no backend; o quadro exibe apenas a última emissão visível.
+const NFSE_LIST_DATE_FROM = '2026-03-26';
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
 
@@ -31,8 +31,8 @@ const NfseListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = 15;
+  const page = 1;
+  const limit = 1;
   const status = (searchParams.get('status') as NfseStatus) || undefined;
   const provider = (searchParams.get('provider') as NfseProvider) || undefined;
 
@@ -57,7 +57,6 @@ const NfseListPage = () => {
   const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && !data), 400);
 
   const items = data?.data || [];
-  const totalPages = data?.totalPages || 1;
   const providerDetails = useQueries({
     queries: items.map((nfse) => ({
       queryKey: ['nfse-provider-list', nfse.id],
@@ -78,13 +77,6 @@ const NfseListPage = () => {
     } else {
       params.delete(key);
     }
-    params.set('page', '1');
-    setSearchParams(params);
-  };
-
-  const goToPage = (p: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', p.toString());
     setSearchParams(params);
   };
 
@@ -154,7 +146,6 @@ const NfseListPage = () => {
           <SelectContent>
             <SelectItem value="all">Todos Status</SelectItem>
             <SelectItem value="PENDING">Processando</SelectItem>
-            <SelectItem value="PROCESSING">Processando (legado)</SelectItem>
             <SelectItem value="AUTHORIZED">Autorizada</SelectItem>
             <SelectItem value="REJECTED">Rejeitada</SelectItem>
             <SelectItem value="ERROR">Erro</SelectItem>
@@ -254,19 +245,13 @@ const NfseListPage = () => {
             </Table>
           </div>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Página {page} de {totalPages} ({data?.total || 0} registros)
+              Mostrando apenas a última emissão visível no quadro.
             </span>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <span className="text-sm text-muted-foreground">
+              Histórico preservado: {data?.total || 0} registro(s).
+            </span>
           </div>
         </>
       )}
