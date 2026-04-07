@@ -16,9 +16,6 @@ import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
-// Mantemos o histórico no backend; abrimos 1 dia para trás por causa do corte em UTC,
-// mas continuamos exibindo apenas a última emissão visível no quadro.
-const NFSE_LIST_DATE_FROM = '2026-03-25';
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
 
@@ -44,7 +41,6 @@ const NfseListPage = () => {
       limit,
       status,
       provider,
-      dateFrom: NFSE_LIST_DATE_FROM,
       sort: 'createdAt',
       order: 'DESC',
     }),
