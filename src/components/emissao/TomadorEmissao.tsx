@@ -200,6 +200,9 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
     !tomadorExistente &&
     !data.cnpjCpf.trim() &&
     !data.nomeRazaoSocial.trim();
+  const selectorButtonClass = shouldPulseSelector
+    ? 'border-[hsl(144,72%,28%)] bg-[hsl(144,72%,28%)] text-white ring-2 ring-[hsl(144,72%,28%)]/35 shadow-[0_0_0_4px_rgba(20,123,61,0.18)] motion-safe:animate-[pulse_0.85s_ease-in-out_infinite]'
+    : 'border-[hsl(144,72%,28%)] text-[hsl(144,72%,28%)] hover:bg-[hsl(144,72%,28%)]/10';
 
   const selecionarTomador = (t: Tomador) => {
     lastFetchedCnpj.current = t.cpfCnpj.replace(/\D/g, '');
@@ -286,7 +289,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
           <button
             type="button"
             onClick={() => setShowDropdown((prev) => !prev)}
-            className={`flex items-center gap-1 text-[11px] py-1 px-2 rounded-md border border-[hsl(144,72%,28%)] text-[hsl(144,72%,28%)] hover:bg-[hsl(144,72%,28%)]/10 transition-colors font-bold ${shouldPulseSelector ? 'motion-safe:animate-pulse shadow-[0_0_0_1px_rgba(20,123,61,0.18)]' : ''}`}
+            className={`flex items-center gap-1 text-[11px] py-1 px-2 rounded-md border transition-colors font-bold ${selectorButtonClass}`}
           >
             <Search className="w-3.5 h-3.5" />
             Selecione ({tomadoresView.length})
