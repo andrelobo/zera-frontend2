@@ -188,7 +188,7 @@ describe('new API flows', () => {
     const result = await nfseApi.list({ provider: 'PLUGNOTAS', page: 3, limit: 5 });
 
     expect(mockGet).toHaveBeenCalledWith('/nfse', {
-      params: { provider: 'plugnotas', page: 3, limit: 5 },
+      params: { provider: 'PLUGNOTAS', page: 3, limit: 5 },
     });
     expect(result).toEqual({
       data: [{ id: 'n1', status: 'PENDING' }],
