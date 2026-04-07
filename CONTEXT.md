@@ -27,6 +27,54 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-07) - tomador, observabilidade admin, prestador e navegação
+Fonte: `codigo local` + `testes locais` + `build local` + `direcionamento explicito do P.O`.
+
+Leitura consolidada:
+- a rodada recente voltou a privilegiar mudanca pequena, visivel e verificavel
+- o mantra operacional continua sendo:
+  - sem quebrar
+  - sem regredir
+  - uma coisa de cada vez
+
+Tomadores - cadastro:
+- `Nome Fantasia` e `Suframa` foram removidos da interface do cadastro de tomador
+- a remocao foi feita sem limpeza agressiva de payload legado
+- `Inscricao Municipal` e `Inscricao Estadual` passaram a fazer parte do formulario, com a regra:
+  - aparecem ao lado de `CNPJ/CPF`
+  - permanecem visiveis apenas em contexto de `CNPJ`
+  - somem automaticamente quando o documento entra em contexto de `CPF`
+
+Emissao - Tomador:
+- o botao `Selecione (n)` do card `Tomador(a)` recebeu destaque visual mais forte
+- a animacao nao ficou permanente; ela so aparece quando a selecao ainda esta pendente e o card segue vazio
+- a leitura correta e:
+  - trata-se de chamada operacional guiada pelo P.O
+  - nao e nova regra fiscal
+
+Observabilidade interna:
+- entrou acesso admin-only para `Observabilidade Fiscal`
+- o atalho fica no menu do usuario, acima de `Sair`
+- a tela passou a ser a referencia visual do frontend para:
+  - diagnostico do webhook
+  - consulta por `externalId`
+  - leitura de `timeline`
+  - comparacao pratica entre `webhook` e `polling`
+
+Prestador - Regime Tributario:
+- a aba `Regime Tributario` passou a mostrar tambem o card:
+  - `Prestacao de servicos, exceto para o exterior.`
+- o card foi reaproveitado do componente ja existente na emissao, evitando divergencia desnecessaria
+
+Navegacao:
+- `Gestor AI` saiu do menu lateral enquanto a frente sera retrabalhada
+- a rota/pagina nao foi apagada; apenas saiu da navegacao principal
+
+Leitura operacional correta do frontend hoje:
+- a base continua produtiva
+- as mudancas recentes sao de UX e operacao interna
+- nao houve remodelagem ampla de contrato nem refactor estrutural
+
 ## 0. Atualizacao de Contexto (2026-03-25) - tomador CPF, `cadastropf` e criterio real de adocao
 Fonte: `codigo local` + `documentacao oficial do fornecedor` + `portal legacy do fornecedor` + `retorno do suporte` + `teste real manual`.
 

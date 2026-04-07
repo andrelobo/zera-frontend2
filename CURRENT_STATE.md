@@ -1,6 +1,55 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **25/03/2026**.
+Snapshot operacional do frontend em **07/04/2026**.
+
+## 0. Atualizacao rapida (07/04/2026) - tomadores, observabilidade admin, prestador e emissao
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- a rodada recente foi pequena e cirurgica
+- o frontend recebeu ajustes em:
+  - cadastro de tomadores
+  - menu/operacao interna
+  - card de regime tributario do prestador
+  - chamada visual de selecao pendente na emissao
+
+Tomadores - cadastro:
+- `Nome Fantasia` e `Suframa` foram removidos da interface
+- `Inscricao Municipal` e `Inscricao Estadual` agora existem no formulario
+- regra vigente:
+  - aparecem ao lado de `CNPJ/CPF`
+  - so aparecem para `CNPJ`
+  - somem para `CPF`
+
+Observabilidade Fiscal:
+- entrou tela admin-only acessivel pelo menu do usuario
+- a tela consulta:
+  - `GET /nfse/webhook/diagnostico`
+  - `GET /nfse/external/:externalId/observability`
+- no frontend, ela virou a fonte de verdade visual para:
+  - `Segredo`
+  - `Header`
+  - `Polling Fallback`
+  - `Sync Autorizado`
+  - `timeline` da emissao
+
+Prestador:
+- a aba `Regime Tributario` passou a mostrar o card:
+  - `Prestacao de servicos, exceto para o exterior.`
+
+Menu lateral:
+- `Gestor AI` foi ocultado da navegacao lateral
+- a pagina continua existindo internamente
+
+Emissao:
+- o seletor de tomador `Selecione (n)` agora recebe destaque forte quando a selecao ainda esta pendente
+- a animacao para assim que o tomador deixa de estar pendente
+
+Regra operacional consolidada desta rodada:
+1. sem quebrar
+2. sem regressao
+3. uma coisa de cada vez
 
 ## 0. Atualizacao rapida (25/03/2026) - tomador CPF e validacao real do `cadastropf`
 
