@@ -151,4 +151,29 @@ describe('TomadorSection UI', () => {
     expect(screen.getByRole('button', { name: 'Sim' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Não' })).toBeInTheDocument();
   });
+
+  it('shows inscricoes for CNPJ and hides them when CPF is typed', () => {
+    const Harness = () => {
+      const [data, setData] = useState(baseTomador());
+
+      return (
+        <TomadorSection
+          data={data}
+          onChange={setData}
+          onAutosave={vi.fn()}
+        />
+      );
+    };
+
+    render(<Harness />);
+
+    expect(screen.getByPlaceholderText('Inscrição municipal')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Inscrição estadual')).toBeInTheDocument();
+
+    const docInput = screen.getByPlaceholderText('00.000.000/0000-00');
+    fireEvent.change(docInput, { target: { value: '61020788100' } });
+
+    expect(screen.queryByPlaceholderText('Inscrição municipal')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Inscrição estadual')).not.toBeInTheDocument();
+  });
 });

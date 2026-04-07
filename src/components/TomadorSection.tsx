@@ -297,6 +297,29 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         </div>
       </div>
 
+      {!currentIsCPF && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="field-label">Inscrição Municipal</label>
+            <input
+              className="field-input"
+              placeholder="Inscrição municipal"
+              value={data.inscricaoMunicipal}
+              onChange={(e) => update('inscricaoMunicipal', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="field-label">Inscrição Estadual</label>
+            <input
+              className="field-input"
+              placeholder="Inscrição estadual"
+              value={data.inscricaoEstadual}
+              onChange={(e) => update('inscricaoEstadual', e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-1' : 'md:grid-cols-[1fr_auto]'} gap-4 mt-4 items-end`}>
         <div>
           <label className="field-label">TOMADOR(A)</label>
