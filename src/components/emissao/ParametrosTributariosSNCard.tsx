@@ -8,9 +8,9 @@ interface Props {
 }
 
 const PARAMETROS = [
-  'Nao sujeitos ao fator "r" e tributados pelo Anexo III, sem retencao/substituicao tributaria de ISS, com ISS devido a outro(s) Municipio(s).',
-  'Nao sujeitos ao fator "r" e tributados pelo Anexo III, sem retencao/substituicao tributaria de ISS, com ISS devido ao proprio Municipio do estabelecimento.',
-  'Nao sujeitos ao fator "r" e tributados pelo Anexo III, com retencao/substituicao tributaria de ISS.',
+  'Não sujeitos ao fator "r" e tributados pelo Anexo III, sem retenção/substituição tributária de ISS, com ISS devido a outro(s) Município(s).',
+  'Não sujeitos ao fator "r" e tributados pelo Anexo III, sem retenção/substituição tributária de ISS, com ISS devido ao próprio Município do estabelecimento.',
+  'Não sujeitos ao fator "r" e tributados pelo Anexo III, com retenção/substituição tributária de ISS.',
 ];
 
 const ParametrosTributariosSNCard: React.FC<Props> = ({ value, disabled = false }) => {
@@ -27,7 +27,7 @@ const ParametrosTributariosSNCard: React.FC<Props> = ({ value, disabled = false 
       >
         <h2 className="section-title text-sm mb-0 flex items-center gap-1.5">
           <Scale className="w-4 h-4 text-primary" />
-          Prestacao de servicos, exceto para o exterior.
+          Prestação de serviços, exceto para o exterior.
         </h2>
         <ChevronDown
           className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
@@ -39,7 +39,7 @@ const ParametrosTributariosSNCard: React.FC<Props> = ({ value, disabled = false 
           <div className="flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <span className="text-[10px] text-muted-foreground">
-              Regra automatica na emissao da nfse por tomador e local.
+              Regra automática na emissão da nfse por tomador e local.
             </span>
           </div>
           <ul className="space-y-1.5">

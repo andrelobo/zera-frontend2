@@ -12,6 +12,7 @@ import CTNSection, { type CnaeAdicionado } from '@/components/CTNSection';
 import SimplesNacionalSection from '@/components/SimplesNacionalSection';
 import CNAESection, { type CNAEAtividade } from '@/components/CNAESection';
 import TabelaAnexoIII from '@/components/TabelaAnexoIII';
+import ParametrosTributariosSNCard from '@/components/emissao/ParametrosTributariosSNCard';
 import EmpresaCard from '@/components/prestador/EmpresaCard';
 import EnderecoCard from '@/components/prestador/EnderecoCard';
 import ContatoCard from '@/components/prestador/ContatoCard';
@@ -1497,6 +1498,8 @@ const EmpresaFormPage = () => {
             {regimeTela === 'simples' && (
               <TabelaAnexoIII faixaAtual={simplesCalculo.faixa?.faixa ?? null} />
             )}
+
+            {regimeTela === 'simples' && <ParametrosTributariosSNCard />}
 
             <div className="flex justify-end pt-2">
               <button
