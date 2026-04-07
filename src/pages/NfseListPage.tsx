@@ -16,7 +16,8 @@ import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
-const NFSE_LIST_DATE_FROM = '2026-02-01';
+// Mantemos o histórico no backend; a listagem operacional começa em 27/03/2026.
+const NFSE_LIST_DATE_FROM = '2026-03-27';
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
 
