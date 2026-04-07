@@ -282,7 +282,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         Tomadores
       </h2>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-1' : 'md:grid-cols-3'} gap-4`}>
         <div>
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
           <div className="flex gap-2">
@@ -295,30 +295,29 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
             </p>
           )}
         </div>
+        {!currentIsCPF && (
+          <>
+            <div>
+              <label className="field-label">Inscrição Municipal</label>
+              <input
+                className="field-input"
+                placeholder="Inscrição municipal"
+                value={data.inscricaoMunicipal}
+                onChange={(e) => update('inscricaoMunicipal', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label">Inscrição Estadual</label>
+              <input
+                className="field-input"
+                placeholder="Inscrição estadual"
+                value={data.inscricaoEstadual}
+                onChange={(e) => update('inscricaoEstadual', e.target.value)}
+              />
+            </div>
+          </>
+        )}
       </div>
-
-      {!currentIsCPF && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="field-label">Inscrição Municipal</label>
-            <input
-              className="field-input"
-              placeholder="Inscrição municipal"
-              value={data.inscricaoMunicipal}
-              onChange={(e) => update('inscricaoMunicipal', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="field-label">Inscrição Estadual</label>
-            <input
-              className="field-input"
-              placeholder="Inscrição estadual"
-              value={data.inscricaoEstadual}
-              onChange={(e) => update('inscricaoEstadual', e.target.value)}
-            />
-          </div>
-        </div>
-      )}
 
       <div className={`grid grid-cols-1 ${currentIsCPF ? 'md:grid-cols-1' : 'md:grid-cols-[1fr_auto]'} gap-4 mt-4 items-end`}>
         <div>
