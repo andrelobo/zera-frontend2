@@ -107,6 +107,18 @@ const splitLocalidadeUf = (value: string) => {
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
+type FavoritoEmissao = {
+  codigo: string;
+  cnaeDescricao: string;
+  lc116Item: string;
+  vinculos: {
+    ctn?: string;
+    ctnDescricao?: string;
+    nbs?: string;
+    nbsDescricao?: string;
+  }[];
+};
+
 const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   if (!empresa) return INITIAL_PRESTADOR;
   const endereco = empresa.endereco || {};
@@ -128,6 +140,35 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
     email: String(empresa.email || '').trim(),
     whatsapp: formatPhone(String(empresa.whatsapp || empresa.fone || '').trim()),
   };
+};
+
+export const mapFavoritosTomador = (
+  tomadorServicos: Array<{ codigoServico: string; descricaoServico: string }>,
+): FavoritoEmissao[] =>
+  tomadorServicos.map((item) => ({
+    codigo: item.codigoServico,
+    cnaeDescricao: item.descricaoServico,
+    lc116Item: '',
+    vinculos: [
+      {
+        ctn: item.codigoServico,
+        ctnDescricao: String(getCTNByCode(item.codigoServico)?.descricao || item.descricaoServico || '').trim(),
+      },
+    ],
+  }));
+
+export const combineFavoritosEmissao = (
+  favoritosPrestador: FavoritoEmissao[],
+  favoritosTomador: FavoritoEmissao[],
+): FavoritoEmissao[] => {
+  const seen = new Set<string>();
+  return [...favoritosPrestador, ...favoritosTomador].filter((item) => {
+    const key = item.codigo.replace(/\D/g, '').slice(0, 6);
+    if (!key) return false;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 };
 
 const NfseEmitPage: React.FC = () => {
@@ -213,27 +254,11 @@ const NfseEmitPage: React.FC = () => {
   }, [empresaAtual, empresaQuery.isSuccess, favoritos.length, listaServico.length]);
 
   const favoritosTomador = useMemo(() => {
-    return tomadorServicos.map((item) => ({
-      codigo: item.codigoServico,
-      cnaeDescricao: `[Tomador] ${item.descricaoServico}`,
-      lc116Item: '',
-      vinculos: [{
-        ctn: item.codigoServico,
-        ctnDescricao: String(getCTNByCode(item.codigoServico)?.descricao || item.descricaoServico || '').trim(),
-      }],
-    }));
+    return mapFavoritosTomador(tomadorServicos);
   }, [tomadorServicos]);
 
   const favoritosCombinados = useMemo(() => {
-    const seen = new Set<string>();
-    const combined = [...favoritosTomador, ...favoritos].filter((item) => {
-      const key = item.codigo.replace(/\D/g, '').slice(0, 6);
-      if (!key) return false;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-    return combined;
+    return combineFavoritosEmissao(favoritos, favoritosTomador);
   }, [favoritosTomador, favoritos]);
 
   const valores = useMemo(() => {
