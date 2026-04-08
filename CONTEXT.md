@@ -27,6 +27,43 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-07) - quadro de emissoes e filtro de provedor
+Fonte: `codigo local` + `teste funcional manual` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- a listagem de NFSe ganhou uma leitura operacional mais controlada para apresentacao/revisao
+- a direcao do P.O para esta rodada foi:
+  - nao apagar historico
+  - limpar visualmente o quadro
+  - deixar apenas uma emissao visivel para avaliacao do designer
+
+Mudanca aplicada na listagem:
+- a tela de `Notas Fiscais` passou a exibir apenas a ultima emissao visivel no quadro
+- a paginacao foi retirada dessa visao amostral
+- o historico permanece preservado no backend e continua disponivel para uso futuro, inclusive por IA
+- a tela passou a explicitar isso visualmente:
+  - mostra apenas a ultima emissao
+  - informa que o historico segue preservado
+
+Correcao critica descoberta na rodada:
+- o filtro de `Provedor` estava com bug real
+- ao selecionar `PlugNotas`, o frontend enviava `plugnotas` minusculo
+- a listagem/contrato trabalhava com `PLUGNOTAS`
+- efeito observado:
+  - o quadro podia ficar vazio mesmo quando a emissao era da propria PlugNotas
+
+Correcao aplicada:
+- o frontend deixou de normalizar `provider` para minusculas ao listar NFSe
+- a selecao `PlugNotas` voltou a casar corretamente com emissoes reais do provider
+
+Leitura operacional correta:
+- o vazio observado no quadro nao era apenas falta de emissao ou recorte temporal
+- havia bug de filtro no frontend
+- a visao correta agora e:
+  - ultima emissao visivel no quadro
+  - historico preservado
+  - filtro `PlugNotas` coerente com o backend
+
 ## 0. Atualizacao de Contexto (2026-04-07) - tomador, observabilidade admin, prestador e navegação
 Fonte: `codigo local` + `testes locais` + `build local` + `direcionamento explicito do P.O`.
 

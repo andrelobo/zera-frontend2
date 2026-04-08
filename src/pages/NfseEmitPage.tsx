@@ -11,7 +11,6 @@ import ParametrosTributariosSNCard from '@/components/emissao/ParametrosTributar
 import ValoresTotaisSection from '@/components/emissao/ValoresTotaisSection';
 import DANFSePrint from '@/components/emissao/DANFSePrint';
 import { formatCNPJ, formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
-import { getCTNByCode } from '@/utils/ctn-data';
 import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
@@ -107,18 +106,6 @@ const splitLocalidadeUf = (value: string) => {
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
-type FavoritoEmissao = {
-  codigo: string;
-  cnaeDescricao: string;
-  lc116Item: string;
-  vinculos: {
-    ctn?: string;
-    ctnDescricao?: string;
-    nbs?: string;
-    nbsDescricao?: string;
-  }[];
-};
-
 const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   if (!empresa) return INITIAL_PRESTADOR;
   const endereco = empresa.endereco || {};
@@ -142,35 +129,6 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   };
 };
 
-export const mapFavoritosTomador = (
-  tomadorServicos: Array<{ codigoServico: string; descricaoServico: string }>,
-): FavoritoEmissao[] =>
-  tomadorServicos.map((item) => ({
-    codigo: item.codigoServico,
-    cnaeDescricao: item.descricaoServico,
-    lc116Item: '',
-    vinculos: [
-      {
-        ctn: item.codigoServico,
-        ctnDescricao: String(getCTNByCode(item.codigoServico)?.descricao || item.descricaoServico || '').trim(),
-      },
-    ],
-  }));
-
-export const combineFavoritosEmissao = (
-  favoritosPrestador: FavoritoEmissao[],
-  favoritosTomador: FavoritoEmissao[],
-): FavoritoEmissao[] => {
-  const seen = new Set<string>();
-  return [...favoritosPrestador, ...favoritosTomador].filter((item) => {
-    const key = item.codigo.replace(/\D/g, '').slice(0, 6);
-    if (!key) return false;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -178,7 +136,6 @@ const NfseEmitPage: React.FC = () => {
   const [tomador, setTomador] = useState<TomadorEmissaoData>(INITIAL_TOMADOR);
   const [prestacao, setPrestacao] = useState<PrestacaoServicoData>(INITIAL_PRESTACAO);
   const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({ pais: 'Brasil', uf: 'AM', municipio: 'Manaus' });
-  const [tomadorServicos, setTomadorServicos] = useState<Array<{ codigoServico: string; descricaoServico: string }>>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [tomadorSubstituto, setTomadorSubstituto] = useState(false);
   const [referenciaExterna] = useState(buildReferencia());
@@ -252,14 +209,6 @@ const NfseEmitPage: React.FC = () => {
       });
     }
   }, [empresaAtual, empresaQuery.isSuccess, favoritos.length, listaServico.length]);
-
-  const favoritosTomador = useMemo(() => {
-    return mapFavoritosTomador(tomadorServicos);
-  }, [tomadorServicos]);
-
-  const favoritosCombinados = useMemo(() => {
-    return combineFavoritosEmissao(favoritos, favoritosTomador);
-  }, [favoritosTomador, favoritos]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
@@ -343,14 +292,6 @@ const NfseEmitPage: React.FC = () => {
       localidadeUf: [municipio, uf].filter(Boolean).join(' - '),
       pais: 'Brasil',
     }));
-    setTomadorServicos(
-      (t.servicos || [])
-        .map((item) => ({
-          codigoServico: item.codigoServico?.replace(/\D/g, '').slice(0, 6) || '',
-          descricaoServico: item.descricaoServico || '',
-        }))
-        .filter((item) => item.codigoServico && item.descricaoServico),
-    );
   }, [empresaTributacao, localPrestacao.municipio, localPrestacao.uf]);
 
   const handleEmitir = async () => {
@@ -472,14 +413,7 @@ const NfseEmitPage: React.FC = () => {
 
         <TomadorEmissao
           data={tomador}
-          onChange={(next) => {
-            const previousDoc = tomador.cnpjCpf.replace(/\D/g, '');
-            const nextDoc = next.cnpjCpf.replace(/\D/g, '');
-            if (previousDoc !== nextDoc) {
-              setTomadorServicos([]);
-            }
-            setTomador(next);
-          }}
+          onChange={setTomador}
           onTomadorSelecionado={handleTomadorSelecionado}
           tomadores={tomadoresQuery.data || []}
           loadingTomadores={tomadoresQuery.isLoading}
@@ -493,7 +427,7 @@ const NfseEmitPage: React.FC = () => {
           mostrarRetencoesFederais={true}
           optanteSimples={Boolean(empresaAtual?.opcaoPeloSimples)}
           tomadorSubstituto={tomadorSubstituto}
-          favoritos={favoritosCombinados}
+          favoritos={favoritos}
           listaServico={listaServico}
         />
 

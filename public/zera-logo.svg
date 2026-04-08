@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 90" role="img" aria-labelledby="title desc">
+  <title id="title">ZERA Logo</title>
+  <desc id="desc">Logo completo da marca ZERA com simbolo em verde agua e dourado acompanhado do nome ZERA em azul.</desc>
+  <defs>
+    <linearGradient id="zera-teal" x1="20" y1="10" x2="60" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#36C7B6" />
+      <stop offset="100%" stop-color="#20B7A5" />
+    </linearGradient>
+    <linearGradient id="zera-amber" x1="60" y1="12" x2="102" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F0C46A" />
+      <stop offset="100%" stop-color="#E2B04F" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(0 5)">
+    <circle cx="42" cy="40" r="24" fill="none" stroke="url(#zera-teal)" stroke-width="11" />
+    <circle cx="78" cy="40" r="24" fill="none" stroke="url(#zera-amber)" stroke-width="11" />
+    <path d="M58 55 L66 48 L67 60 Z" fill="#20B7A5" />
+    <path d="M62 25 L54 32 L53 20 Z" fill="#E2B04F" />
+    <circle cx="60" cy="40" r="12" fill="#F8FAFC" />
+    <text
+      x="60"
+      y="45"
+      text-anchor="middle"
+      font-size="22"
+      font-weight="700"
+      fill="#2663D9"
+      font-family="Inter, system-ui, sans-serif"
+    >
+      0
+    </text>
+  </g>
+
+  <text
+    x="128"
+    y="57"
+    font-size="40"
+    font-weight="900"
+    letter-spacing="2"
+    fill="#2663D9"
+    font-family="Inter, system-ui, sans-serif"
+  >
+    ZERA
+  </text>
+</svg>

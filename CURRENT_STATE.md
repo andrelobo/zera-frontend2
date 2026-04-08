@@ -2,6 +2,31 @@
 
 Snapshot operacional do frontend em **07/04/2026**.
 
+## 0. Atualizacao rapida (07/04/2026) - listagem de NFSe reduzida e filtro `PlugNotas` corrigido
+
+Fonte: `codigo local` + `teste funcional manual` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- a tela `Notas Fiscais` entrou em modo de quadro reduzido
+- o objetivo desta rodada foi deixar apenas uma emissao visivel para avaliacao de layout/comentarios, sem apagar historico
+
+Estado atual da listagem:
+- mostra apenas a ultima emissao visivel
+- nao depende mais de corte por data para decidir qual emissao aparece
+- a paginacao foi removida dessa visao
+- a tela informa que o historico permanece preservado
+
+Bug corrigido na mesma frente:
+- o filtro `PlugNotas` estava enviando `provider` em minusculas
+- isso quebrava o casamento com o backend e podia esconder emissões reais da propria PlugNotas
+- agora o filtro envia `PLUGNOTAS` corretamente
+
+Leitura operacional correta:
+1. historico nao foi apagado
+2. o quadro foi reduzido visualmente para uma unica emissao
+3. o filtro por provedor voltou a refletir o provider real das notas
+4. se a lista ficar vazia com `PlugNotas`, a leitura automatica anterior de "nao ha emissao" ja nao vale como padrao
+
 ## 0. Atualizacao rapida (07/04/2026) - tomadores, observabilidade admin, prestador e emissao
 
 Fonte: `codigo local` + `testes locais` + `build local`.
