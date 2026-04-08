@@ -27,6 +27,38 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-08) - favoritos do prestador isolados e refresh de emissao alinhado ao webhook rapido
+Fonte: `codigo local` + `observacao funcional real`.
+
+Leitura consolidada:
+- o comportamento anterior de `Servicos Favoritos` na `Nova DANFSE` estava semanticamente impreciso:
+  - a UI parecia prometer "favoritos do prestador"
+  - mas, em alguns casos como o tomador `Andre`, a lista tambem misturava historico salvo no tomador
+- isso explicava a aparicao de servicos antigos nao mais cadastrados no prestador
+
+Correcao aplicada:
+- o select `Servicos Favoritos` passou a refletir apenas o cadastro atual do prestador
+- o historico de servicos do tomador deixou de contaminar essa lista
+- o rotulo visual `[Tomador]` foi removido, porque ele induzia a leitura errada do componente
+
+Leitura correta dessa tela a partir de agora:
+- `Servicos Favoritos` = favoritos do prestador
+- historico do tomador permanece um dado legado do backend, mas nao deve dirigir esse select
+
+Atualizacao adicional da mesma rodada:
+- com o webhook homologado no backend, a conclusao de algumas emissoes passou a acontecer em poucos segundos
+- isso revelou um detalhe de UX:
+  - a navegacao para `/nfse` podia reaproveitar cache recente e exigir refresh manual para o usuario perceber a nova emissao imediatamente
+- correcao aplicada:
+  - `Nova DANFSE` e `Emissao Rapida` agora invalidam queries `nfse` antes de navegar para a listagem
+
+Leitura operacional correta:
+1. nao houve mudanca de fluxo fiscal
+2. nao houve mudanca de calculo
+3. houve apenas:
+  - saneamento semantico do select de favoritos
+  - reforco de sincronizacao visual da listagem apos emissao
+
 ## 0. Atualizacao de Contexto (2026-04-07) - quadro de emissoes e filtro de provedor
 Fonte: `codigo local` + `teste funcional manual` + `testes locais` + `build local`.
 

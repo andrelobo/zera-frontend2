@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, AlertCircle, Loader2, FileOutput, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import PrestadorSection from '@/components/emissao/PrestadorSection';
 import TomadorEmissao, { INITIAL_TOMADOR, type TomadorEmissaoData } from '@/components/emissao/TomadorEmissao';
@@ -131,6 +131,7 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
 
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [prestador, setPrestador] = useState<PrestadorData>(INITIAL_PRESTADOR);
   const [tomador, setTomador] = useState<TomadorEmissaoData>(INITIAL_TOMADOR);
@@ -257,7 +258,8 @@ const NfseEmitPage: React.FC = () => {
 
   const emitMutation = useMutation({
     mutationFn: (payload: EmitirNfseRequest) => nfseApi.emitir(payload),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ['nfse'] });
       toast({ title: 'NFSe enviada', description: `Emissão: ${result.emissionId}. Acompanhe o status na listagem.` });
       navigate('/nfse');
     },

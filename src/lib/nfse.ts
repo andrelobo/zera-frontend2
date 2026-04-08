@@ -15,7 +15,7 @@ export const getNfseTomadorNome = (nfse: Nfse): string => {
 };
 
 export const getNfseTomadorDocumento = (nfse: Nfse): string => {
-  return nfse.tomadorCnpjCpf || nfse.tomador?.cpfCnpj || '—';
+  return nfse.tomadorCnpjCpf || (nfse as Nfse & { tomadorCpfCnpj?: string | null }).tomadorCpfCnpj || nfse.tomador?.cpfCnpj || '—';
 };
 
 export const getNfseCodigoServico = (nfse: Nfse): string => {

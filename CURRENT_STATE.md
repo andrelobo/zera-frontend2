@@ -2,6 +2,34 @@
 
 Snapshot operacional do frontend em **07/04/2026**.
 
+## 0. Atualizacao rapida (08/04/2026) - favoritos do prestador isolados e refresh de emissao endurecido
+
+Fonte: `codigo local` + `observacao funcional real em producao` + `build local`.
+
+Leitura consolidada:
+- o select `Servicos Favoritos` da `Nova DANFSE` deixou de misturar historico do tomador com cadastro atual do prestador
+- a regra correta ficou explicita:
+  - esse select deve refletir apenas os favoritos vigentes do prestador
+- isso eliminou o caso em que o tomador `Andre` contaminava a lista com servicos antigos nao mais cadastrados no prestador
+
+Correcao visual/comportamental aplicada:
+- foi removido o rotulo `[Tomador]` dos itens do select
+- o frontend deixou de misturar:
+  - favoritos do prestador
+  - historico `servicos` salvo no tomador
+
+Leitura adicional desta rodada:
+- depois da homologacao real do webhook, uma emissao passou a fechar rapido demais para a UI de listagem acompanhar sem refresh manual
+- por isso, as telas de emissao agora invalidam o cache de `NFSe` logo apos sucesso em:
+  - `Nova DANFSE`
+  - `Emissao Rapida`
+
+Regra operacional correta agora:
+1. `Servicos Favoritos` = cadastro atual do prestador
+2. historico do tomador nao deve contaminar esse select
+3. emissao continua com o mesmo fluxo funcional
+4. o refresh da listagem ficou mais resiliente ao webhook rapido, sem mexer em calculo ou payload
+
 ## 0. Atualizacao rapida (07/04/2026) - listagem de NFSe reduzida e filtro `PlugNotas` corrigido
 
 Fonte: `codigo local` + `teste funcional manual` + `testes locais` + `build local`.

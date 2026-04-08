@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { empresasApi, nfseApi } from '@/services/api';
 import type { ApiError, EmitirNfseQuickResponse } from '@/types/api';
@@ -66,6 +66,7 @@ const getApiError = (error: unknown): ApiError => {
 
 const NfseQuickEmitPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [empresaSearch, setEmpresaSearch] = useState('');
   const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [cnpj, setCnpj] = useState('');
@@ -134,7 +135,8 @@ const NfseQuickEmitPage = () => {
       valor: valorNumber,
       codigoServico: codigoServicoClean,
     }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ['nfse'] });
       setApiError(null);
       setFormError(null);
       setCertRequiredBlock(false);
