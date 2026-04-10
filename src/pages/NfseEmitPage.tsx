@@ -182,6 +182,11 @@ const NfseEmitPage: React.FC = () => {
   const favoritos = useMemo(() => mapFavoritosFromParametroMunicipal(empresaAtual || undefined), [empresaAtual]);
   const listaServicoConfig = useMemo(() => mapListaServicoFromConfig(empresaAtual || undefined), [empresaAtual]);
   const empresaTributacao = useMemo(() => resolveEmpresaTributacao(empresaAtual), [empresaAtual]);
+  const tomadorCadastradoAtual = useMemo(() => {
+    const digits = tomador.cnpjCpf.replace(/\D/g, '');
+    if (digits.length !== 11 && digits.length !== 14) return null;
+    return (tomadoresQuery.data || []).find((item) => item.cpfCnpj.replace(/\D/g, '') === digits) || null;
+  }, [tomador.cnpjCpf, tomadoresQuery.data]);
 
   const listaServico = useMemo<ListaServicoItem[]>(() => {
     return listaServicoConfig;
@@ -199,6 +204,32 @@ const NfseEmitPage: React.FC = () => {
   );
   const parametroIssLabel = useMemo(() => resolveParametroIssLabel(simplesParametroIss), [simplesParametroIss]);
   const showParametroCard = empresaTributacao.optanteSimples && empresaTributacao.simplesAnexo === 'III';
+
+  useEffect(() => {
+    const substituto = Boolean(tomadorCadastradoAtual?.substitutoTributario);
+    setTomadorSubstituto((prev) => (prev === substituto ? prev : substituto));
+    setPrestacao((prev) => {
+      const automation = resolveIssAutomation({
+        ...empresaTributacao,
+        tomadorSubstituto: substituto,
+        localMunicipio: localPrestacao.municipio,
+        localUf: localPrestacao.uf,
+        aliquotaAtual: prev.aliquota,
+      });
+
+      if (
+        prev.issRetido === automation.issRetido &&
+        prev.aliquota === automation.aliquota
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        ...automation,
+      };
+    });
+  }, [empresaTributacao, localPrestacao.municipio, localPrestacao.uf, tomadorCadastradoAtual]);
 
   useEffect(() => {
     if (!empresaAtual) return;
@@ -268,18 +299,6 @@ const NfseEmitPage: React.FC = () => {
   const handleTomadorSelecionado = useCallback((t: Tomador) => {
     const municipio = t.endereco?.municipio || '';
     const uf = (t.endereco?.uf || '').toUpperCase();
-    const substituto = Boolean(t.substitutoTributario);
-    setTomadorSubstituto(substituto);
-    setPrestacao((prev) => ({
-      ...prev,
-      ...resolveIssAutomation({
-        ...empresaTributacao,
-        tomadorSubstituto: substituto,
-        localMunicipio: localPrestacao.municipio,
-        localUf: localPrestacao.uf,
-        aliquotaAtual: prev.aliquota,
-      }),
-    }));
     setTomador((prev) => ({
       ...prev,
       cnpjCpf: formatDoc(t.cpfCnpj || ''),
@@ -294,7 +313,7 @@ const NfseEmitPage: React.FC = () => {
       localidadeUf: [municipio, uf].filter(Boolean).join(' - '),
       pais: 'Brasil',
     }));
-  }, [empresaTributacao, localPrestacao.municipio, localPrestacao.uf]);
+  }, []);
 
   const handleEmitir = async () => {
     const erros = validar();
