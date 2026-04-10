@@ -137,4 +137,32 @@ describe('Tomadores persistence flow', () => {
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['tomador', 'tom-1'] });
     });
   });
+
+  it('preserves substituto tributario when editing cpf tomador', async () => {
+    const cpfTomador = {
+      ...baseTomador,
+      cpfCnpj: '61020788100',
+      substitutoTributario: true,
+    };
+
+    mocks.getTomadorById.mockResolvedValue(cpfTomador);
+
+    renderWithProviders(<TomadorFormPage />, {
+      route: '/tomadores/tom-1',
+      path: '/tomadores/:id',
+    });
+
+    expect(await screen.findByDisplayValue('CLIENTE TESTE LTDA')).toBeInTheDocument();
+    expect(screen.getByText('Substituto Tributário')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Não' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar Tomador' }));
+
+    await waitFor(() => {
+      expect(mocks.updateTomador).toHaveBeenCalledWith(
+        'tom-1',
+        expect.objectContaining({ substitutoTributario: false }),
+      );
+    });
+  });
 });

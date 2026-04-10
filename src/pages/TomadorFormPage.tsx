@@ -78,7 +78,6 @@ const TomadorFormPage = () => {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<TomadorSectionData>(INITIAL_FORM);
-  const [fallbackEmpresaCnpj, setFallbackEmpresaCnpj] = useState('');
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['tomador', id],
@@ -93,15 +92,9 @@ const TomadorFormPage = () => {
   });
 
   const empresaCnpjContext = useMemo(
-    () => (existing?.empresaCnpj || fallbackEmpresaCnpj || '').replace(/\D/g, ''),
-    [existing?.empresaCnpj, fallbackEmpresaCnpj],
+    () => (existing?.empresaCnpj || empresas[0]?.cnpj || '').replace(/\D/g, ''),
+    [empresas, existing?.empresaCnpj],
   );
-
-  useEffect(() => {
-    if (!isEdit && empresas[0]?.cnpj) {
-      setFallbackEmpresaCnpj(empresas[0].cnpj.replace(/\D/g, ''));
-    }
-  }, [empresas, isEdit]);
 
   useEffect(() => {
     if (!existing) return;
@@ -146,14 +139,14 @@ const TomadorFormPage = () => {
       const cpfContext = isCpfContext(form.cnpjCpf);
       const { municipio, uf } = parseLocalidadeUf(form.localidadeUf);
       const payload = {
-        empresaCnpj: fallbackEmpresaCnpj.replace(/\D/g, ''),
+        empresaCnpj: empresaCnpjContext,
         cpfCnpj: form.cnpjCpf.replace(/\D/g, ''),
         razaoSocial: form.nomeEmpresarial.trim(),
         nomeFantasia: cpfContext ? undefined : (form.nomeFantasia || undefined),
         inscricaoMunicipal: cpfContext ? undefined : (form.inscricaoMunicipal || undefined),
         inscricaoEstadual: cpfContext ? undefined : (form.inscricaoEstadual || undefined),
         suframa: cpfContext ? undefined : (form.suframa || undefined),
-        substitutoTributario: cpfContext ? false : form.substitutoTributario,
+        substitutoTributario: form.substitutoTributario,
         email: form.email || undefined,
         whatsapp: form.whatsapp || undefined,
         endereco: {
@@ -230,6 +223,14 @@ const TomadorFormPage = () => {
     }
     if (!form.nomeEmpresarial) {
       toast({ title: 'Dados obrigatórios', description: 'Preencha o nome/razão social.', variant: 'destructive' });
+      return;
+    }
+    if (!isEdit && empresaCnpjContext.length !== 14) {
+      toast({
+        title: 'Empresa indisponível',
+        description: 'Nenhuma empresa ativa foi encontrada para vincular o tomador.',
+        variant: 'destructive',
+      });
       return;
     }
     mutation.mutate();

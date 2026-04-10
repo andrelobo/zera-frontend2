@@ -176,4 +176,18 @@ describe('TomadorSection UI', () => {
     expect(screen.queryByPlaceholderText('Inscrição municipal')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText('Inscrição estadual')).not.toBeInTheDocument();
   });
+
+  it('keeps substituto tributario toggle visible for cpf tomadores', () => {
+    render(
+      <TomadorSection
+        data={{ ...baseTomador(), cnpjCpf: '610.207.881-00' }}
+        onChange={vi.fn()}
+        onAutosave={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Substituto Tributário')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sim' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Não' })).toBeInTheDocument();
+  });
 });
