@@ -54,7 +54,7 @@ const TomadoresPage = () => {
         ? `${tomador.endereco.municipio} - ${tomador.endereco.uf}`
         : undefined,
       email: tomador.email,
-      substitutoTributario: false,
+      substitutoTributario: Boolean(tomador.substitutoTributario),
     })),
     [tomadores],
   );

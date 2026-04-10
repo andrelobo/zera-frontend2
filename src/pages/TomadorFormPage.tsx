@@ -186,6 +186,9 @@ const TomadorFormPage = () => {
     onSuccess: () => {
       toast({ title: isEdit ? 'Tomador atualizado' : 'Tomador cadastrado' });
       queryClient.invalidateQueries({ queryKey: ['tomadores'] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['tomador', id] });
+      }
       navigate('/tomadores');
     },
   });
