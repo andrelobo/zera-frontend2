@@ -1137,6 +1137,9 @@ const EmpresaFormPage = () => {
         camposFaltantesEmissao: empresa.camposFaltantesEmissao,
       });
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa', empresa.id || id] });
+      queryClient.invalidateQueries({ queryKey: ['empresas', 'emit-normal'] });
+      queryClient.removeQueries({ queryKey: ['empresas', 'emit-normal'] });
 
       if (empresa.statusCadastro === 'PENDENTE') {
         const pendenciasGerais = (empresa.camposFaltantes || []).slice(0, 4).map(toCampoLabel);

@@ -159,7 +159,8 @@ const NfseEmitPage: React.FC = () => {
         return picked;
       }
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const empresaAtual = empresaQuery.data ?? null;
