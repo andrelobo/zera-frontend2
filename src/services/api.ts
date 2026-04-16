@@ -152,6 +152,20 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     descricaoCidade: pickString(enderecoRaw.descricaoCidade, enderecoRaw.municipio),
     estado: pickString(enderecoRaw.estado, enderecoRaw.uf),
   };
+  const certificadoRaw = (legacy.certificado as Record<string, unknown> | undefined) ?? {};
+  const certificado = Object.keys(certificadoRaw).length > 0 ? {
+    filename: pickString(certificadoRaw.filename, certificadoRaw.fileName),
+    mimeType: pickString(certificadoRaw.mimeType, certificadoRaw.mime_type),
+    size: (() => {
+      const value = certificadoRaw.size ?? certificadoRaw.fileSize;
+      if (value === null || value === undefined || value === '') return undefined;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    })(),
+    sha256: pickString(certificadoRaw.sha256),
+    uploadedAt: pickString(certificadoRaw.uploadedAt, certificadoRaw.uploaded_at),
+    expiresAt: pickString(certificadoRaw.expiresAt, certificadoRaw.expires_at),
+  } : undefined;
   const hasEndereco = Object.values(endereco).some((value) => value !== undefined && value !== '');
   const simplesSnapshotRaw =
     (legacy.simplesSnapshot as Record<string, unknown> | undefined) ??
@@ -315,6 +329,7 @@ const normalizeEmpresa = (raw: Empresa | Record<string, unknown>): Empresa => {
     parametroMunicipal: pickObjectArray(legacy.parametroMunicipal, legacy.parametro_municipal),
     configOperacionais: pickConfigOperacionais(legacy.configOperacionais, legacy.config_operacionais),
     email: pickString(legacy.email),
+    certificado,
     whatsapp: pickString(legacy.whatsapp, legacy.telefone, legacy.fone, legacy.ddd_telefone_1),
     fone: pickString(legacy.fone, legacy.telefone, legacy.ddd_telefone_1),
     nfseNum: pickString(legacy.nfseNum, legacy.nfse_num),

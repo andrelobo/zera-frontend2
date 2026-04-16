@@ -134,6 +134,14 @@ export interface Empresa {
   serieDpsNum?: string;
   fone?: string;
   email?: string;
+  certificado?: {
+    filename?: string;
+    mimeType?: string;
+    size?: number;
+    sha256?: string;
+    uploadedAt?: string;
+    expiresAt?: string;
+  };
   statusCadastro?: 'PENDENTE' | 'COMPLETO';
   prontoParaEmitir?: boolean;
   percentualCompletude?: number;
