@@ -1409,7 +1409,7 @@ const EmpresaFormPage = () => {
 
             <CertificadoDigitalCard
               cnpj={form.cnpj}
-              certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string; expiresAt?: string } | undefined) ?? null}
+              certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string } | undefined) ?? null}
               onImported={async () => {
                 if (!isEdit) return;
                 await refetchEmpresa();
