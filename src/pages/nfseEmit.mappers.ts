@@ -81,25 +81,28 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
           return { ctn, ctnDescricao, nbs, nbsDescricao };
         })
         .filter((v): v is FavoritoVinculo => Boolean(v));
-      const vinculosCorrigidos = shouldRepairLegacyVinculos(codigo, vinculos)
-        ? getDefaultVinculosForCnae(codigo).map((item) => ({
+      const fallbackCtn = pickFirstString(raw, ['ctn', 'ctnCodigo']);
+      const fallbackNbs = pickFirstString(raw, ['nbs', 'nbsCodigo']);
+      const hasExplicitFallback = Boolean(fallbackCtn || fallbackNbs);
+      const vinculosPadrao = getDefaultVinculosForCnae(codigo);
+      const shouldUseDefaults = vinculos.length === 0
+        ? (!hasExplicitFallback && vinculosPadrao.length > 0)
+        : shouldRepairLegacyVinculos(codigo, vinculos);
+      const vinculosCorrigidos = shouldUseDefaults
+        ? vinculosPadrao.map((item) => ({
             ctn: item.ctn,
             ctnDescricao: item.ctnDescricao || resolveCtnDescricao(item.ctn),
             nbs: item.nbs,
             nbsDescricao: item.nbsDescricao || resolveNbsDescricao(item.nbs),
           }))
         : vinculos;
-      if (vinculosCorrigidos.length === 0) {
-        const fallbackCtn = pickFirstString(raw, ['ctn', 'ctnCodigo']);
-        const fallbackNbs = pickFirstString(raw, ['nbs', 'nbsCodigo']);
-        if (fallbackCtn || fallbackNbs) {
-          vinculosCorrigidos.push({
-            ctn: fallbackCtn || undefined,
-            ctnDescricao: pickFirstString(raw, ['ctnDescricao', 'descricaoCtn']) || undefined,
-            nbs: fallbackNbs || undefined,
-            nbsDescricao: pickFirstString(raw, ['nbsDescricao', 'descricaoNbs']) || undefined,
-          });
-        }
+      if (vinculosCorrigidos.length === 0 && hasExplicitFallback) {
+        vinculosCorrigidos.push({
+          ctn: fallbackCtn || undefined,
+          ctnDescricao: pickFirstString(raw, ['ctnDescricao', 'descricaoCtn']) || undefined,
+          nbs: fallbackNbs || undefined,
+          nbsDescricao: pickFirstString(raw, ['nbsDescricao', 'descricaoNbs']) || undefined,
+        });
       }
       return {
         codigo,

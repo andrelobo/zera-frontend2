@@ -143,6 +143,34 @@ describe('nfseEmit mappers', () => {
     });
   });
 
+  it('uses default vinculos when parametroMunicipal item arrives sem vinculos for known cnae', () => {
+    const empresa = baseEmpresa({
+      parametroMunicipal: [
+        {
+          codigo: '6920601',
+          cnaeDescricao: 'Atividades de contabilidade',
+          vinculos: [],
+        },
+        {
+          codigo: '7319002',
+          cnaeDescricao: 'Promoção de vendas',
+          vinculos: [],
+        },
+      ],
+    });
+
+    const favoritos = mapFavoritosFromParametroMunicipal(empresa);
+    expect(favoritos).toHaveLength(2);
+    expect(favoritos[0]).toEqual(expect.objectContaining({
+      codigo: '6920601',
+      vinculos: [expect.objectContaining({ ctn: '171901', nbs: '1.1302.21.00' })],
+    }));
+    expect(favoritos[1]).toEqual(expect.objectContaining({
+      codigo: '7319002',
+      vinculos: [expect.objectContaining({ ctn: '170601', nbs: '1.1406.11.00' })],
+    }));
+  });
+
   it('maps lista servico from formato atual e ignora residuos legados', () => {
     const empresa = baseEmpresa({
       configOperacionais: [
