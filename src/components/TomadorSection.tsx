@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { Building2, MapPin, Mail, Loader2, FileText, HelpCircle, ExternalLink } from 'lucide-react';
 import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, sanitizeAddressNumber, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
-import { empresasApi } from '@/services/api';
+import { empresasApi, tomadoresApi } from '@/services/api';
 import { lookupCep } from '@/services/cep';
 
 export interface TomadorSectionData {
@@ -70,6 +70,7 @@ const formatSourceLabel = (source?: string) => {
   if (normalized === 'receitaws') return 'ReceitaWS';
   if (normalized === 'brasilapi+receitaws') return 'BrasilAPI + ReceitaWS';
   if (normalized === 'plugnotas') return 'PlugNotas';
+  if (normalized === 'hubdev_cadastropf' || normalized === 'hubdev' || normalized === 'hub_do_desenvolvedor') return 'Hub do Desenvolvedor';
   return source as string;
 };
 
@@ -126,6 +127,40 @@ export function mergeTomadorFromCnpjResult(
   };
 }
 
+export function mergeTomadorFromCpfResult(
+  current: TomadorSectionData,
+  result: {
+    nome?: string;
+    email?: string;
+    whatsapp?: string;
+    telefone?: string;
+    endereco?: {
+      cep?: string;
+      logradouro?: string;
+      numero?: string;
+      complemento?: string;
+      bairro?: string;
+      municipio?: string;
+      uf?: string;
+    };
+  },
+): TomadorSectionData {
+  return {
+    ...current,
+    nomeEmpresarial: result.nome || current.nomeEmpresarial,
+    cep: result.endereco?.cep ? formatCEP(result.endereco.cep) : current.cep,
+    logradouro: result.endereco?.logradouro ? normalizeLogradouro(result.endereco.logradouro) : current.logradouro,
+    numero: result.endereco?.numero || current.numero,
+    complemento: result.endereco?.complemento || current.complemento,
+    bairro: result.endereco?.bairro || current.bairro,
+    localidadeUf: result.endereco?.municipio && result.endereco?.uf
+      ? `${result.endereco.municipio} - ${result.endereco.uf}`
+      : current.localidadeUf,
+    email: result.email || current.email,
+    whatsapp: result.whatsapp ? formatPhone(result.whatsapp) : result.telefone ? formatPhone(result.telefone) : current.whatsapp,
+  };
+}
+
 export function mergeTomadorFromCepResult(
   current: TomadorSectionData,
   result: {
@@ -166,6 +201,11 @@ async function fetchCNPJData(cnpj: string) {
   };
 }
 
+async function fetchCpfData(cpf: string) {
+  const cleaned = cpf.replace(/\D/g, '');
+  return tomadoresApi.lookupCpf(cleaned);
+}
+
 async function fetchCEPData(cep: string) {
   const data = await lookupCep(cep);
   return {
@@ -178,11 +218,14 @@ async function fetchCEPData(cep: string) {
 
 const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
+  const [loadingCPF, setLoadingCPF] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
   const [lookupSource, setLookupSource] = useState<string>('');
   const lastFetchedCNPJ = useRef('');
+  const lastFetchedCPF = useRef('');
   const lastFetchedCEP = useRef('');
   const cnpjRequestSeq = useRef(0);
+  const cpfRequestSeq = useRef(0);
   const cepRequestSeq = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -227,6 +270,53 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     }
   }, [onChange, onAutosave]);
 
+  const buscarCPF = useCallback(async (cpfValue: string) => {
+    const cleaned = cpfValue.replace(/\D/g, '');
+    if (cleaned.length !== 11 || !validateCPF(cleaned)) return;
+    if (lastFetchedCPF.current === cleaned) return;
+    lastFetchedCPF.current = cleaned;
+    const requestId = ++cpfRequestSeq.current;
+    setLoadingCPF(true);
+    try {
+      const result = await fetchCpfData(cleaned);
+      if (requestId !== cpfRequestSeq.current) return;
+      if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
+      setLookupSource(result.source || '');
+
+      if (!result.found) {
+        toast.error('CPF não encontrado na consulta externa.');
+        return;
+      }
+
+      if (!result.usefulData) {
+        toast.error('CPF encontrado, mas os dados vieram ofuscados por LGPD.');
+        return;
+      }
+
+      let updated = mergeTomadorFromCpfResult(dataRef.current, result);
+      onChange(updated);
+      onAutosave();
+      toast.success('Dados do CPF preenchidos automaticamente!');
+
+      const cepClean = (result.endereco?.cep || '').replace(/\D/g, '');
+      if (cepClean.length === 8 && (!result.endereco?.logradouro && !result.endereco?.bairro)) {
+        lastFetchedCEP.current = '';
+        const cepResult = await fetchCEPData(cepClean);
+        if (requestId !== cpfRequestSeq.current) return;
+        if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
+        updated = mergeTomadorFromCepResult(updated, cepResult);
+        onChange(updated);
+        onAutosave();
+      }
+    } catch {
+      toast.error('Não foi possível consultar o CPF.');
+    } finally {
+      if (requestId === cpfRequestSeq.current) {
+        setLoadingCPF(false);
+      }
+    }
+  }, [onChange, onAutosave]);
+
   const buscarCEP = useCallback(async (cepValue: string) => {
     const cleaned = cepValue.replace(/\D/g, '');
     if (cleaned.length !== 8) return;
@@ -257,13 +347,23 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     const docChanged = previousDigits !== cleaned;
     if (docChanged) {
       lastFetchedCNPJ.current = '';
+      lastFetchedCPF.current = '';
       cnpjRequestSeq.current += 1;
+      cpfRequestSeq.current += 1;
+      setLoadingCNPJ(false);
+      setLoadingCPF(false);
       setLookupSource('');
     }
     const base = docChanged ? clearAutofillFields(data) : data;
     onChange({ ...base, cnpjCpf: formatted });
     onAutosave();
-    if (cleaned.length === 14) buscarCNPJ(formatted);
+    if (cleaned.length === 14) {
+      buscarCNPJ(formatted);
+      return;
+    }
+    if (cleaned.length === 11 && validateCPF(cleaned)) {
+      buscarCPF(formatted);
+    }
   };
 
   const handleCEPChange = (value: string) => {
@@ -287,7 +387,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
           <label className="field-label flex items-center gap-1"><FileText className="w-3.5 h-3.5" />CNPJ/CPF*</label>
           <div className="flex gap-2">
             <input className="field-input" placeholder="00.000.000/0000-00" value={data.cnpjCpf} onChange={(e) => handleCNPJCPFChange(e.target.value)} maxLength={18} />
-            {loadingCNPJ && <div className="flex items-center px-2"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>}
+            {(loadingCNPJ || loadingCPF) && <div className="flex items-center px-2"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>}
           </div>
           {lookupSource && (
             <p className="mt-1 text-[11px] text-muted-foreground">

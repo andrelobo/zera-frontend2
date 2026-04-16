@@ -2,6 +2,32 @@
 
 Snapshot operacional do frontend em **07/04/2026**.
 
+## 0. Atualizacao rapida (16/04/2026) - CPF de tomador integrado via backend com Hub do Desenvolvedor
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- `cadastropf` deixou de estar apenas documentado e passou a alimentar o produto
+- o frontend agora consulta o backend em `GET /tomadores/lookup/cpf?cpf=` para enriquecimento de tomador PF
+- a automacao foi limitada ao contexto de `tomadores`, preservando integralmente o fluxo existente de `CNPJ`
+
+Comportamento atual:
+- `Tomadores > Cadastro`: CPF valido tenta preenchimento assistido
+- `Nova DANFSE`: CPF manual do tomador tambem tenta o mesmo enriquecimento
+- dados mascarados por LGPD nao bloqueiam o fluxo e nao substituem preenchimento manual
+
+Campos preenchidos quando vierem uteis:
+- nome
+- email
+- telefone / whatsapp
+- endereco com apoio de CEP quando necessario
+
+Regra operacional correta agora:
+1. `CPF` enriquecido = apoio de preenchimento
+2. `CNPJ` continua no fluxo antigo
+3. `prestador` nao participa dessa frente
+4. a tela deve degradar para preenchimento manual se a fonte vier ofuscada ou parcial
+
 ## 0. Atualizacao rapida (08/04/2026) - favoritos do prestador isolados e refresh de emissao endurecido
 
 Fonte: `codigo local` + `observacao funcional real em producao` + `build local`.

@@ -122,6 +122,98 @@ yarn vitest run <arquivo-do-teste>
 - Selecionar item em `Lista Servico`
 - Confirmar que codigo e descricao atualizam corretamente
 
+## Emissao - Checklist Provisorio Antes do Enriquecimento por CPF
+
+Este bloco existe para o estado atual do produto:
+- antes da integracao do autocomplete rico por CPF via Hub do Desenvolvedor
+- com emissao normal (`/nfse/emitir`) e emissao rapida (`/nfse/quick`) convivendo
+
+Leitura correta:
+- a DANFSE normal ainda pressupoe tomador suficientemente completo para atender o contrato fiscal
+- a Emissao Rapida continua sendo o fluxo canonico para CPF sem cadastro previo quando o objetivo e emitir com payload minimo
+
+### 9. DANFSE com tomador PJ ja cadastrado
+
+- Abrir `Nova DANFSE`
+- Selecionar tomador PJ no botao `Selecione (n)`
+- Confirmar preenchimento de:
+  - documento
+  - razao social
+  - inscricao municipal (quando existir)
+  - endereco
+- Emitir
+- Confirmar submit sem erro de payload incompleto do tomador
+
+### 10. DANFSE com tomador PF ja cadastrado
+
+- Abrir `Nova DANFSE`
+- Selecionar tomador PF ja salvo
+- Confirmar:
+  - ocultacao de `Inscricao Municipal`
+  - preenchimento de nome
+  - preenchimento de endereco
+- Emitir
+- Confirmar submit sem erro de payload incompleto do tomador
+
+### 11. DANFSE com tomador digitado manualmente por CNPJ
+
+- Abrir `Nova DANFSE`
+- Digitar CNPJ valido de tomador nao selecionado na lista
+- Confirmar tentativa de preenchimento assistido
+- Validar se vieram, no minimo:
+  - razao social
+  - CEP
+  - logradouro
+  - bairro
+  - municipio / UF
+- Emitir
+- Se o endereco nao vier completo, confirmar que o fluxo nao e tratado como pronto para emissao por engano
+
+### 12. DANFSE sem tomador suficiente
+
+- Abrir `Nova DANFSE`
+- Informar apenas documento e nome do tomador, sem endereco suficiente
+- Tentar emitir
+- Confirmar falha clara do fluxo
+- Confirmar que isso nao e mascarado como sucesso nem erro fiscal ambiguo
+
+### 13. Emissao Rapida com CPF sem cadastro previo
+
+- Abrir `Emissao Rapida`
+- Informar:
+  - CNPJ do prestador
+  - CPF do tomador
+  - valor
+  - codigo do servico
+- Emitir
+- Confirmar que o fluxo aceita payload minimo sem depender de cadastro previo do tomador
+
+### 14. Servico Prestado na DANFSE
+
+- Confirmar favoritos carregando do `Prestador > Parametros Municipais`
+- Selecionar favorito
+- Confirmar reaproveitamento de CTN vinculado
+- Selecionar item em `Lista Servico` sem `codigoServico`
+- Confirmar que apenas a descricao e acrescentada
+- Selecionar item em `Lista Servico` com `codigoServico`
+- Confirmar que o CTN e reaproveitado
+
+### 15. Regra tributaria sensivel na emissao
+
+- Testar tomador marcado como `Substituto Tributario`
+- Testar tomador nao substituto
+- Confirmar impacto esperado em:
+  - `ISS Retido`
+  - aliquota automatica
+  - card `Parametro Tributario Aplicado`
+
+### 16. Pos-emissao
+
+- Emitir pela DANFSE normal
+- Emitir pela Emissao Rapida
+- Confirmar invalidacao da listagem
+- Confirmar que a nova emissao aparece sem refresh manual indevido
+
 ## Critio de Bloqueio de Release
 
 Nao liberar se qualquer um destes pontos falhar:

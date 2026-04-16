@@ -65,7 +65,21 @@ describe('PrestacaoServicoSection logic', () => {
     expect(resolved?.nextData.descricaoServico).toBe('');
   });
 
-  it('appends description from lista servico without changing CTN or aliquota', () => {
+  it('appends description from lista servico without changing CTN or aliquota when no codigoServico is provided', () => {
+    const item: ListaServicoItem = {
+      id: 'svc-1',
+      natureza: 'Contabilidade',
+      descricao: 'Serviço contábil mensal',
+      aliquota: '5,00',
+    };
+
+    const next = resolvePrestacaoFromListaServico(INITIAL_DATA, item);
+    expect(next.codigoServico).toBe('');
+    expect(next.descricaoServico).toBe('Serviço contábil mensal');
+    expect(next.aliquota).toBe('');
+  });
+
+  it('reuses codigoServico from lista servico when available, without changing aliquota', () => {
     const item: ListaServicoItem = {
       id: 'svc-1',
       natureza: 'Contabilidade',
@@ -75,7 +89,7 @@ describe('PrestacaoServicoSection logic', () => {
     };
 
     const next = resolvePrestacaoFromListaServico(INITIAL_DATA, item);
-    expect(next.codigoServico).toBe('');
+    expect(next.codigoServico).toBe('171901');
     expect(next.descricaoServico).toBe('Serviço contábil mensal');
     expect(next.aliquota).toBe('');
   });

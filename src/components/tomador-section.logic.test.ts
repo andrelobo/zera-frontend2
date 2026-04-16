@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isCPF,
   mergeTomadorFromCepResult,
+  mergeTomadorFromCpfResult,
   mergeTomadorFromCnpjResult,
   type TomadorSectionData,
 } from './TomadorSection';
@@ -54,6 +55,44 @@ describe('TomadorSection logic', () => {
       bairro: 'CENTRO',
       localidadeUf: 'MANAUS - AM',
       email: 'contato@econtabilis.com',
+    });
+    expect(merged.whatsapp).toContain('(92)');
+  });
+
+  it('merges CPF lookup payload preserving manual-only tax fields', () => {
+    const merged = mergeTomadorFromCpfResult(
+      {
+        ...baseTomador(),
+        inscricaoMunicipal: 'MANUAL',
+        inscricaoEstadual: 'ISENTO',
+      },
+      {
+        nome: 'Andre Lobo',
+        email: 'andre@zera.app',
+        telefone: '92991234567',
+        endereco: {
+          cep: '69010040',
+          logradouro: 'R SALDANHA MARINHO',
+          numero: '606',
+          complemento: 'SALA 255',
+          bairro: 'CENTRO',
+          municipio: 'MANAUS',
+          uf: 'AM',
+        },
+      },
+    );
+
+    expect(merged).toMatchObject({
+      nomeEmpresarial: 'Andre Lobo',
+      inscricaoMunicipal: 'MANUAL',
+      inscricaoEstadual: 'ISENTO',
+      cep: '69010-040',
+      logradouro: 'R SALDANHA MARINHO',
+      numero: '606',
+      complemento: 'SALA 255',
+      bairro: 'CENTRO',
+      localidadeUf: 'MANAUS - AM',
+      email: 'andre@zera.app',
     });
     expect(merged.whatsapp).toContain('(92)');
   });

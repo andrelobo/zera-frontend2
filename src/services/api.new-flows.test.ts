@@ -128,6 +128,26 @@ describe('new API flows', () => {
     });
   });
 
+  it('queries cpf lookup for tomador enrichment', async () => {
+    const { tomadoresApi } = await import('@/services/api');
+    const response = {
+      cpf: '61020788100',
+      source: 'hubdev_cadastropf',
+      found: true,
+      usefulData: true,
+      maskedByLgpd: false,
+      nome: 'Andre Lobo',
+    };
+    mockGet.mockResolvedValue({ data: response });
+
+    const result = await tomadoresApi.lookupCpf('610.207.881-00');
+
+    expect(result).toEqual(response);
+    expect(mockGet).toHaveBeenCalledWith('/tomadores/lookup/cpf', {
+      params: { cpf: '61020788100' },
+    });
+  });
+
   it('queries service autocomplete', async () => {
     const { nfseApi } = await import('@/services/api');
     const response = {

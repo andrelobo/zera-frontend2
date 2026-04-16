@@ -5,6 +5,7 @@ import TomadorSection, { type TomadorSectionData } from './TomadorSection';
 
 const mocks = vi.hoisted(() => ({
   previewByCnpj: vi.fn(),
+  lookupCpf: vi.fn(),
   lookupCep: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
@@ -13,6 +14,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/services/api', () => ({
   empresasApi: {
     previewByCnpj: mocks.previewByCnpj,
+  },
+  tomadoresApi: {
+    lookupCpf: mocks.lookupCpf,
   },
 }));
 
@@ -48,6 +52,51 @@ const baseTomador = (): TomadorSectionData => ({
 describe('TomadorSection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('autocompletes cpf in tomador cadastro using backend enrichment', async () => {
+    mocks.lookupCpf.mockResolvedValue({
+      cpf: '61020788100',
+      source: 'hubdev_cadastropf',
+      found: true,
+      usefulData: true,
+      maskedByLgpd: false,
+      nome: 'Andre Lobo',
+      email: 'andre@zera.app',
+      telefone: '92991234567',
+      endereco: {
+        cep: '69010040',
+        logradouro: 'Rua Saldanha Marinho',
+        numero: '606',
+        complemento: 'Sala 255',
+        bairro: 'Centro',
+        municipio: 'Manaus',
+        uf: 'AM',
+      },
+    });
+
+    const Harness = () => {
+      const [data, setData] = useState({ ...baseTomador(), cnpjCpf: '' });
+
+      return (
+        <TomadorSection
+          data={data}
+          onChange={setData}
+          onAutosave={vi.fn()}
+        />
+      );
+    };
+
+    render(<Harness />);
+
+    const docInput = screen.getByPlaceholderText('00.000.000/0000-00') as HTMLInputElement;
+
+    await act(async () => {
+      fireEvent.change(docInput, { target: { value: '61020788100' } });
+    });
+
+    expect(mocks.lookupCpf).toHaveBeenCalledWith('61020788100');
+    expect(await screen.findByDisplayValue('Andre Lobo')).toBeTruthy();
   });
 
   it('allows editing logradouro after prefilled value without swallowing spaces', () => {

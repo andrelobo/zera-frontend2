@@ -282,6 +282,31 @@ export interface CreateTomadorRequest {
 
 export type UpdateTomadorRequest = Partial<Omit<CreateTomadorRequest, 'empresaCnpj' | 'cpfCnpj'>>;
 
+export interface TomadorCpfLookupResponse {
+  cpf: string;
+  source: string;
+  found: boolean;
+  usefulData: boolean;
+  maskedByLgpd: boolean;
+  nome?: string;
+  dataNascimento?: string;
+  nomeMae?: string;
+  genero?: string;
+  email?: string;
+  whatsapp?: string;
+  telefone?: string;
+  endereco?: {
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    uf?: string;
+    cep?: string;
+  };
+  lastUpdate?: string;
+}
+
 // NFSe
 export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELLED';
 export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK';

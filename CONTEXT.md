@@ -27,6 +27,36 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-16) - enriquecimento de tomador PF por CPF integrado via backend
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- o enriquecimento de tomador por CPF deixou de ser apenas frente autorizada e passou a estar integrado no produto
+- a integracao usa o backend do ZERA como borda para o `cadastropf` do Hub do Desenvolvedor
+- o endpoint aditivo introduzido foi `GET /tomadores/lookup/cpf?cpf=`
+
+Regra canonica desta integracao:
+1. vale apenas para `tomadores` pessoa fisica
+2. nao altera nem substitui o fluxo atual de `CNPJ`
+3. nao toca `prestador`
+4. o preenchimento continua assistido, nunca bloqueante
+5. payload mascarado por LGPD passa a ser tratado como encontrado, mas nao util para autopreenchimento
+
+Campos assistivos atualmente considerados uteis:
+- nome
+- email
+- telefone / whatsapp
+- endereco quando vier com granularidade suficiente para uso real
+
+Leitura operacional correta agora:
+- `CNPJ` continua sendo a trilha canonica para tomador PJ
+- `CPF` agora tem enriquecimento incremental por fonte externa sem perder os dados das outras APIs ja usadas pelo sistema
+- se a fonte vier mascarada, o usuario continua no fluxo manual sem quebra
+
+Validacao desta rodada:
+- testes focados de backend e frontend passaram
+- build do frontend passou
+
 ## 0. Atualizacao de Contexto (2026-04-08) - favoritos do prestador isolados e refresh de emissao alinhado ao webhook rapido
 Fonte: `codigo local` + `observacao funcional real`.
 

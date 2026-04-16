@@ -5,7 +5,7 @@ import type {
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
   NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem, NfseBiSummary,
-  Tomador, CreateTomadorRequest, UpdateTomadorRequest, CnaeCatalogLookupItem,
+  Tomador, CreateTomadorRequest, UpdateTomadorRequest, CnaeCatalogLookupItem, TomadorCpfLookupResponse,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 
@@ -669,6 +669,10 @@ export const tomadoresApi = {
         limit: input.limit,
       },
     }).then(r => (r.data || []).map((item) => normalizeTomador(item))),
+  lookupCpf: (cpf: string) =>
+    api.get<TomadorCpfLookupResponse>('/tomadores/lookup/cpf', {
+      params: { cpf: cpf.replace(/\D/g, '') || undefined },
+    }).then((r) => r.data),
   getById: (id: string) =>
     api.get<Tomador>(`/tomadores/${id}`).then(r => normalizeTomador(r.data)),
   create: (data: CreateTomadorRequest) =>

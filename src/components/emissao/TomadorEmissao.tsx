@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Users, FileText, Loader2, Search, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { empresasApi } from '@/services/api';
+import { empresasApi, tomadoresApi } from '@/services/api';
 import { lookupCep } from '@/services/cep';
 import { normalizeLogradouro, validateCNPJ } from '@/utils/validators';
 import type { Tomador } from '@/types/api';
@@ -112,6 +112,11 @@ async function fetchCnpjData(cnpj: string) {
   };
 }
 
+async function fetchCpfData(cpf: string) {
+  const cleaned = cpf.replace(/\D/g, '');
+  return tomadoresApi.lookupCpf(cleaned);
+}
+
 async function fetchCepData(cep: string) {
   const data = await lookupCep(cep);
   return {
@@ -151,6 +156,35 @@ const mergeTomadorFromCnpjResult = (
   email: result.email || current.email,
 });
 
+const mergeTomadorFromCpfResult = (
+  current: TomadorEmissaoData,
+  result: {
+    nome?: string;
+    email?: string;
+    endereco?: {
+      cep?: string;
+      logradouro?: string;
+      numero?: string;
+      complemento?: string;
+      bairro?: string;
+      municipio?: string;
+      uf?: string;
+    };
+  },
+): TomadorEmissaoData => ({
+  ...current,
+  nomeRazaoSocial: result.nome || current.nomeRazaoSocial,
+  cep: result.endereco?.cep || current.cep,
+  logradouro: result.endereco?.logradouro ? normalizeLogradouro(result.endereco.logradouro) : current.logradouro,
+  numero: result.endereco?.numero || current.numero,
+  complemento: result.endereco?.complemento || current.complemento,
+  bairro: result.endereco?.bairro || current.bairro,
+  localidadeUf: result.endereco?.municipio && result.endereco?.uf
+    ? `${result.endereco.municipio} - ${result.endereco.uf}`
+    : current.localidadeUf,
+  email: result.email || current.email,
+});
+
 const mergeTomadorFromCepResult = (
   current: TomadorEmissaoData,
   result: {
@@ -171,9 +205,12 @@ const mergeTomadorFromCepResult = (
 const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, loadingTomadores }: Props) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
+  const [loadingCpf, setLoadingCpf] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lastFetchedCnpj = useRef('');
+  const lastFetchedCpf = useRef('');
   const cnpjRequestSeq = useRef(0);
+  const cpfRequestSeq = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -256,6 +293,49 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
     }
   }, [onChange]);
 
+  const buscarCpf = useCallback(async (docValue: string) => {
+    const cleaned = docValue.replace(/\D/g, '');
+    if (cleaned.length !== 11 || !validateCPF(cleaned)) return;
+    if (lastFetchedCpf.current === cleaned) return;
+    lastFetchedCpf.current = cleaned;
+    const requestId = ++cpfRequestSeq.current;
+    setLoadingCpf(true);
+    try {
+      const result = await fetchCpfData(cleaned);
+      if (requestId !== cpfRequestSeq.current) return;
+      if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
+
+      if (!result.found) {
+        toast.error('CPF não encontrado na consulta externa.');
+        return;
+      }
+
+      if (!result.usefulData) {
+        toast.error('CPF encontrado, mas os dados vieram ofuscados por LGPD.');
+        return;
+      }
+
+      let updated = mergeTomadorFromCpfResult(dataRef.current, result);
+      onChange(updated);
+      toast.success('Dados do tomador preenchidos!');
+
+      const cepClean = String(result.endereco?.cep || '').replace(/\D/g, '');
+      if (cepClean.length === 8 && (!result.endereco?.logradouro && !result.endereco?.bairro)) {
+        const cepResult = await fetchCepData(cepClean);
+        if (requestId !== cpfRequestSeq.current) return;
+        if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
+        updated = mergeTomadorFromCepResult(updated, cepResult);
+        onChange(updated);
+      }
+    } catch {
+      toast.error('Não foi possível consultar o CPF.');
+    } finally {
+      if (requestId === cpfRequestSeq.current) {
+        setLoadingCpf(false);
+      }
+    }
+  }, [onChange]);
+
   const handleDocChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const formatted = formatDoc(value);
@@ -263,8 +343,11 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
     const docChanged = previousDigits !== cleaned;
     if (docChanged) {
       lastFetchedCnpj.current = '';
+      lastFetchedCpf.current = '';
       cnpjRequestSeq.current += 1;
+      cpfRequestSeq.current += 1;
       setLoadingCnpj(false);
+      setLoadingCpf(false);
     }
     const base = docChanged ? clearAutofillFields(data) : data;
     onChange({ ...base, cnpjCpf: formatted });
@@ -274,7 +357,16 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
       return;
     }
 
+    if (cleaned.length === 11 && validateCPF(cleaned)) {
+      const jaCadastrado = tomadores.some((item) => item.cpfCnpj.replace(/\D/g, '') === cleaned);
+      if (!jaCadastrado) {
+        buscarCpf(formatted);
+      }
+      return;
+    }
+
     setLoadingCnpj(false);
+    setLoadingCpf(false);
   };
 
   return (
@@ -327,7 +419,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
               onChange={(e) => handleDocChange(e.target.value)}
               maxLength={18}
             />
-            {(loadingTomadores || loadingCnpj) && (
+            {(loadingTomadores || loadingCnpj || loadingCpf) && (
               <div className="flex items-center px-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
               </div>
