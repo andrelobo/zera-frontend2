@@ -218,10 +218,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
           <div className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="space-y-1">
-              <p>
-                {certificadoAtual?.filename || 'Certificado importado'}
-                {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
-              </p>
+              <p>{certificadoAtual?.filename || 'Certificado importado'}</p>
               {expiresAtLabel && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
@@ -229,16 +226,17 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
                     {expirationStatus ? ` · ${expirationStatus}` : ''}
                   </p>
                   {expirationProgress && (
-                    <div className="space-y-1">
-                      <div className="h-2 overflow-hidden rounded-full bg-emerald-950/10 dark:bg-white/10">
+                    <div className="h-2 overflow-hidden rounded-full bg-emerald-950/10 dark:bg-white/10">
+                      <div className="flex h-full w-full">
                         <div
-                          className={`h-full rounded-full transition-all ${expirationProgress.tone}`}
+                          className="h-full bg-emerald-950/10 dark:bg-white/10"
+                          style={{ width: `${100 - expirationProgress.progress}%` }}
+                        />
+                        <div
+                          className={`h-full transition-all ${expirationProgress.tone}`}
                           style={{ width: `${expirationProgress.progress}%` }}
                         />
                       </div>
-                      <p className="text-[11px] text-emerald-900/80 dark:text-emerald-100/80">
-                        {expirationProgress.progress}% do ciclo estimado restante
-                      </p>
                     </div>
                   )}
                 </div>
