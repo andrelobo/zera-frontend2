@@ -38,6 +38,23 @@ const formatDateLabel = (value?: string) => {
   return date.toLocaleDateString('pt-BR');
 };
 
+const getExpirationProgress = (value?: string) => {
+  if (!value) return null;
+  const expiration = new Date(value);
+  if (Number.isNaN(expiration.getTime())) return null;
+
+  const now = new Date();
+  const issuedBaseline = new Date(expiration);
+  issuedBaseline.setFullYear(issuedBaseline.getFullYear() - 1);
+
+  const total = expiration.getTime() - issuedBaseline.getTime();
+  const remaining = expiration.getTime() - now.getTime();
+  const progress = total <= 0 ? 0 : Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
+
+  const tone = progress <= 10 ? 'bg-red-500' : progress <= 30 ? 'bg-amber-500' : 'bg-emerald-500';
+  return { progress, tone };
+};
+
 const getExpirationStatus = (value?: string) => {
   if (!value) return '';
   const expiration = new Date(value);
@@ -105,6 +122,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
     : '';
   const expiresAtLabel = formatDateLabel(certificadoAtual?.expiresAt);
   const expirationStatus = getExpirationStatus(certificadoAtual?.expiresAt);
+  const expirationProgress = getExpirationProgress(certificadoAtual?.expiresAt);
   const importDiagnosticMessage = getImportDiagnosticMessage(importDiagnostic);
 
   useEffect(() => {
@@ -201,15 +219,29 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="space-y-1">
               <p>
-                Certificado digital já importado
-                {certificadoAtual?.filename ? `: ${certificadoAtual.filename}` : ''}
+                {certificadoAtual?.filename || 'Certificado importado'}
                 {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
               </p>
               {expiresAtLabel && (
-                <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
-                  Validade: {expiresAtLabel}
-                  {expirationStatus ? ` · ${expirationStatus}` : ''}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                    Validade: {expiresAtLabel}
+                    {expirationStatus ? ` · ${expirationStatus}` : ''}
+                  </p>
+                  {expirationProgress && (
+                    <div className="space-y-1">
+                      <div className="h-2 overflow-hidden rounded-full bg-emerald-950/10 dark:bg-white/10">
+                        <div
+                          className={`h-full rounded-full transition-all ${expirationProgress.tone}`}
+                          style={{ width: `${expirationProgress.progress}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-emerald-900/80 dark:text-emerald-100/80">
+                        {expirationProgress.progress}% do ciclo estimado restante
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
               {importDiagnosticMessage && (
                 <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
