@@ -302,13 +302,13 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
                 Inscrição Municipal
                 <span className="group relative inline-flex">
                   <HelpCircle className="h-3.5 w-3.5 cursor-help text-muted-foreground transition-colors group-hover:text-primary" />
-                  <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 rounded-xl border border-border bg-popover px-3 py-2 text-[11px] font-normal leading-5 text-popover-foreground shadow-xl group-hover:block">
+                  <span className="invisible absolute bottom-full left-1/2 z-20 mb-2 w-72 -translate-x-1/2 rounded-xl border border-border bg-popover px-3 py-2 text-[11px] font-normal leading-5 text-popover-foreground opacity-0 shadow-xl transition-opacity duration-150 group-hover:visible group-hover:opacity-100">
                     Para descobrir a Inscrição Municipal e verificar se o tomador é substituto tributário, consulte o portal da Prefeitura de Manaus.
                     <a
                       href="https://nfse-prd.manaus.am.gov.br/nfse/servlet/hloginconsultacadastral"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-2 pointer-events-auto"
+                      className="mt-2 inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-2"
                     >
                       Abrir consulta cadastral
                       <ExternalLink className="h-3.5 w-3.5" />
