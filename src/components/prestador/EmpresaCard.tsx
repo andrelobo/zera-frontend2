@@ -78,7 +78,7 @@ const EmpresaCard: React.FC<Props> = ({
               type="button"
               className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${
                 simplesStatus === true
-                  ? 'bg-[hsl(144,72%,28%)] text-white border-[hsl(144,72%,28%)]'
+                  ? 'bg-[hsl(144,72%,28%)] text-white border-[hsl(144,72%,28%)] ring-1 ring-[hsl(144,72%,28%)]/20 shadow-[0_0_0_3px_rgba(20,123,61,0.08)] motion-safe:animate-[pulse_1.8s_ease-in-out_infinite]'
                   : 'bg-muted text-muted-foreground border-border hover:bg-accent'
               }`}
               onClick={() => onSimplesToggle(true)}
