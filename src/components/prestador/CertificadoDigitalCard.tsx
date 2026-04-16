@@ -18,6 +18,11 @@ interface Props {
   onImported?: (result: ImportCertificadoDigitalResponse) => void | Promise<void>;
 }
 
+type ImportDiagnostic = {
+  status?: string;
+  error?: string | null;
+};
+
 const CERT_EXTENSIONS = ['.pfx', '.p12'];
 
 const getFileExtension = (fileName: string) => {
@@ -49,6 +54,24 @@ const getExpirationStatus = (value?: string) => {
   return `Vence em ${diffInDays} dias`;
 };
 
+const getImportDiagnosticMessage = (diagnostic: ImportDiagnostic | null) => {
+  if (!diagnostic?.status || diagnostic.status === 'ok') return null;
+
+  if (diagnostic.status === 'openssl_missing') {
+    return 'O servidor importou o certificado, mas não conseguiu ler a validade porque o OpenSSL não está disponível no ambiente.';
+  }
+
+  if (diagnostic.status === 'extract_failed') {
+    return diagnostic.error
+      ? `O servidor importou o certificado, mas falhou ao extrair a validade: ${diagnostic.error}`
+      : 'O servidor importou o certificado, mas falhou ao extrair a validade.';
+  }
+
+  return diagnostic.error
+    ? `O servidor importou o certificado, mas retornou status ${diagnostic.status}: ${diagnostic.error}`
+    : `O servidor importou o certificado, mas retornou status ${diagnostic.status}.`;
+};
+
 const getApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data as Partial<ApiError>;
@@ -72,6 +95,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
   const [showSenha, setShowSenha] = useState(false);
   const [showReplaceForm, setShowReplaceForm] = useState(false);
   const [apiError, setApiError] = useState<ApiError | null>(null);
+  const [importDiagnostic, setImportDiagnostic] = useState<ImportDiagnostic | null>(null);
   const [certificadoAtual, setCertificadoAtual] = useState<Props['certificado']>(certificado ?? null);
   const inputRef = useRef<HTMLInputElement>(null);
   const cnpjClean = useMemo(() => cnpj.replace(/\D/g, ''), [cnpj]);
@@ -81,6 +105,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
     : '';
   const expiresAtLabel = formatDateLabel(certificadoAtual?.expiresAt);
   const expirationStatus = getExpirationStatus(certificadoAtual?.expiresAt);
+  const importDiagnosticMessage = getImportDiagnosticMessage(importDiagnostic);
 
   useEffect(() => {
     setCertificadoAtual(certificado ?? null);
@@ -90,6 +115,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
     setFile(null);
     setSenha('');
     setApiError(null);
+    setImportDiagnostic(null);
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -137,7 +163,11 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
       setCertificadoAtual(nextCertificado);
       setShowReplaceForm(false);
       resetForm();
-      toast.success('Certificado importado com sucesso');
+      setImportDiagnostic({
+        status: result.expiresAtStatus,
+        error: result.expiresAtError ?? null,
+      });
+      toast.success(result.expiresAtStatus === 'ok' ? 'Certificado importado com sucesso' : 'Certificado importado, mas a validade não foi lida');
       await onImported?.(result);
     },
     onError: (error) => {
@@ -179,6 +209,11 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
                 <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
                   Validade: {expiresAtLabel}
                   {expirationStatus ? ` · ${expirationStatus}` : ''}
+                </p>
+              )}
+              {importDiagnosticMessage && (
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                  Diagnostico da validade: {importDiagnosticMessage}
                 </p>
               )}
             </div>

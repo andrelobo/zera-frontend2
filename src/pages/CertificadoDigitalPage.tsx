@@ -26,6 +26,24 @@ const formatFileSize = (size: number) => {
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
 };
 
+const getImportDiagnosticMessage = (status?: string, error?: string | null) => {
+  if (!status || status === 'ok') return null;
+
+  if (status === 'openssl_missing') {
+    return 'O servidor importou o certificado, mas não conseguiu ler a validade porque o OpenSSL não está disponível no ambiente.';
+  }
+
+  if (status === 'extract_failed') {
+    return error
+      ? `O servidor importou o certificado, mas falhou ao extrair a validade: ${error}`
+      : 'O servidor importou o certificado, mas falhou ao extrair a validade.';
+  }
+
+  return error
+    ? `O servidor importou o certificado, mas retornou status ${status}: ${error}`
+    : `O servidor importou o certificado, mas retornou status ${status}.`;
+};
+
 const getApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data as Partial<ApiError>;
@@ -73,9 +91,11 @@ const CertificadoDigitalPage = () => {
     filename?: string;
     size?: number;
     uploadedAt?: string;
+    expiresAt?: string;
   } } | undefined))?.certificado;
   const certificadoImportado = Boolean(certificadoAtual?.filename || certificadoAtual?.uploadedAt);
   const exibirFormularioImportacao = !certificadoImportado || showReplaceForm;
+  const importDiagnosticMessage = getImportDiagnosticMessage(success?.expiresAtStatus, success?.expiresAtError ?? null);
 
   const mutation = useMutation({
     mutationFn: () => empresasApi.importCertificadoDigital({
@@ -225,6 +245,9 @@ const CertificadoDigitalPage = () => {
                   <p><strong>Arquivo:</strong> {success.fileName}</p>
                   <p><strong>Tamanho:</strong> {formatFileSize(success.fileSize)}</p>
                   <p><strong>Upload:</strong> {new Date(success.uploadedAt).toLocaleString('pt-BR')}</p>
+                  {success.expiresAt && <p><strong>Validade:</strong> {new Date(success.expiresAt).toLocaleDateString('pt-BR')}</p>}
+                  {success.expiresAtStatus && <p><strong>Status da validade:</strong> {success.expiresAtStatus}</p>}
+                  {importDiagnosticMessage && <p><strong>Diagnostico:</strong> {importDiagnosticMessage}</p>}
                 </AlertDescription>
               </Alert>
             )}

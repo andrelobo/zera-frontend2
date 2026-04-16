@@ -538,6 +538,8 @@ export interface ImportCertificadoDigitalResponse {
   fileSize: number;
   uploadedAt: string;
   expiresAt?: string;
+  expiresAtStatus?: 'ok' | 'extract_failed' | 'openssl_missing' | string;
+  expiresAtError?: string | null;
   issuer?: string;
 }
 
