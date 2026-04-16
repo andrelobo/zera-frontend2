@@ -13,6 +13,7 @@ interface Props {
     filename?: string;
     size?: number;
     uploadedAt?: string;
+    expiresAt?: string;
   } | null;
   onImported?: (result: ImportCertificadoDigitalResponse) => void | Promise<void>;
 }
@@ -55,6 +56,52 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
   const uploadedAtLabel = certificadoAtual?.uploadedAt
     ? new Date(certificadoAtual.uploadedAt).toLocaleString('pt-BR')
     : '';
+
+  const expiresAtDate = certificadoAtual?.expiresAt ? new Date(certificadoAtual.expiresAt) : null;
+  const hasValidExpiresAt = Boolean(expiresAtDate && !Number.isNaN(expiresAtDate.getTime()));
+  const expiresAtLabel = hasValidExpiresAt
+    ? expiresAtDate!.toLocaleDateString('pt-BR')
+    : '';
+
+  const expirationStatus = useMemo(() => {
+    if (!hasValidExpiresAt || !expiresAtDate) return null;
+
+    const toStartOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const diffDays = Math.round((toStartOfDay(expiresAtDate) - toStartOfDay(new Date())) / 86_400_000);
+
+    if (diffDays < 0) {
+      return {
+        label: `Vencido há ${Math.abs(diffDays)} dia${Math.abs(diffDays) === 1 ? '' : 's'}`,
+        className: 'border-destructive/30 bg-destructive/10 text-destructive',
+      };
+    }
+
+    if (diffDays === 0) {
+      return {
+        label: 'Vence hoje',
+        className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      };
+    }
+
+    if (diffDays === 1) {
+      return {
+        label: 'Vence amanhã',
+        className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      };
+    }
+
+    if (diffDays <= 30) {
+      return {
+        label: `Vence em ${diffDays} dias`,
+        className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      };
+    }
+
+    return {
+      label: `Vence em ${diffDays} dias`,
+      className: 'border-emerald-600/25 bg-emerald-600/10 text-emerald-700 dark:text-emerald-300',
+    };
+  }, [expiresAtDate, hasValidExpiresAt]);
 
   const resetForm = () => {
     setFile(null);
@@ -101,6 +148,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
         filename: result.fileName || file?.name || certificadoAtual?.filename,
         size: result.fileSize ?? file?.size ?? certificadoAtual?.size,
         uploadedAt: result.uploadedAt || new Date().toISOString(),
+        expiresAt: result.expiresAt || certificadoAtual?.expiresAt,
       };
       setApiError(null);
       setCertificadoAtual(nextCertificado);
@@ -144,6 +192,21 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
               {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
             </span>
           </p>
+
+          {(expiresAtLabel || expirationStatus) && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 pl-6">
+              {expiresAtLabel && (
+                <span className="rounded-full border border-emerald-600/20 bg-white/70 px-2.5 py-1 text-[11px] font-medium text-emerald-800 dark:bg-transparent dark:text-emerald-200">
+                  Validade: {expiresAtLabel}
+                </span>
+              )}
+              {expirationStatus && (
+                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${expirationStatus.className}`}>
+                  {expirationStatus.label}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex justify-end">
           <button
