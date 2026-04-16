@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { Loader2, ShieldCheck, Upload, X, Eye, EyeOff, FileKey2, CheckCircle2 } from 'lucide-react';
@@ -13,6 +13,7 @@ interface Props {
     filename?: string;
     size?: number;
     uploadedAt?: string;
+    expiresAt?: string;
   } | null;
   onImported?: (result: ImportCertificadoDigitalResponse) => void | Promise<void>;
 }
@@ -23,6 +24,29 @@ const getFileExtension = (fileName: string) => {
   const parts = fileName.toLowerCase().split('.');
   if (parts.length < 2) return '';
   return `.${parts[parts.length - 1]}`;
+};
+
+const formatDateLabel = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('pt-BR');
+};
+
+const getExpirationStatus = (value?: string) => {
+  if (!value) return '';
+  const expiration = new Date(value);
+  if (Number.isNaN(expiration.getTime())) return '';
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfExpiration = new Date(expiration.getFullYear(), expiration.getMonth(), expiration.getDate());
+  const diffInDays = Math.round((startOfExpiration.getTime() - startOfToday.getTime()) / 86400000);
+
+  if (diffInDays < 0) return `Vencido ha ${Math.abs(diffInDays)} dia${Math.abs(diffInDays) === 1 ? '' : 's'}`;
+  if (diffInDays == 0) return 'Vence hoje';
+  if (diffInDays == 1) return 'Vence amanha';
+  return `Vence em ${diffInDays} dias`;
 };
 
 const getApiError = (error: unknown): ApiError => {
@@ -55,7 +79,12 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
   const uploadedAtLabel = certificadoAtual?.uploadedAt
     ? new Date(certificadoAtual.uploadedAt).toLocaleString('pt-BR')
     : '';
+  const expiresAtLabel = formatDateLabel(certificadoAtual?.expiresAt);
+  const expirationStatus = getExpirationStatus(certificadoAtual?.expiresAt);
 
+  useEffect(() => {
+    setCertificadoAtual(certificado ?? null);
+  }, [certificado]);
 
   const resetForm = () => {
     setFile(null);
@@ -102,6 +131,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
         filename: result.fileName || file?.name || certificadoAtual?.filename,
         size: result.fileSize ?? file?.size ?? certificadoAtual?.size,
         uploadedAt: result.uploadedAt || new Date().toISOString(),
+        expiresAt: result.expiresAt || certificadoAtual?.expiresAt,
       };
       setApiError(null);
       setCertificadoAtual(nextCertificado);
@@ -137,14 +167,22 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
           Certificado CNPJ A1
         </h2>
         <div className="mb-3 rounded-md border border-emerald-600/25 bg-emerald-600/10 px-3 py-2">
-          <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            <span>
-              Certificado digital já importado
-              {certificadoAtual?.filename ? `: ${certificadoAtual.filename}` : ''}
-              {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
-            </span>
-          </p>
+          <div className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="space-y-1">
+              <p>
+                Certificado digital já importado
+                {certificadoAtual?.filename ? `: ${certificadoAtual.filename}` : ''}
+                {uploadedAtLabel ? ` (${uploadedAtLabel})` : ''}.
+              </p>
+              {expiresAtLabel && (
+                <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                  Validade: {expiresAtLabel}
+                  {expirationStatus ? ` · ${expirationStatus}` : ''}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
         <div className="flex justify-end">
           <button

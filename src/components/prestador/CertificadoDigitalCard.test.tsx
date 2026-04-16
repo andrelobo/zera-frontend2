@@ -54,11 +54,13 @@ describe('CertificadoDigitalCard', () => {
         certificado={{
           filename: 'certiapa.pfx',
           uploadedAt: '2026-02-22T17:31:38.702Z',
+          expiresAt: '2027-03-18T00:00:00.000Z',
         }}
       />,
     );
 
     expect(screen.getByText(/Certificado digital já importado/)).toBeTruthy();
+    expect(screen.getByText(/Validade: 18\/03\/2027/)).toBeTruthy();
     expect(screen.queryByText('Arquivo do Certificado')).toBeNull();
     expect(screen.queryByText('Senha do Certificado')).toBeNull();
     expect(screen.getByRole('button', { name: 'Substituir certificado' })).toBeTruthy();
