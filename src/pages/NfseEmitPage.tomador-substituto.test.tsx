@@ -7,6 +7,7 @@ import NfseEmitPage from './NfseEmitPage';
 
 const mocks = vi.hoisted(() => ({
   empresasList: vi.fn(),
+  empresaGetById: vi.fn(),
   empresaGetByCnpj: vi.fn(),
   empresaPreviewByCnpj: vi.fn(),
   tomadoresList: vi.fn(),
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/services/api', () => ({
   empresasApi: {
     list: mocks.empresasList,
+    getById: mocks.empresaGetById,
     getByCnpj: mocks.empresaGetByCnpj,
     previewByCnpj: mocks.empresaPreviewByCnpj,
   },
@@ -131,6 +133,7 @@ describe('NfseEmitPage tomador substituto', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.empresasList.mockResolvedValue([empresaBase]);
+    mocks.empresaGetById.mockResolvedValue(empresaBase);
     mocks.empresaGetByCnpj.mockResolvedValue(empresaBase);
     mocks.empresaPreviewByCnpj.mockResolvedValue(empresaBase);
     mocks.tomadoresList.mockResolvedValue([tomadorSim, tomadorNao]);
@@ -147,6 +150,41 @@ describe('NfseEmitPage tomador substituto', () => {
       idempotentReplay: false,
       result: { status: 'PENDING', provider: 'PLUGNOTAS' },
     });
+  });
+
+  it('hydrates favoritos from empresa detail so all cadastrados appear na emissao', async () => {
+    mocks.empresasList.mockResolvedValue([
+      {
+        ...empresaBase,
+        parametroMunicipal: [
+          {
+            codigo: '6920601',
+            cnaeDescricao: 'Atividades de contabilidade',
+            vinculos: [{ ctn: '171901', ctnDescricao: 'Contabilidade', nbs: '1.1302.21.00', nbsDescricao: 'Serviços de contabilidade' }],
+          },
+        ],
+      },
+    ]);
+    mocks.empresaGetById.mockResolvedValue({
+      ...empresaBase,
+      parametroMunicipal: [
+        {
+          codigo: '6920601',
+          cnaeDescricao: 'Atividades de contabilidade',
+          vinculos: [{ ctn: '171901', ctnDescricao: 'Contabilidade', nbs: '1.1302.21.00', nbsDescricao: 'Serviços de contabilidade' }],
+        },
+        {
+          codigo: '7319002',
+          cnaeDescricao: 'Promoção de vendas',
+          vinculos: [{ ctn: '170601', ctnDescricao: 'Propaganda e publicidade', nbs: '1.1406.11.00', nbsDescricao: 'Serviços de campanhas publicitárias' }],
+        },
+      ],
+    });
+
+    renderPage(<NfseEmitPage />);
+
+    expect(await screen.findByPlaceholderText(/Buscar entre 2 serviço\(s\)/i)).toBeInTheDocument();
+    expect(mocks.empresaGetById).toHaveBeenCalledWith('empresa-1');
   });
 
   it('reacts inside the emission screen when switching from substituto to non-substituto tomador', async () => {

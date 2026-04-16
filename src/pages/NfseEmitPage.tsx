@@ -149,7 +149,15 @@ const NfseEmitPage: React.FC = () => {
     queryKey: ['empresas', 'emit-normal'],
     queryFn: async () => {
       const list = await empresasApi.list();
-      return pickEmpresaForEmissao(list) ?? null;
+      const picked = pickEmpresaForEmissao(list) ?? null;
+      if (!picked) return null;
+      if (!picked.id) return picked;
+
+      try {
+        return await empresasApi.getById(picked.id);
+      } catch {
+        return picked;
+      }
     },
     staleTime: 60_000,
   });
