@@ -143,6 +143,27 @@ describe('PrestacaoServicoSection UI', () => {
     expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('');
   });
 
+  it('reuses codigoServico from Lista Serviço when available', async () => {
+    renderHarness({
+      favoritos: [],
+      listaServico: [
+        {
+          id: 'svc-ctn-1',
+          natureza: 'Contabilidade',
+          descricao: 'Servico contabil mensal',
+          codigoServico: '171901',
+        },
+      ],
+    });
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'svc-ctn-1' } });
+
+    expect(screen.getByPlaceholderText('Buscar código ou descrição...')).toHaveValue('17.19.01');
+    expect(screen.getByPlaceholderText('Descreva o serviço prestado conforme a NFS-e...')).toHaveValue(
+      'Servico contabil mensal',
+    );
+  });
+
   it('does not commit manual CTN typing on blur by itself', async () => {
     renderHarness({
       favoritos: [],

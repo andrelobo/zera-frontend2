@@ -93,6 +93,7 @@ export function resolvePrestacaoFromListaServico(
 ): PrestacaoServicoData {
   return {
     ...data,
+    codigoServico: item.codigoServico || data.codigoServico,
     descricaoServico: data.descricaoServico ? `${data.descricaoServico}\n${item.descricao}` : item.descricao,
   };
 }
@@ -287,6 +288,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
         {/* Serviços Favoritos */}
         <div ref={favoritosDropdownRef} className="relative">
           <label className="field-label flex items-center gap-1.5" style={{ color: 'hsl(43, 80%, 45%)' }}><Star className="w-4 h-4" fill="currentColor" />Serviços Favoritos</label>
+          <p className="mb-1 text-[11px] text-amber-700/80">Fonte principal da DANFSE para sugerir CTN e vínculos do prestador.</p>
           <div className="relative">
             <input
               className="field-input pr-8"
@@ -408,6 +410,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
         {/* Lista Serviço */}
         <div className="relative">
           <label className="field-label flex items-center gap-1.5"><List className="w-4 h-4 text-primary" />Lista Serviço</label>
+          <p className="mb-1 text-[11px] text-muted-foreground">Complementar: adiciona descrição operacional e reaproveita o código quando disponível.</p>
           <select
             className="field-input"
             value=""
