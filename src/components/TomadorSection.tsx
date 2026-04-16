@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Building2, MapPin, Mail, Loader2, FileText } from 'lucide-react';
+import { Building2, MapPin, Mail, Loader2, FileText, ExternalLink, Search } from 'lucide-react';
 import { formatCNPJ, formatCEP, formatPhone, normalizeLogradouro, sanitizeAddressNumber, validateCNPJ } from '@/utils/validators';
 import { toast } from 'sonner';
 import { empresasApi } from '@/services/api';
@@ -307,6 +307,23 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
               />
             </div>
             <div>
+              <a
+                href="https://nfse-prd.manaus.am.gov.br/nfse/servlet/hloginconsultacadastral"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-left transition-colors hover:bg-primary/10"
+              >
+                <Search className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80">
+                    Consulta cadastral Manaus
+                  </span>
+                  <span className="block text-xs leading-5 text-foreground">
+                    Descubra a Inscrição Municipal e confira se o tomador é substituto tributário.
+                  </span>
+                </span>
+                <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
+              </a>
               <label className="field-label">Inscrição Estadual</label>
               <input
                 className="field-input"

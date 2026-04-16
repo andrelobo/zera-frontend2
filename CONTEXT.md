@@ -59,6 +59,60 @@ Leitura operacional correta:
   - saneamento semantico do select de favoritos
   - reforco de sincronizacao visual da listagem apos emissao
 
+Ganho operacional percebido na mesma frente:
+- antes da homologacao efetiva do webhook no backend, o fechamento visual de uma emissao ate `AUTORIZADA` podia levar cerca de **1min20s**
+- com o webhook homologado e aplicado em producao, esse tempo caiu para aproximadamente **15s**
+- implicacao correta no frontend:
+  - a UI passou a conviver com conclusao muito mais rapida da emissao
+  - por isso a invalidacao de cache antes de navegar para `/nfse` deixou de ser apenas conveniencia e passou a ser ajuste importante de percepcao operacional
+
+## 0. Atualizacao de Contexto (2026-04-08) - `cadastropf` pago e frente liberada para implementacao assistida
+Fonte: `decisao operacional` + `validacao previa de viabilidade tecnica`.
+
+Leitura consolidada:
+- a API do Hub do Desenvolvedor para enriquecimento de CPF foi contratada/paga
+- isso muda a situacao anterior da frente:
+  - deixa de ser apenas estudo de viabilidade
+  - passa a ser frente autorizada para implementacao tecnica
+
+Leitura correta dessa autorizacao:
+- o pagamento da API **nao** transforma automaticamente o autocomplete em feature pronta
+- o que ficou liberado foi:
+  - prosseguir com implementacao do fluxo de autocomplete de tomador por CPF
+  - dentro do contexto de cadastro/emissao
+  - com foco em preenchimento assistido do maior numero possivel de campos uteis
+
+Regra canonica de implementacao:
+1. integrar via backend do ZERA, nao diretamente no frontend
+2. tratar como preenchimento assistido, nunca bloqueio de cadastro
+3. limitar a automacao ao contexto de tomador por CPF
+4. preencher o maximo de campos uteis para emissao sem inventar regra fiscal
+
+Campos-alvo iniciais desta frente:
+- nome
+- CEP
+- logradouro
+- numero
+- complemento
+- bairro
+- cidade
+- UF
+- telefone / whatsapp
+- email
+
+Campos que permanecem fora do escopo desse autocomplete:
+- substituto tributario
+- regra fiscal
+- decisao automatica de emissao
+
+Leitura operacional correta hoje:
+- a frente de enriquecimento por CPF continua sensivel
+- porem agora ela ja pode sair de analise e entrar em implementacao incremental
+- o mantra segue o mesmo:
+  - sem quebrar
+  - sem regredir
+  - uma coisa de cada vez
+
 ## 0. Atualizacao de Contexto (2026-04-07) - quadro de emissoes e filtro de provedor
 Fonte: `codigo local` + `teste funcional manual` + `testes locais` + `build local`.
 
