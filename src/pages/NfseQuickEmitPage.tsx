@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Loader2, Send, ShieldAlert } from 'lucide-react';
 import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
+import { mapListaServicoFromConfig } from './nfseEmit.mappers';
 import { formatCNPJ } from '@/utils/validators';
 
 const CERT_REQUIRED_CODES = new Set(['CERTIFICADO_REQUIRED', 'QUICK_PRESTADOR_NO_CERT']);
@@ -127,6 +129,42 @@ const NfseQuickEmitPage = () => {
       })
       .slice(0, 8);
   }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
+
+  const empresaDetalheQuery = useQuery({
+    queryKey: ['empresas', 'quick-emit-detail', cnpjClean],
+    queryFn: () => empresasApi.getByCnpj(cnpjClean),
+    enabled: cnpjClean.length === 14,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const servicosCadastrados = useMemo(() => {
+    const itens = mapListaServicoFromConfig(empresaDetalheQuery.data || undefined)
+      .filter((item) => Boolean(item.codigoServico))
+      .map((item) => ({
+        ...item,
+        codigoServico: String(item.codigoServico || '').replace(/\D/g, '').slice(0, 6),
+      }))
+      .filter((item) => item.codigoServico.length === 6);
+
+    const unique = new Map();
+    itens.forEach((item) => {
+      const key = `${item.codigoServico}::${item.natureza.trim().toLowerCase()}::${item.descricao.trim().toLowerCase()}`;
+      if (!unique.has(key)) unique.set(key, item);
+    });
+    return Array.from(unique.values());
+  }, [empresaDetalheQuery.data]);
+
+  const usarServicosDoCadastro = servicosCadastrados.length > 0;
+
+  useEffect(() => {
+    if (!usarServicosDoCadastro) return;
+    if (!codigoServicoClean) return;
+    const stillExists = servicosCadastrados.some((item) => item.codigoServico === codigoServicoClean);
+    if (stillExists) return;
+    setCodigoServico('');
+    setServiceSearch('');
+  }, [codigoServicoClean, servicosCadastrados, usarServicosDoCadastro]);
 
   const mutation = useMutation({
     mutationFn: () => nfseApi.emitirQuick({
@@ -268,20 +306,61 @@ const NfseQuickEmitPage = () => {
               />
             </div>
 
-            <ServicoAutocomplete
-              queryScope="quick-emit"
-              value={serviceSearch}
-              selectedCode={codigoServicoClean}
-              helperClassName="text-sm"
-              onValueChange={(next) => {
-                setServiceSearch(next);
-                setCodigoServico(extractServiceCode(next));
-              }}
-              onSelect={(item) => {
-                setCodigoServico(item.codigoServico);
-                setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
-              }}
-            />
+            {usarServicosDoCadastro ? (
+              <div className="space-y-2">
+                <Label htmlFor="codigoServicoCadastro">Serviço do cadastro</Label>
+                <Select
+                  value={codigoServicoClean}
+                  onValueChange={(nextCodigo) => {
+                    const item = servicosCadastrados.find((entry) => entry.codigoServico === nextCodigo);
+                    setCodigoServico(nextCodigo);
+                    setServiceSearch(item ? `${item.codigoServico} - ${item.descricao}` : '');
+                  }}
+                >
+                  <SelectTrigger id="codigoServicoCadastro">
+                    <SelectValue placeholder={`Selecione entre ${servicosCadastrados.length} serviço(s) cadastrados`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {servicosCadastrados.map((item) => (
+                      <SelectItem
+                        key={`${item.id}-${item.codigoServico}`}
+                        value={item.codigoServico}
+                      >
+                        {`${item.codigoServico} - ${item.descricao}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  Serviços do cadastro do prestador selecionado.
+                </p>
+              </div>
+            ) : (
+              <>
+                {empresaDetalheQuery.isFetching && cnpjClean.length === 14 && (
+                  <p className="text-sm text-muted-foreground">Carregando serviços do cadastro...</p>
+                )}
+                <ServicoAutocomplete
+                  queryScope="quick-emit"
+                  value={serviceSearch}
+                  selectedCode={codigoServicoClean}
+                  helperClassName="text-sm"
+                  onValueChange={(next) => {
+                    setServiceSearch(next);
+                    setCodigoServico(extractServiceCode(next));
+                  }}
+                  onSelect={(item) => {
+                    setCodigoServico(item.codigoServico);
+                    setServiceSearch(`${item.codigoServico} - ${item.descricao}`);
+                  }}
+                />
+                {empresaDetalheQuery.isFetched && cnpjClean.length === 14 && (
+                  <p className="text-sm text-muted-foreground">
+                    Cadastro sem serviços configurados. Usando catálogo global como fallback.
+                  </p>
+                )}
+              </>
+            )}
 
             {formError && (
               <Alert variant="destructive">
