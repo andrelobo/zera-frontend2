@@ -449,7 +449,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
         )}
 
         <div>
-          <label className="field-label">Razão Social</label>
+          <label className="field-label">{currentIsCPF ? 'Nome' : 'Razão Social'}</label>
           <input
             className="field-input"
             placeholder="Tomador(a)"
