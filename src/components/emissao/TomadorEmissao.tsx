@@ -95,6 +95,20 @@ const toLocalidadeUf = (tomador: Tomador) => {
   return [municipio, uf].filter(Boolean).join(' - ');
 };
 
+const tomadorToEmissaoData = (tomador: Tomador): TomadorEmissaoData => ({
+  cnpjCpf: formatDoc(tomador.cpfCnpj),
+  nomeRazaoSocial: tomador.razaoSocial || '',
+  inscricaoMunicipal: tomador.inscricaoMunicipal || '',
+  cep: tomador.endereco?.cep || '',
+  logradouro: tomador.endereco?.logradouro || '',
+  numero: tomador.endereco?.numero || '',
+  complemento: tomador.endereco?.complemento || '',
+  bairro: tomador.endereco?.bairro || '',
+  localidadeUf: toLocalidadeUf(tomador),
+  email: tomador.email || '',
+  pais: 'Brasil',
+});
+
 async function fetchCnpjData(cnpj: string) {
   const cleaned = cnpj.replace(/\D/g, '');
   const empresa = await empresasApi.previewByCnpj(cleaned);
@@ -243,19 +257,7 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
 
   const selecionarTomador = (t: Tomador) => {
     lastFetchedCnpj.current = t.cpfCnpj.replace(/\D/g, '');
-    onChange({
-      cnpjCpf: formatDoc(t.cpfCnpj),
-      nomeRazaoSocial: t.razaoSocial || '',
-      inscricaoMunicipal: t.inscricaoMunicipal || '',
-      cep: t.endereco?.cep || '',
-      logradouro: t.endereco?.logradouro || '',
-      numero: t.endereco?.numero || '',
-      complemento: t.endereco?.complemento || '',
-      bairro: t.endereco?.bairro || '',
-      localidadeUf: toLocalidadeUf(t),
-      email: t.email || '',
-      pais: 'Brasil',
-    });
+    onChange(tomadorToEmissaoData(t));
     onTomadorSelecionado?.(t);
     setShowDropdown(false);
   };
@@ -358,10 +360,12 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
     }
 
     if (cleaned.length === 11 && validateCPF(cleaned)) {
-      const jaCadastrado = tomadores.some((item) => item.cpfCnpj.replace(/\D/g, '') === cleaned);
-      if (!jaCadastrado) {
-        buscarCpf(formatted);
+      const tomadorLocal = tomadores.find((item) => item.cpfCnpj.replace(/\D/g, '') === cleaned);
+      if (tomadorLocal) {
+        onChange(tomadorToEmissaoData(tomadorLocal));
+        onTomadorSelecionado?.(tomadorLocal);
       }
+      buscarCpf(formatted);
       return;
     }
 
