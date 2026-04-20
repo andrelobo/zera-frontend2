@@ -139,7 +139,7 @@ const QueryPersistenceBridge = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <QueryPersistenceBridge />
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />

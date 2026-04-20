@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
+import ThemeToggle from '@/components/ThemeToggle';
+import VisualThemeToggle from '@/components/VisualThemeToggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -113,7 +115,7 @@ const AppLayout = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="bg-[hsl(216,60%,16%)] sticky top-0 z-10 px-4 sm:px-6 py-2.5 flex items-center gap-3 sm:gap-6">
+          <header className="bg-[hsl(var(--app-header))] sticky top-0 z-10 px-4 sm:px-6 py-2.5 flex items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <SidebarTrigger className="text-white hover:text-white/80" />
               <div className="hidden sm:block h-5 w-px bg-white/20" />
@@ -165,6 +167,8 @@ const AppLayout = () => {
                       Observabilidade Fiscal
                     </DropdownMenuItem>
                   ) : null}
+                  <ThemeToggle menuItem />
+                  <VisualThemeToggle />
                   {isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/users')}>
                       <UserCog className="mr-2 h-4 w-4" />
