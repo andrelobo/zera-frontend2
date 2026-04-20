@@ -27,6 +27,41 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-17) - CPF de tomador em producao com retorno parcial do Hub do Desenvolvedor
+Fonte: `codigo local` + `curl em producao` + `validacao funcional real`.
+
+Leitura consolidada:
+- a rota de lookup de CPF para tomadores PF esta ativa em producao no backend
+- o fluxo deixou de estar bloqueado por rota ausente ou token faltando
+- o retorno real observado para CPF valido confirmou a integracao funcionando, mas com payload parcial
+
+Evidencia funcional desta rodada:
+- `GET /tomadores/lookup/cpf?cpf=` respondeu em producao
+- o backend encontrou CPF real e devolveu `found: true`
+- o retorno observado trouxe:
+  - `nome`
+  - `dataNascimento`
+  - `genero`
+  - `lastUpdate`
+- o mesmo retorno nao trouxe:
+  - `email`
+  - `telefone`
+  - `endereco`
+
+Leitura canonica correta agora:
+1. a integracao de CPF para `tomadores` esta funcional
+2. o endpoint correto continua sendo `cadastropf`
+3. o frontend deve preencher automaticamente apenas os campos realmente entregues pela fonte
+4. ausencia de contato/endereco nao deve ser tratada como erro do frontend
+5. a leitura mais provavel no momento e restricao de cobertura/LGPD/escopo da conta junto ao Hub do Desenvolvedor
+
+Regra operacional:
+- quando vier apenas payload parcial, o produto deve:
+  - preencher `nome` quando disponivel
+  - preservar digitacao manual dos demais campos
+  - nao sobrescrever nem perder dados vindos das outras trilhas ja existentes
+
+
 ## 0. Atualizacao de Contexto (2026-04-16) - enriquecimento de tomador PF por CPF integrado via backend
 Fonte: `codigo local` + `testes locais` + `build local`.
 
