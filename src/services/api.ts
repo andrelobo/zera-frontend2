@@ -1,7 +1,7 @@
 import api from '@/lib/api';
 import { formatCNPJ } from '@/utils/validators';
 import type {
-  LoginRequest, LoginResponse, User, CreateUserRequest, UpdateUserRequest,
+  LoginRequest, LoginResponse, AcceptInviteRequest, User, CreateUserRequest, UpdateUserRequest, InviteUserRequest, InviteUserResponse,
   Empresa, CreateEmpresaRequest, UpdateEmpresaRequest, ImportCertificadoDigitalRequest, ImportCertificadoDigitalResponse,
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
   NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem, NfseBiSummary,
@@ -362,6 +362,10 @@ export const authApi = {
       timeout: 30_000,
       skipGlobalErrorToast: true,
     }).then(r => r.data),
+  acceptInvite: (data: AcceptInviteRequest) =>
+    api.post<LoginResponse>('/auth/accept-invite', data, {
+      skipGlobalErrorToast: true,
+    }).then(r => r.data),
   warmup: () =>
     api.get('/health', {
       timeout: 20_000,
@@ -706,6 +710,11 @@ export const usersApi = {
       ...data,
       role: data.role ? roleToApi(data.role) : undefined,
       status: data.status || 'active',
+    }).then(r => r.data),
+  invite: (data: InviteUserRequest) =>
+    api.post<InviteUserResponse>('/users/invite', {
+      ...data,
+      role: data.role ? roleToApi(data.role) : undefined,
     }).then(r => r.data),
   update: (id: string, data: UpdateUserRequest) =>
     api.patch<User>(`/users/${id}`, {

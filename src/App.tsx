@@ -11,6 +11,7 @@ import LoadingState from "@/components/LoadingState";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const AcceptInvitePage = lazy(() => import("@/pages/AcceptInvitePage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const Dash2Page = lazy(() => import("@/pages/Dash2Page"));
 const GestorAiPage = lazy(() => import("@/pages/GestorAiPage"));
@@ -147,6 +148,7 @@ const App = () => (
             <Suspense fallback={<LoadingState />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/accept-invite" element={<AcceptInvitePage />} />
                 <Route
                   element={
                     <ProtectedRoute>

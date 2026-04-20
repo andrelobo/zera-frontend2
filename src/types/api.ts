@@ -26,12 +26,23 @@ export interface LoginResponse {
   access_token?: string;
 }
 
+export interface AcceptInviteRequest {
+  token: string;
+  password: string;
+}
+
 export interface User {
   id: string;
   email: string;
   name?: string;
   role: UserRole;
   status?: 'active' | 'inactive';
+  onboardingStatus?: 'manual' | 'invited' | 'accepted';
+  invitedAt?: string;
+  inviteExpiresAt?: string;
+  inviteAcceptedAt?: string;
+  welcomeEmailSentAt?: string;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +55,18 @@ export interface CreateUserRequest {
   password: string;
   role?: UserRole;
   status?: 'active' | 'inactive';
+}
+
+export interface InviteUserRequest {
+  email: string;
+  name: string;
+  role?: UserRole;
+}
+
+export interface InviteUserResponse {
+  user: User;
+  inviteToken: string;
+  inviteUrl: string | null;
 }
 
 export interface UpdateUserRequest {

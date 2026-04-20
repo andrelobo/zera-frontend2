@@ -1,31 +1,51 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy, ArrowLeft, KeyRound, Loader2, MailPlus, Save, ShieldCheck } from 'lucide-react';
 import { usersApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import type { CreateUserRequest, UserRole } from '@/types/api';
+import type { CreateUserRequest, InviteUserResponse, UserRole } from '@/types/api';
 import LoadingState from '@/components/LoadingState';
+import { useAuth } from '@/contexts/AuthContext';
+import { normalizeRole } from '@/lib/roles';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+type CreationMode = 'invite' | 'manual';
+
+const buildLocalInviteLink = (invite: InviteUserResponse | null) => {
+  if (!invite) return '';
+  if (invite.inviteUrl) return invite.inviteUrl;
+  if (typeof window === 'undefined') return invite.inviteToken;
+  return `${window.location.origin}/accept-invite?token=${invite.inviteToken}`;
+};
 
 const UserFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = !!id;
+  const { user } = useAuth();
+  const isAdmin = normalizeRole(user?.role || 'user') === 'admin';
+  const [creationMode, setCreationMode] = useState<CreationMode>('invite');
+  const [inviteResult, setInviteResult] = useState<InviteUserResponse | null>(null);
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['user', id],
     queryFn: () => usersApi.getById(id!),
-    enabled: isEdit,
+    enabled: isEdit && isAdmin,
   });
 
   const [form, setForm] = useState<CreateUserRequest>({
-    name: '', email: '', password: '', role: 'user', status: 'active',
+    name: '',
+    email: '',
+    password: '',
+    role: 'user',
+    status: 'active',
   });
 
   useEffect(() => {
@@ -41,7 +61,7 @@ const UserFormPage = () => {
   }, [existing]);
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (isEdit) {
         const payload: Record<string, unknown> = {
           name: form.name,
@@ -50,16 +70,67 @@ const UserFormPage = () => {
           status: form.status,
         };
         if (form.password) payload.password = form.password;
-        return usersApi.update(id!, payload);
+        return { kind: 'update' as const, data: await usersApi.update(id!, payload) };
       }
-      return usersApi.create(form);
+
+      if (creationMode === 'invite') {
+        return {
+          kind: 'invite' as const,
+          data: await usersApi.invite({
+            name: form.name,
+            email: form.email,
+            role: form.role,
+          }),
+        };
+      }
+
+      return { kind: 'create' as const, data: await usersApi.create(form) };
     },
-    onSuccess: () => {
-      toast({ title: isEdit ? 'Usuário atualizado' : 'Usuário criado' });
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+
+      if (result.kind === 'invite') {
+        setInviteResult(result.data);
+        toast({
+          title: 'Convite criado',
+          description: 'Copie o link de primeiro acesso e envie ao usuário.',
+        });
+        return;
+      }
+
+      toast({ title: isEdit ? 'Usuário atualizado' : 'Usuário criado' });
       navigate('/users');
     },
   });
+
+  const inviteLink = buildLocalInviteLink(inviteResult);
+
+  const copyInviteLink = async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      toast({ title: 'Link copiado' });
+    } catch {
+      toast({
+        title: 'Não foi possível copiar',
+        description: 'Selecione o link manualmente e copie.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+        <Alert>
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>Acesso restrito</AlertTitle>
+          <AlertDescription>Esta área é exclusiva para administradores.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (isEdit && isLoading) return <LoadingState />;
 
@@ -69,49 +140,143 @@ const UserFormPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/users')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Usuário' : 'Novo Usuário'}</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Usuário' : 'Convidar Usuário'}</h1>
+          <p className="text-sm text-muted-foreground">
+            {isEdit ? 'Atualize perfil, status ou senha.' : 'Crie acesso sem enviar senha por e-mail.'}
+          </p>
+        </div>
       </div>
+
+      {inviteResult ? (
+        <Card className="border-emerald-200 bg-emerald-50/70">
+          <CardContent className="space-y-4 pt-6">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 rounded-full bg-emerald-600/10 p-2 text-emerald-700">
+                <MailPlus className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold text-emerald-950">Convite pronto para envio</h2>
+                <p className="mt-1 text-sm text-emerald-900/75">
+                  O usuário está inativo até aceitar o convite e definir a própria senha.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input value={inviteLink} readOnly className="bg-white" />
+              <Button type="button" onClick={copyInviteLink} className="shrink-0">
+                <Copy className="mr-2 h-4 w-4" />
+                Copiar link
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardContent className="pt-6">
-          <form onSubmit={e => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+          <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-5">
+            {!isEdit ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => { setCreationMode('invite'); setInviteResult(null); }}
+                  className={`rounded-xl border p-4 text-left transition ${
+                    creationMode === 'invite'
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                      : 'hover:border-primary/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-semibold">
+                    <MailPlus className="h-4 w-4 text-primary" />
+                    Convite seguro
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    Recomendado: o usuário define a própria senha no primeiro acesso.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCreationMode('manual'); setInviteResult(null); }}
+                  className={`rounded-xl border p-4 text-left transition ${
+                    creationMode === 'manual'
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                      : 'hover:border-primary/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-semibold">
+                    <KeyRound className="h-4 w-4 text-primary" />
+                    Senha manual
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    Mantém o fluxo antigo: o administrador define a senha inicial.
+                  </p>
+                </button>
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} required />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>E-mail</Label>
-              <Input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
+
+            {(isEdit || creationMode === 'manual') ? (
+              <div className="space-y-2">
+                <Label>{isEdit ? 'Nova Senha (deixe vazio para manter)' : 'Senha inicial'}</Label>
+                <Input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                  required={!isEdit && creationMode === 'manual'}
+                />
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Perfil</Label>
+                <Select value={form.role || 'user'} onValueChange={(v) => setForm((p) => ({ ...p, role: v as UserRole }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="manager">Gestor</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(isEdit || creationMode === 'manual') ? (
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={form.status || 'active'} onValueChange={(v) => setForm((p) => ({ ...p, status: v as 'active' | 'inactive' }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Ativo</SelectItem>
+                      <SelectItem value="inactive">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
             </div>
-            <div className="space-y-2">
-              <Label>{isEdit ? 'Nova Senha (deixe vazio para manter)' : 'Senha'}</Label>
-              <Input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required={!isEdit} />
-            </div>
-            <div className="space-y-2">
-              <Label>Perfil</Label>
-              <Select value={form.role || 'user'} onValueChange={v => setForm(p => ({ ...p, role: v as UserRole }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="manager">Gestor</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status || 'active'} onValueChange={v => setForm(p => ({ ...p, status: v as 'active' | 'inactive' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end pt-4">
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="ghost" onClick={() => navigate('/users')}>
+                Voltar
+              </Button>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                {isEdit ? 'Salvar' : 'Cadastrar'}
+                {mutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : creationMode === 'invite' && !isEdit ? (
+                  <MailPlus className="mr-2 h-4 w-4" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                {isEdit ? 'Salvar' : creationMode === 'invite' ? 'Gerar convite' : 'Cadastrar'}
               </Button>
             </div>
           </form>

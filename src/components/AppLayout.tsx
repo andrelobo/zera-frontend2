@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { BotMessageSquare, ChevronDown, LogOut, RadioTower, UserRound } from 'lucide-react';
+import { BotMessageSquare, ChevronDown, LogOut, RadioTower, UserCog, UserRound } from 'lucide-react';
 import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import { useAuth } from '@/contexts/AuthContext';
 import { normalizeRole } from '@/lib/roles';
@@ -163,6 +163,12 @@ const AppLayout = () => {
                     <DropdownMenuItem onClick={() => navigate('/observabilidade-fiscal')}>
                       <RadioTower className="mr-2 h-4 w-4" />
                       Observabilidade Fiscal
+                    </DropdownMenuItem>
+                  ) : null}
+                  {isAdmin ? (
+                    <DropdownMenuItem onClick={() => navigate('/users')}>
+                      <UserCog className="mr-2 h-4 w-4" />
+                      Usuários
                     </DropdownMenuItem>
                   ) : null}
                   {isAdmin ? <DropdownMenuSeparator /> : null}
