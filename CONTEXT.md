@@ -27,6 +27,37 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+
+## 0. Atualizacao de Contexto (2026-04-20) - DANFSE, CPF, servicos favoritos e emissao rapida sem poluir tomadores
+Fonte: `codigo local` + `testes locais` + `validacao funcional real`.
+
+Leitura consolidada:
+- a DANFSE normal segue como fluxo completo de emissao, com tomador selecionado ou preenchido manualmente
+- o enriquecimento por CPF agora tambem participa do tomador digitado manualmente na DANFSE
+- quando o documento for CPF, a UI deve usar leitura de pessoa fisica:
+  - label `Nome`
+  - sem campos de PJ como inscricao municipal
+- quando o CPF existir localmente, o frontend pode preencher os dados salvos e ainda consultar o Hub do Desenvolvedor para complemento
+- quando o Hub devolver apenas nome/data/genero, isso e sucesso parcial, nao falha visual
+
+Servicos na DANFSE:
+- `Servicos Favoritos` deve vir do cadastro atual do prestador em `Prestador > Parametros Municipais`
+- se o prestador tiver dois favoritos salvos, os dois precisam aparecer na emissao
+- a lista da DANFSE nao deve depender de historico do tomador nem de dados antigos contaminando o select
+- a tela pode exibir itens sem CTN/NBS apenas quando o cadastro realmente estiver incompleto; nesse caso, a leitura correta e revisar/salvar o prestador
+
+Emissao rapida:
+- `Emissao Rapida` continua sendo o fluxo para emitir com payload minimo, inclusive CPF sem cadastro completo
+- ela nao deve ser tratada como fonte de cadastro formal de tomadores para o seletor da DANFSE
+- tomadores antigos que ja tenham sido criados por emissao rapida sao legado de banco e exigem limpeza propria, fora de mudancas visuais
+
+Regra operacional:
+1. nao misturar correcao visual com alteracao fiscal
+2. nao inferir dados ausentes do Hub no frontend
+3. nao sobrescrever dados manuais bons com retorno parcial
+4. validar servicos favoritos sempre contra o cadastro vigente do prestador
+5. manter a premissa: sem quebrar, sem regredir, uma coisa de cada vez
+
 ## 0. Atualizacao de Contexto (2026-04-17) - CPF de tomador em producao com retorno parcial do Hub do Desenvolvedor
 Fonte: `codigo local` + `curl em producao` + `validacao funcional real`.
 

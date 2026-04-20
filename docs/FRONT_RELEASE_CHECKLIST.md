@@ -122,15 +122,17 @@ yarn vitest run <arquivo-do-teste>
 - Selecionar item em `Lista Servico`
 - Confirmar que codigo e descricao atualizam corretamente
 
-## Emissao - Checklist Provisorio Antes do Enriquecimento por CPF
+## Emissao - Checklist Atual com CPF, favoritos e Emissao Rapida
 
-Este bloco existe para o estado atual do produto:
-- antes da integracao do autocomplete rico por CPF via Hub do Desenvolvedor
-- com emissao normal (`/nfse/emitir`) e emissao rapida (`/nfse/quick`) convivendo
+Este bloco protege o estado atual do produto:
+- CPF de tomador ja consulta o backend em `GET /tomadores/lookup/cpf?cpf=`
+- a resposta do Hub do Desenvolvedor pode ser parcial e deve degradar para preenchimento manual
+- emissao normal (`/nfse/emitir`) e emissao rapida (`/nfse/quick`) continuam convivendo, mas com responsabilidades diferentes
 
 Leitura correta:
-- a DANFSE normal ainda pressupoe tomador suficientemente completo para atender o contrato fiscal
+- a DANFSE normal pressupoe tomador suficientemente completo para atender o contrato fiscal
 - a Emissao Rapida continua sendo o fluxo canonico para CPF sem cadastro previo quando o objetivo e emitir com payload minimo
+- a Emissao Rapida nao deve criar novo tomador no seletor da DANFSE; aparicoes antigas devem ser tratadas como legado de dados
 
 ### 9. DANFSE com tomador PJ ja cadastrado
 
@@ -149,9 +151,10 @@ Leitura correta:
 - Abrir `Nova DANFSE`
 - Selecionar tomador PF ja salvo
 - Confirmar:
+  - label `Nome` no lugar de `Razao Social`
   - ocultacao de `Inscricao Municipal`
   - preenchimento de nome
-  - preenchimento de endereco
+  - preenchimento de endereco quando existir no cadastro
 - Emitir
 - Confirmar submit sem erro de payload incompleto do tomador
 
@@ -169,7 +172,15 @@ Leitura correta:
 - Emitir
 - Se o endereco nao vier completo, confirmar que o fluxo nao e tratado como pronto para emissao por engano
 
-### 12. DANFSE sem tomador suficiente
+### 12. DANFSE com tomador digitado manualmente por CPF
+
+- Abrir `Nova DANFSE`
+- Digitar CPF valido de tomador nao selecionado na lista
+- Confirmar tentativa de lookup em `GET /tomadores/lookup/cpf?cpf=`
+- Confirmar que a tela preenche `Nome` quando o provider devolver nome legivel
+- Confirmar que ausencia de endereco/contato nao apaga digitacao manual nem trava a tela indevidamente
+
+### 12.1 DANFSE sem tomador suficiente
 
 - Abrir `Nova DANFSE`
 - Informar apenas documento e nome do tomador, sem endereco suficiente
@@ -187,12 +198,16 @@ Leitura correta:
   - codigo do servico
 - Emitir
 - Confirmar que o fluxo aceita payload minimo sem depender de cadastro previo do tomador
+- Voltar para `Nova DANFSE`
+- Confirmar que esse CPF novo nao foi adicionado ao seletor de tomadores por causa da emissao rapida
 
 ### 14. Servico Prestado na DANFSE
 
 - Confirmar favoritos carregando do `Prestador > Parametros Municipais`
+- Se houver dois favoritos salvos no prestador, confirmar que os dois aparecem no select
 - Selecionar favorito
-- Confirmar reaproveitamento de CTN vinculado
+- Confirmar preenchimento de descricao e codigos disponiveis
+- Confirmar que favorito sem CTN/NBS mostra a lacuna sem inventar codigo
 - Selecionar item em `Lista Servico` sem `codigoServico`
 - Confirmar que apenas a descricao e acrescentada
 - Selecionar item em `Lista Servico` com `codigoServico`
@@ -225,6 +240,7 @@ Nao liberar se qualquer um destes pontos falhar:
 - tomador duplicado permitir salvar
 - save/reload do prestador voltar dados incoerentes
 - favorito/lista servico na emissao reaproveitar dado antigo
+- emissao rapida voltar a criar tomador novo no seletor da DANFSE
 
 ## Observacoes
 

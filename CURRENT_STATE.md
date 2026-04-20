@@ -2,6 +2,24 @@
 
 Snapshot operacional do frontend em **07/04/2026**.
 
+
+## 0. Atualizacao rapida (20/04/2026) - DANFSE alinhada ao CPF, favoritos do prestador e emissao rapida isolada
+
+Fonte: `codigo local` + `testes locais` + `validacao funcional real`.
+
+Leitura consolidada:
+- `Nova DANFSE` usa CPF de tomador como pessoa fisica: label `Nome`, sem campos de PJ e com lookup assistido no backend
+- quando o CPF ja existir na base local, a tela pode preencher o tomador salvo antes de complementar com Hub do Desenvolvedor
+- resposta parcial do Hub continua valida apenas para os campos que vierem legiveis
+- `Servicos Favoritos` na emissao deve refletir o que esta salvo em `Prestador > Parametros Municipais`
+- `Emissao Rapida` nao deve cadastrar tomador no seletor da DANFSE; se aparecer registro antigo, tratar como legado de dados
+
+Regra operacional atual:
+1. DANFSE normal = fluxo completo, com tomador suficientemente preenchido
+2. Emissao Rapida = payload minimo para emitir, sem virar cadastro formal de tomador
+3. favoritos de servico = prestador vigente, nao historico de tomador
+4. CPF = assistido e parcial quando a fonte externa entregar pouco dado
+
 ## 0. Atualizacao rapida (16/04/2026) - CPF de tomador integrado via backend com Hub do Desenvolvedor
 
 Fonte: `codigo local` + `testes locais` + `build local`.
