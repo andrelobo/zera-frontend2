@@ -2,6 +2,39 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (21/04/2026) - DANFSE padrao aceita tomador manual com decisao explicita de cadastro
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Estado atual:
+- `Nova DANFSE` continua sendo o fluxo completo de emissao
+- tomador manual/nao cadastrado agora pode ser usado na emissao padrao sem passar antes por `Tomadores`
+- quando o tomador digitado nao existe no cadastro, ou veio incompleto, a tela abre `Dados do tomador para esta nota`
+- os campos obrigatorios para evitar rejeicao da API sao:
+  - CEP
+  - logradouro
+  - numero
+  - bairro
+- a tela tambem permite complemento, cidade/UF e e-mail
+- CEP no bloco do tomador manual consulta endereco e preenche logradouro/bairro/cidade quando a fonte retornar dados
+
+Decisao de cadastro:
+- tomador manual mostra `Cadastrar no cadastro de tomadores?`
+- padrao para manual: `Nao`
+- `Nao` envia `syncTomadorCadastro: false`
+- `Sim` envia `syncTomadorCadastro: true`
+- tomador ja cadastrado nao mostra essa escolha
+
+Regra operacional correta:
+1. DANFSE padrao pode emitir para tomador avulso, desde que os dados fiscais completos estejam na tela
+2. a tela bloqueia antes do backend se faltar endereco obrigatorio do tomador
+3. cadastro a partir da emissao padrao e escolha explicita, nao efeito colateral invisivel
+4. Emissao Rapida permanece isolada e sem cadastro formal de tomador
+
+Validacao:
+- `npm test -- src/components/emissao/TomadorEmissao.test.tsx src/pages/NfseEmitPage.tomador-substituto.test.tsx`
+- `npm run build`
+
 ## 0. Atualizacao rapida (21/04/2026) - visual elegante azul, Phosphor somente no Visual elegante e onboarding admin
 
 Fonte: `codigo local` + `git log local` + `build local`.

@@ -27,6 +27,49 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-21) - DANFSE padrao com tomador manual, endereco obrigatorio e escolha de cadastro
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- a DANFSE padrao continua sendo o fluxo completo de emissao
+- agora ela tambem permite preencher tomador manual/avulso sem depender previamente do cadastro de tomadores
+- quando o CPF/CNPJ digitado nao existe no cadastro, ou quando o tomador cadastrado esta sem endereco fiscal completo, a tela abre o bloco `Dados do tomador para esta nota`
+- esse bloco coleta os dados que o backend ja exigia para a emissao:
+  - CEP
+  - logradouro
+  - numero
+  - bairro
+  - complemento
+  - cidade/UF
+  - e-mail
+- o CEP digitado nesse bloco consulta a mesma fonte de CEP usada no restante do frontend e preenche endereco quando houver retorno util
+
+Validacao antes do backend:
+- a tela agora bloqueia a emissao padrao antes de chamar a API se faltar:
+  - CEP valido do tomador
+  - logradouro do tomador
+  - numero do tomador
+  - bairro do tomador
+- isso substitui o erro bruto do backend por mensagem local clara, sem relaxar a regra fiscal
+
+Cadastro do tomador a partir da emissao:
+- para tomador manual/nao cadastrado, a DANFSE mostra a pergunta `Cadastrar no cadastro de tomadores?`
+- o padrao para tomador manual e `Nao`
+- se o usuario marcar `Sim`, o frontend envia `syncTomadorCadastro: true`
+- se o usuario mantiver `Nao`, o frontend envia `syncTomadorCadastro: false`
+- quando o tomador ja existe no cadastro, a pergunta nao aparece e o comportamento segue estavel
+
+Regra operacional:
+1. DANFSE padrao pode emitir para tomador nao cadastrado, desde que os dados fiscais obrigatorios sejam informados na propria tela
+2. Emissao Rapida continua sendo payload minimo e nao vira cadastro formal de tomador
+3. cadastro de tomador a partir da DANFSE padrao virou decisao explicita do usuario
+4. nao inventar endereco, nao inferir dados ausentes e nao criar tomador sem escolha consciente
+5. manter o mantra: sem quebrar, sem regredir, uma coisa de cada vez
+
+Validacao desta rodada:
+- `npm test -- src/components/emissao/TomadorEmissao.test.tsx src/pages/NfseEmitPage.tomador-substituto.test.tsx`
+- `npm run build`
+
 ## 0. Atualizacao de Contexto (2026-04-21) - tema visual elegante azul, icones condicionais e onboarding de usuarios
 Fonte: `codigo local` + `git log local` + `build local`.
 
