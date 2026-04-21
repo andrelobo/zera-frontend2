@@ -13,10 +13,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { BotMessageSquare, ChevronDown, LogOut, RadioTower, UserCog, UserRound } from 'lucide-react';
+import {
+  BotMessageSquare,
+  ChevronDown,
+  LogOut,
+  RadioTower,
+  UserCog,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  Broadcast,
+  CaretDown,
+  Robot,
+  SignOut,
+  UserCircle,
+  UserGear,
+  type Icon as PhosphorIcon,
+} from '@phosphor-icons/react';
 import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import { useAuth } from '@/contexts/AuthContext';
 import { normalizeRole } from '@/lib/roles';
+import { useVisualTheme } from '@/hooks/useVisualTheme';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 type HeaderSnapshot = {
@@ -24,6 +42,17 @@ type HeaderSnapshot = {
   issReferencia: number;
   aliquotaEfetiva: number;
 };
+
+type AdaptiveIconProps = {
+  className: string;
+  classic: LucideIcon;
+  elegant: PhosphorIcon;
+  isElegant: boolean;
+};
+
+const AdaptiveIcon = ({ className, classic: ClassicIcon, elegant: ElegantIcon, isElegant }: AdaptiveIconProps) => (
+  isElegant ? <ElegantIcon className={className} weight="duotone" /> : <ClassicIcon className={className} />
+);
 
 const fallbackCalculo = calcularSimplesAnexoIII(120000, 'III');
 const FALLBACK_SNAPSHOT: HeaderSnapshot = {
@@ -64,6 +93,7 @@ const getInitials = (nameOrEmail: string | undefined) => {
 const AppLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { isElegant } = useVisualTheme();
   const [snapshot, setSnapshot] = useState<HeaderSnapshot>(() => {
     if (typeof window === 'undefined') return FALLBACK_SNAPSHOT;
     return parseSnapshot(window.localStorage.getItem(TICKER_STORAGE_KEY)) || FALLBACK_SNAPSHOT;
@@ -120,7 +150,12 @@ const AppLayout = () => {
               <SidebarTrigger className="text-white hover:text-white/80" />
               <div className="hidden sm:block h-5 w-px bg-white/20" />
               <span className="hidden sm:flex text-[10px] font-semibold text-white/50 tracking-widest items-center gap-1.5">
-                <BotMessageSquare className="w-4 h-4 animate-[bounce_2s_ease-in-out_infinite]" />
+                <AdaptiveIcon
+                  classic={BotMessageSquare}
+                  elegant={Robot}
+                  isElegant={isElegant}
+                  className="w-4 h-4 animate-[bounce_2s_ease-in-out_infinite]"
+                />
                 Inteligência Fiscal IA
               </span>
             </div>
@@ -148,7 +183,7 @@ const AppLayout = () => {
                       </AvatarFallback>
                     </Avatar>
                     <span className="hidden sm:inline max-w-[180px] truncate text-sm text-white">{displayName}</span>
-                    <ChevronDown className="h-4 w-4 text-white/70" />
+                    <AdaptiveIcon classic={ChevronDown} elegant={CaretDown} isElegant={isElegant} className="h-4 w-4 text-white/70" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -158,12 +193,12 @@ const AppLayout = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/account')}>
-                    <UserRound className="mr-2 h-4 w-4" />
+                    <AdaptiveIcon classic={UserRound} elegant={UserCircle} isElegant={isElegant} className="mr-2 h-4 w-4" />
                     Minha Conta
                   </DropdownMenuItem>
                   {isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/observabilidade-fiscal')}>
-                      <RadioTower className="mr-2 h-4 w-4" />
+                      <AdaptiveIcon classic={RadioTower} elegant={Broadcast} isElegant={isElegant} className="mr-2 h-4 w-4" />
                       Observabilidade Fiscal
                     </DropdownMenuItem>
                   ) : null}
@@ -171,13 +206,13 @@ const AppLayout = () => {
                   <VisualThemeToggle />
                   {isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/users')}>
-                      <UserCog className="mr-2 h-4 w-4" />
+                      <AdaptiveIcon classic={UserCog} elegant={UserGear} isElegant={isElegant} className="mr-2 h-4 w-4" />
                       Usuários
                     </DropdownMenuItem>
                   ) : null}
                   {isAdmin ? <DropdownMenuSeparator /> : null}
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <AdaptiveIcon classic={LogOut} elegant={SignOut} isElegant={isElegant} className="mr-2 h-4 w-4" />
                     Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>

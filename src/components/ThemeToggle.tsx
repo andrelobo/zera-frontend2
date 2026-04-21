@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
+import { Moon as MoonLucide, Sun as SunLucide } from 'lucide-react';
+import { Moon as MoonPhosphor, Sun as SunPhosphor } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
+import { useVisualTheme } from '@/hooks/useVisualTheme';
 
 type ThemeToggleProps = {
   menuItem?: boolean;
@@ -9,6 +11,7 @@ type ThemeToggleProps = {
 
 const ThemeToggle = ({ menuItem = false }: ThemeToggleProps) => {
   const { resolvedTheme, setTheme } = useTheme();
+  const { isElegant } = useVisualTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -17,7 +20,19 @@ const ThemeToggle = ({ menuItem = false }: ThemeToggleProps) => {
 
   const isDark = mounted && resolvedTheme === 'dark';
   const label = isDark ? 'Tema claro' : 'Tema escuro';
-  const Icon = isDark ? Sun : Moon;
+
+  const iconClassName = menuItem ? 'mr-2 h-4 w-4' : 'h-4 w-4';
+  const icon = isElegant
+    ? (
+      isDark
+        ? <SunPhosphor className={iconClassName} weight="duotone" />
+        : <MoonPhosphor className={iconClassName} weight="duotone" />
+    )
+    : (
+      isDark
+        ? <SunLucide className={iconClassName} />
+        : <MoonLucide className={iconClassName} />
+    );
 
   return (
     <Button
@@ -33,7 +48,7 @@ const ThemeToggle = ({ menuItem = false }: ThemeToggleProps) => {
           : 'h-9 w-9 text-white hover:bg-white/10 hover:text-white focus-visible:ring-white/50'
       }
     >
-      <Icon className={menuItem ? 'mr-2 h-4 w-4' : 'h-4 w-4'} />
+      {icon}
       {menuItem ? <span>{label}</span> : null}
     </Button>
   );

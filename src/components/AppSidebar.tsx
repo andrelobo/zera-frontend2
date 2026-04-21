@@ -8,7 +8,18 @@ import {
   Settings,
   ClipboardList,
   LayoutDashboard,
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  Bank,
+  Buildings,
+  ClipboardText,
+  House,
+  Receipt as ReceiptPhosphor,
+  SlidersHorizontal,
+  UsersThree,
+  type Icon as PhosphorIcon,
+} from '@phosphor-icons/react';
 import {
   Sidebar,
   SidebarContent,
@@ -22,20 +33,38 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useVisualTheme } from '@/hooks/useVisualTheme';
 
 type ActiveTab = 'dashboard' | 'prestador' | 'tomador' | 'emissao';
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
 
-const prestadorSubItems = [
-  { key: 'cadastro' as PrestadorSubTab, label: 'Dados Cadastrais', icon: ClipboardList },
-  { key: 'regime' as PrestadorSubTab, label: 'Regime Tributário', icon: Landmark },
-  { key: 'parametros' as PrestadorSubTab, label: 'Parâmetros Fiscais', icon: Settings },
+type AdaptiveIconProps = {
+  className: string;
+  classic: LucideIcon;
+  elegant: PhosphorIcon;
+  isElegant: boolean;
+};
+
+const AdaptiveIcon = ({ className, classic: ClassicIcon, elegant: ElegantIcon, isElegant }: AdaptiveIconProps) => (
+  isElegant ? <ElegantIcon className={className} weight="duotone" /> : <ClassicIcon className={className} />
+);
+
+const prestadorSubItems: Array<{
+  key: PrestadorSubTab;
+  label: string;
+  classicIcon: LucideIcon;
+  elegantIcon: PhosphorIcon;
+}> = [
+  { key: 'cadastro', label: 'Dados Cadastrais', classicIcon: ClipboardList, elegantIcon: ClipboardText },
+  { key: 'regime', label: 'Regime Tributário', classicIcon: Landmark, elegantIcon: Bank },
+  { key: 'parametros', label: 'Parâmetros Fiscais', classicIcon: Settings, elegantIcon: SlidersHorizontal },
 ];
 
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state, isMobile, setOpenMobile } = useSidebar();
+  const { isElegant } = useVisualTheme();
   const isCollapsed = state === 'collapsed';
 
   const activeTab = useMemo<ActiveTab>(() => {
@@ -114,7 +143,7 @@ const AppSidebar = () => {
                       : ''
                   }
                 >
-                  <LayoutDashboard className="w-4 h-4" />
+                  <AdaptiveIcon classic={LayoutDashboard} elegant={House} isElegant={isElegant} className="w-4 h-4" />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -130,7 +159,7 @@ const AppSidebar = () => {
                       : ''
                   }
                 >
-                  <Building2 className="w-4 h-4" />
+                  <AdaptiveIcon classic={Building2} elegant={Buildings} isElegant={isElegant} className="w-4 h-4" />
                   <span>O Prestador</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -149,7 +178,12 @@ const AppSidebar = () => {
                             : 'text-sidebar-foreground/70'
                         }`}
                       >
-                        <sub.icon className="w-3.5 h-3.5" />
+                        <AdaptiveIcon
+                          classic={sub.classicIcon}
+                          elegant={sub.elegantIcon}
+                          isElegant={isElegant}
+                          className="w-3.5 h-3.5"
+                        />
                         <span>{sub.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -168,7 +202,7 @@ const AppSidebar = () => {
                       : ''
                   }
                 >
-                  <Users className="w-4 h-4" />
+                  <AdaptiveIcon classic={Users} elegant={UsersThree} isElegant={isElegant} className="w-4 h-4" />
                   <span>Tomadores</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -184,7 +218,7 @@ const AppSidebar = () => {
                       : ''
                   }
                 >
-                  <Receipt className="w-4 h-4" />
+                  <AdaptiveIcon classic={Receipt} elegant={ReceiptPhosphor} isElegant={isElegant} className="w-4 h-4" />
                   <span>DANFSE</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
