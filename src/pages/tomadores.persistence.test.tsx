@@ -138,7 +138,7 @@ describe('Tomadores persistence flow', () => {
     });
   });
 
-  it('preserves substituto tributario when editing cpf tomador', async () => {
+  it('forces substituto tributario false when editing cpf tomador', async () => {
     const cpfTomador = {
       ...baseTomador,
       cpfCnpj: '61020788100',
@@ -155,7 +155,6 @@ describe('Tomadores persistence flow', () => {
     expect(await screen.findByDisplayValue('CLIENTE TESTE LTDA')).toBeInTheDocument();
     expect(screen.getByText('Substituto Tributário')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Não' }));
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Tomador' }));
 
     await waitFor(() => {

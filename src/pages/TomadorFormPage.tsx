@@ -146,7 +146,7 @@ const TomadorFormPage = () => {
         inscricaoMunicipal: cpfContext ? undefined : (form.inscricaoMunicipal || undefined),
         inscricaoEstadual: cpfContext ? undefined : (form.inscricaoEstadual || undefined),
         suframa: cpfContext ? undefined : (form.suframa || undefined),
-        substitutoTributario: form.substitutoTributario,
+        substitutoTributario: cpfContext ? false : form.substitutoTributario,
         email: form.email || undefined,
         whatsapp: form.whatsapp || undefined,
         endereco: {

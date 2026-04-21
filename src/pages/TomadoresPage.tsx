@@ -54,7 +54,9 @@ const TomadoresPage = () => {
         ? `${tomador.endereco.municipio} - ${tomador.endereco.uf}`
         : undefined,
       email: tomador.email,
-      substitutoTributario: Boolean(tomador.substitutoTributario),
+      substitutoTributario: tomador.cpfCnpj.replace(/\D/g, '').length === 11
+        ? false
+        : Boolean(tomador.substitutoTributario),
     })),
     [tomadores],
   );

@@ -226,17 +226,25 @@ describe('TomadorSection UI', () => {
     expect(screen.queryByPlaceholderText('Inscrição estadual')).not.toBeInTheDocument();
   });
 
-  it('keeps substituto tributario toggle visible for cpf tomadores', () => {
+  it('forces substituto tributario to nao for cpf tomadores', () => {
+    const onChange = vi.fn();
+
     render(
       <TomadorSection
-        data={{ ...baseTomador(), cnpjCpf: '610.207.881-00' }}
-        onChange={vi.fn()}
+        data={{ ...baseTomador(), cnpjCpf: '610.207.881-00', substitutoTributario: true }}
+        onChange={onChange}
         onAutosave={vi.fn()}
       />,
     );
 
     expect(screen.getByText('Substituto Tributário')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sim' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sim' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Não' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim' }));
+
+    expect(onChange).not.toHaveBeenCalledWith(
+      expect.objectContaining({ substitutoTributario: true }),
+    );
   });
 });

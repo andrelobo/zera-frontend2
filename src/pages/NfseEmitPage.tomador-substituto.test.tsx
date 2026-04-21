@@ -112,6 +112,15 @@ const tomadorNao = {
   updatedAt: '2026-04-10T00:00:00.000Z',
 };
 
+const tomadorCpfLegadoSim = {
+  ...tomadorSim,
+  id: 'tom-cpf-legado-sim',
+  cpfCnpj: '61020788100',
+  razaoSocial: 'TOMADOR CPF LEGADO SIM',
+  substitutoTributario: true,
+  inscricaoMunicipal: undefined,
+};
+
 const renderPage = (ui: ReactNode) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -235,6 +244,23 @@ describe('NfseEmitPage tomador substituto', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Tomador já cadastrado: TOMADOR NAO/i)).toBeInTheDocument();
+      expect(screen.getByText(/ISS devido ao proprio Municipio/i)).toBeInTheDocument();
+    });
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('ignores substituto tributario true from legacy cpf tomador during emission', async () => {
+    mocks.tomadoresList.mockResolvedValue([tomadorCpfLegadoSim]);
+    mocks.tomadoresAutocomplete.mockResolvedValue([tomadorCpfLegadoSim]);
+
+    renderPage(<NfseEmitPage />);
+
+    const [_, docInput] = await screen.findAllByPlaceholderText('00.000.000/0000-00');
+
+    fireEvent.change(docInput, { target: { value: '61020788100' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tomador já cadastrado: TOMADOR CPF LEGADO SIM/i)).toBeInTheDocument();
       expect(screen.getByText(/ISS devido ao proprio Municipio/i)).toBeInTheDocument();
     });
     expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');

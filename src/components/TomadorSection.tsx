@@ -355,7 +355,11 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
       setLookupSource('');
     }
     const base = docChanged ? clearAutofillFields(data) : data;
-    onChange({ ...base, cnpjCpf: formatted });
+    onChange({
+      ...base,
+      cnpjCpf: formatted,
+      substitutoTributario: isRealCpf(formatted) ? false : base.substitutoTributario,
+    });
     onAutosave();
     if (cleaned.length === 14) {
       buscarCNPJ(formatted);
@@ -374,6 +378,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
   };
 
   const currentIsCPF = isRealCpf(data.cnpjCpf);
+  const effectiveSubstitutoTributario = currentIsCPF ? false : data.substitutoTributario;
 
   return (
     <div className="section-card">
@@ -444,8 +449,8 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         <div className="flex items-center gap-3 pb-1">
           <label className="field-label whitespace-nowrap mb-0">Substituto Tributário</label>
           <div className="flex items-center gap-0">
-            <button type="button" className={`px-2 py-1 text-xs rounded-l-md border transition-colors ${data.substitutoTributario ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: true }); onAutosave(); }}>Sim</button>
-            <button type="button" className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${!data.substitutoTributario ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: false }); onAutosave(); }}>Não</button>
+            <button type="button" disabled={currentIsCPF} className={`px-2 py-1 text-xs rounded-l-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${effectiveSubstitutoTributario ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { if (currentIsCPF) return; onChange({ ...data, substitutoTributario: true }); onAutosave(); }}>Sim</button>
+            <button type="button" className={`px-2 py-1 text-xs rounded-r-md border border-l-0 transition-colors ${!effectiveSubstitutoTributario ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:bg-accent'}`} onClick={() => { onChange({ ...data, substitutoTributario: false }); onAutosave(); }}>Não</button>
           </div>
         </div>
       </div>

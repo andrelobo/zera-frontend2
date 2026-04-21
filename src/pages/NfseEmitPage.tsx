@@ -215,7 +215,10 @@ const NfseEmitPage: React.FC = () => {
   const showParametroCard = empresaTributacao.optanteSimples && empresaTributacao.simplesAnexo === 'III';
 
   useEffect(() => {
-    const substituto = Boolean(tomadorCadastradoAtual?.substitutoTributario);
+    const tomadorDocDigits = tomadorCadastradoAtual?.cpfCnpj.replace(/\D/g, '') || '';
+    const substituto = tomadorDocDigits.length === 11
+      ? false
+      : Boolean(tomadorCadastradoAtual?.substitutoTributario);
     setTomadorSubstituto((prev) => (prev === substituto ? prev : substituto));
     setPrestacao((prev) => {
       const automation = resolveIssAutomation({
