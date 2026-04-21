@@ -27,6 +27,54 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-04-21) - tema visual elegante azul, icones condicionais e onboarding de usuarios
+Fonte: `codigo local` + `git log local` + `build local`.
+
+Leitura consolidada:
+- o frontend passou a ter duas alternancias independentes no menu do usuario:
+  - `Tema claro/escuro` controla o tema base via `next-themes`
+  - `Visual elegante/classico` controla apenas a camada visual propria do ZERA
+- o `ThemeProvider` nao deve mais forcar somente tema claro; o dark mode do Tema 1 voltou a poder ser alternado pelo usuario
+- o `Visual elegante` e aplicado por `body.theme-elegant`, persistido em `localStorage` e sincronizado por hook compartilhado
+- a paleta canonica do `Visual elegante` voltou para a familia azul do ZERA; nao usar verde/marrom como direcao dessa frente
+- a fonte do `Visual elegante` e `Manrope`, mantendo leitura mais fina/elegante sem trocar a base funcional
+
+Regra canonica dos icones:
+- o kit novo e `@phosphor-icons/react`
+- Phosphor deve aparecer somente quando `Visual elegante` estiver ativo
+- o tema classico continua com `lucide-react`
+- a troca de icones aplicada ate aqui fica restrita a casca do app:
+  - sidebar
+  - header
+  - menu do usuario
+  - toggles de tema/visual
+- nao trocar icones globalmente em formularios fiscais, emissao, prestador ou tomador sem rodada especifica
+
+Onboarding de usuarios no frontend:
+- area admin de usuarios esta acessivel pelo menu do usuario em `/users`
+- rotas atuais:
+  - `/users`
+  - `/users/novo`
+  - `/users/:id`
+  - `/accept-invite`
+- admin pode:
+  - listar usuarios
+  - editar perfil/status/senha
+  - remover usuario
+  - criar usuario manualmente
+  - gerar convite seguro e copiar link de primeiro acesso
+- usuario convidado define a propria senha em `/accept-invite?token=...`
+- se o backend nao devolver `inviteUrl`, o frontend monta o link usando `window.location.origin`
+- senha nao deve trafegar por e-mail; o link de convite e a trilha recomendada
+
+Validacao desta rodada:
+- `yarn build` passou apos a troca visual e inclusao do Phosphor
+
+Regra operacional:
+1. tema elegante deve ser evoluido atras do toggle, sem alterar contratos fiscais
+2. kit novo de icones e exclusivo do visual elegante
+3. tema classico continua servindo como baseline anti-regressao
+4. qualquer expansao de icones para telas internas deve ser feita uma tela por vez
 
 ## 0. Atualizacao de Contexto (2026-04-20) - DANFSE, CPF, servicos favoritos e emissao rapida sem poluir tomadores
 Fonte: `codigo local` + `testes locais` + `validacao funcional real`.

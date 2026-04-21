@@ -1,7 +1,35 @@
 # ZERA Frontend – Current State
 
-Snapshot operacional do frontend em **07/04/2026**.
+Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (21/04/2026) - visual elegante azul, Phosphor somente no Visual elegante e onboarding admin
+
+Fonte: `codigo local` + `git log local` + `build local`.
+
+Estado atual:
+- o menu do usuario concentra as alternancias de UI:
+  - `Tema claro/escuro` para o tema base
+  - `Visual elegante/classico` para a camada visual experimental controlada
+- `Visual elegante` usa `body.theme-elegant`, `localStorage` e hook compartilhado para sincronizar estado
+- a direcao visual vigente do elegante e azul ZERA com `Manrope`
+- `@phosphor-icons/react` foi adicionado como kit novo, mas sua renderizacao fica condicionada ao `Visual elegante`
+- no tema classico, a casca continua com os icones `lucide-react`
+- a troca de kit esta limitada a sidebar, header, dropdown do usuario e toggles
+
+Regra anti-regressao:
+1. nao trocar icones globalmente fora do `Visual elegante`
+2. nao alterar telas fiscais internas junto com mudanca de tema
+3. manter o tema classico como fallback visual seguro
+
+Usuarios e onboarding:
+- admin acessa `/users` pelo menu do usuario
+- `/users/novo` permite gerar convite seguro ou criar usuario manual
+- convite retorna link copiavel para `/accept-invite?token=...`
+- usuario convidado define sua propria senha no primeiro acesso
+- o fluxo recomendado nao envia senha por e-mail
+
+Validacao:
+- `yarn build` passou.
 
 ## 0. Atualizacao rapida (20/04/2026) - DANFSE alinhada ao CPF, favoritos do prestador e emissao rapida isolada
 
