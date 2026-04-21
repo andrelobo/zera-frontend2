@@ -3,7 +3,7 @@ import { Users, FileText, Loader2, Search, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { empresasApi, tomadoresApi } from '@/services/api';
 import { lookupCep } from '@/services/cep';
-import { normalizeLogradouro, validateCNPJ } from '@/utils/validators';
+import { formatCEP, normalizeLogradouro, sanitizeAddressNumber, validateCNPJ } from '@/utils/validators';
 import type { Tomador } from '@/types/api';
 
 export interface TomadorEmissaoData {
@@ -26,6 +26,8 @@ interface Props {
   tomadores?: Tomador[];
   onTomadorSelecionado?: (tomador: Tomador) => void;
   loadingTomadores?: boolean;
+  syncTomadorCadastro?: boolean;
+  onSyncTomadorCadastroChange?: (value: boolean) => void;
 }
 
 export const INITIAL_TOMADOR: TomadorEmissaoData = {
@@ -216,15 +218,25 @@ const mergeTomadorFromCepResult = (
     : current.localidadeUf,
 });
 
-const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, loadingTomadores }: Props) => {
+const TomadorEmissao = ({
+  data,
+  onChange,
+  tomadores = [],
+  onTomadorSelecionado,
+  loadingTomadores,
+  syncTomadorCadastro = false,
+  onSyncTomadorCadastroChange,
+}: Props) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [loadingCpf, setLoadingCpf] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lastFetchedCnpj = useRef('');
   const lastFetchedCpf = useRef('');
   const cnpjRequestSeq = useRef(0);
   const cpfRequestSeq = useRef(0);
+  const cepRequestSeq = useRef(0);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -240,11 +252,23 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
 
   const tomadoresView = useMemo(() => tomadores.slice(0, 30), [tomadores]);
   const currentIsCPF = isCPF(data.cnpjCpf);
+  const docDigits = data.cnpjCpf.replace(/\D/g, '');
   const tomadorExistente = useMemo(() => {
-    const digits = data.cnpjCpf.replace(/\D/g, '');
+    const digits = docDigits;
     if (digits.length !== 11 && digits.length !== 14) return null;
     return tomadores.find((item) => item.cpfCnpj.replace(/\D/g, '') === digits) || null;
-  }, [data.cnpjCpf, tomadores]);
+  }, [docDigits, tomadores]);
+  const hasCompleteRequiredAddress =
+    data.cep.replace(/\D/g, '').length === 8 &&
+    Boolean(data.logradouro.trim()) &&
+    Boolean(data.numero.trim()) &&
+    Boolean(data.bairro.trim());
+  const shouldShowAddressFields =
+    (docDigits.length === 11 || docDigits.length === 14) &&
+    (!tomadorExistente || !hasCompleteRequiredAddress);
+  const shouldShowSyncChoice =
+    (docDigits.length === 11 || docDigits.length === 14) &&
+    !tomadorExistente;
   const shouldPulseSelector =
     tomadoresView.length > 0 &&
     !showDropdown &&
@@ -348,8 +372,10 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
       lastFetchedCpf.current = '';
       cnpjRequestSeq.current += 1;
       cpfRequestSeq.current += 1;
+      cepRequestSeq.current += 1;
       setLoadingCnpj(false);
       setLoadingCpf(false);
+      setLoadingCep(false);
     }
     const base = docChanged ? clearAutofillFields(data) : data;
     onChange({ ...base, cnpjCpf: formatted });
@@ -371,6 +397,45 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
 
     setLoadingCnpj(false);
     setLoadingCpf(false);
+  };
+
+  const updateField = (field: keyof TomadorEmissaoData, value: string) => {
+    const normalizedValue = field === 'logradouro'
+      ? normalizeLogradouro(value)
+      : field === 'numero'
+        ? sanitizeAddressNumber(value)
+        : value;
+    onChange({ ...data, [field]: normalizedValue });
+  };
+
+  const buscarCep = useCallback(async (cepValue: string) => {
+    const cleaned = cepValue.replace(/\D/g, '');
+    if (cleaned.length !== 8) return;
+    const requestId = ++cepRequestSeq.current;
+    setLoadingCep(true);
+    try {
+      const result = await fetchCepData(cleaned);
+      if (requestId !== cepRequestSeq.current) return;
+      onChange(mergeTomadorFromCepResult({ ...dataRef.current, cep: formatCEP(cleaned) }, result));
+    } catch {
+      toast.error('Não foi possível consultar o CEP.');
+    } finally {
+      if (requestId === cepRequestSeq.current) {
+        setLoadingCep(false);
+      }
+    }
+  }, [onChange]);
+
+  const handleCepChange = (value: string) => {
+    const formatted = formatCEP(value);
+    onChange({ ...data, cep: formatted });
+    const cleaned = formatted.replace(/\D/g, '');
+    if (cleaned.length === 8) {
+      buscarCep(formatted);
+      return;
+    }
+    cepRequestSeq.current += 1;
+    setLoadingCep(false);
   };
 
   return (
@@ -458,6 +523,128 @@ const TomadorEmissao = ({ data, onChange, tomadores = [], onTomadorSelecionado, 
           />
         </div>
       </div>
+
+      {shouldShowAddressFields && (
+        <div className="mt-4 pt-4 border-t border-border/70">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Dados do tomador para esta nota</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-[0.8fr_2fr_0.7fr_1.2fr] gap-3">
+            <div>
+              <label className="field-label">CEP*</label>
+              <div className="flex gap-2">
+                <input
+                  className="field-input"
+                  placeholder="00000-000"
+                  value={formatCEP(data.cep)}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  maxLength={9}
+                />
+                {loadingCep && (
+                  <div className="flex items-center px-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Logradouro*</label>
+              <input
+                className="field-input"
+                placeholder="Rua, Av., etc."
+                value={data.logradouro}
+                onChange={(e) => updateField('logradouro', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="field-label">Número*</label>
+              <input
+                className="field-input"
+                placeholder="Nº"
+                value={data.numero}
+                onChange={(e) => updateField('numero', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="field-label">Bairro*</label>
+              <input
+                className="field-input"
+                placeholder="Bairro"
+                value={data.bairro}
+                onChange={(e) => updateField('bairro', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr_1fr] gap-3 mt-3">
+            <div>
+              <label className="field-label">Complemento</label>
+              <input
+                className="field-input"
+                placeholder="Sala, andar, etc."
+                value={data.complemento}
+                onChange={(e) => updateField('complemento', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="field-label">Cidade / UF</label>
+              <input
+                className="field-input"
+                placeholder="Manaus - AM"
+                value={data.localidadeUf}
+                onChange={(e) => updateField('localidadeUf', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="field-label">E-mail</label>
+              <input
+                className="field-input"
+                placeholder="email@dominio.com"
+                value={data.email}
+                onChange={(e) => updateField('email', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {shouldShowSyncChoice && (
+        <div className="mt-4 pt-4 border-t border-border/70 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Cadastrar no cadastro de tomadores?</p>
+            <p className="text-xs text-muted-foreground">Use Sim quando este tomador deve aparecer nos próximos autocompletes.</p>
+          </div>
+
+          <div className="inline-flex w-fit rounded-md border border-border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => onSyncTomadorCadastroChange?.(false)}
+              className={`px-3 py-1.5 text-xs font-bold transition-colors ${
+                !syncTomadorCadastro
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-background text-muted-foreground hover:bg-muted/60'
+              }`}
+            >
+              Não
+            </button>
+            <button
+              type="button"
+              onClick={() => onSyncTomadorCadastroChange?.(true)}
+              className={`px-3 py-1.5 text-xs font-bold transition-colors border-l border-border ${
+                syncTomadorCadastro
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-background text-muted-foreground hover:bg-muted/60'
+              }`}
+            >
+              Sim
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

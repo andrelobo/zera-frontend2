@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   empresaPreviewByCnpj: vi.fn(),
   tomadoresList: vi.fn(),
   tomadoresAutocomplete: vi.fn(),
+  tomadoresLookupCpf: vi.fn(),
   emitirNfse: vi.fn(),
   listMunicipiosByUf: vi.fn(),
   lookupCep: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock('@/services/api', () => ({
   tomadoresApi: {
     list: mocks.tomadoresList,
     autocomplete: mocks.tomadoresAutocomplete,
+    lookupCpf: mocks.tomadoresLookupCpf,
   },
   nfseApi: {
     emitir: mocks.emitirNfse,
@@ -147,6 +149,11 @@ describe('NfseEmitPage tomador substituto', () => {
     mocks.empresaPreviewByCnpj.mockResolvedValue(empresaBase);
     mocks.tomadoresList.mockResolvedValue([tomadorSim, tomadorNao]);
     mocks.tomadoresAutocomplete.mockResolvedValue([tomadorSim, tomadorNao]);
+    mocks.tomadoresLookupCpf.mockResolvedValue({
+      cpf: '61020788100',
+      found: false,
+      usefulData: false,
+    });
     mocks.listMunicipiosByUf.mockResolvedValue([{ id: 1302603, nome: 'Manaus', uf: 'AM' }]);
     mocks.lookupCep.mockResolvedValue({
       logradouro: 'RUA UM',
@@ -264,5 +271,21 @@ describe('NfseEmitPage tomador substituto', () => {
       expect(screen.getByText(/ISS devido ao proprio Municipio/i)).toBeInTheDocument();
     });
     expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('blocks standard emission before backend when manual tomador address is missing', async () => {
+    renderPage(<NfseEmitPage />);
+
+    const [_, docInput] = await screen.findAllByPlaceholderText('00.000.000/0000-00');
+
+    fireEvent.change(docInput, { target: { value: '61020788100' } });
+    fireEvent.change(await screen.findByPlaceholderText('Tomador(a)'), { target: { value: 'CLIENTE AVULSO' } });
+    fireEvent.click(screen.getByRole('button', { name: /Emitir/i }));
+
+    expect(await screen.findByText('CEP do tomador é obrigatório.')).toBeInTheDocument();
+    expect(screen.getByText('Logradouro do tomador é obrigatório.')).toBeInTheDocument();
+    expect(screen.getByText('Número do tomador é obrigatório.')).toBeInTheDocument();
+    expect(screen.getByText('Bairro do tomador é obrigatório.')).toBeInTheDocument();
+    expect(mocks.emitirNfse).not.toHaveBeenCalled();
   });
 });

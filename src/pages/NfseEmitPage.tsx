@@ -139,6 +139,7 @@ const NfseEmitPage: React.FC = () => {
   const [localPrestacao, setLocalPrestacao] = useState<LocalPrestacaoData>({ pais: 'Brasil', uf: 'AM', municipio: 'Manaus' });
   const [errors, setErrors] = useState<string[]>([]);
   const [tomadorSubstituto, setTomadorSubstituto] = useState(false);
+  const [syncTomadorCadastro, setSyncTomadorCadastro] = useState(false);
   const [referenciaExterna] = useState(buildReferencia());
   const prestadorHydratedRef = useRef(false);
   const prestadorCnpjDigits = prestador.cnpj.replace(/\D/g, '');
@@ -213,6 +214,10 @@ const NfseEmitPage: React.FC = () => {
   );
   const parametroIssLabel = useMemo(() => resolveParametroIssLabel(simplesParametroIss), [simplesParametroIss]);
   const showParametroCard = empresaTributacao.optanteSimples && empresaTributacao.simplesAnexo === 'III';
+
+  useEffect(() => {
+    setSyncTomadorCadastro(Boolean(tomadorCadastradoAtual));
+  }, [tomador.cnpjCpf, tomadorCadastradoAtual]);
 
   useEffect(() => {
     const tomadorDocDigits = tomadorCadastradoAtual?.cpfCnpj.replace(/\D/g, '') || '';
@@ -291,6 +296,10 @@ const NfseEmitPage: React.FC = () => {
     if (!validateCNPJ(prestador.cnpj)) erros.push('CNPJ do prestador é obrigatório/inválido.');
     if (!tomador.cnpjCpf) erros.push('CPF/CNPJ do tomador é obrigatório.');
     if (!tomador.nomeRazaoSocial) erros.push('Nome/Razão Social do tomador é obrigatório.');
+    if (tomador.cep.replace(/\D/g, '').length !== 8) erros.push('CEP do tomador é obrigatório.');
+    if (!tomador.logradouro.trim()) erros.push('Logradouro do tomador é obrigatório.');
+    if (!tomador.numero.trim()) erros.push('Número do tomador é obrigatório.');
+    if (!tomador.bairro.trim()) erros.push('Bairro do tomador é obrigatório.');
     if (tomador.email && !validateEmail(tomador.email)) erros.push('E-mail do tomador inválido.');
     if (!prestacao.codigoServico) erros.push('Código do serviço é obrigatório.');
     if (!prestacao.descricaoServico) erros.push('Descrição do serviço é obrigatória.');
@@ -340,6 +349,7 @@ const NfseEmitPage: React.FC = () => {
 
     const payload: EmitirNfseRequest = {
       parametroIssAplicado: simplesParametroIss || undefined,
+      syncTomadorCadastro,
       localPrestacao: {
         pais: localPrestacao.pais || undefined,
         uf: localPrestacao.uf || undefined,
@@ -450,6 +460,8 @@ const NfseEmitPage: React.FC = () => {
           onTomadorSelecionado={handleTomadorSelecionado}
           tomadores={tomadoresQuery.data || []}
           loadingTomadores={tomadoresQuery.isLoading}
+          syncTomadorCadastro={syncTomadorCadastro}
+          onSyncTomadorCadastroChange={setSyncTomadorCadastro}
         />
 
         <LocalPrestacaoSection data={localPrestacao} onChange={setLocalPrestacao} />

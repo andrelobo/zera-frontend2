@@ -403,6 +403,7 @@ export interface EmitirNfseRequest {
   competencia?: string;
   dataEmissao?: string;
   parametroIssAplicado?: string;
+  syncTomadorCadastro?: boolean;
   localPrestacao?: {
     pais?: string;
     uf?: string;
