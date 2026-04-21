@@ -18,6 +18,7 @@ import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
+const NFSE_LIST_LIMIT = 10;
 
 const openBlobInNewTab = (blob: Blob) => {
   const url = URL.createObjectURL(blob);
@@ -30,7 +31,7 @@ const NfseListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = 1;
-  const limit = 1;
+  const limit = NFSE_LIST_LIMIT;
   const status = (searchParams.get('status') as NfseStatus) || undefined;
   const provider = (searchParams.get('provider') as NfseProvider) || undefined;
 
@@ -244,7 +245,7 @@ const NfseListPage = () => {
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Mostrando apenas a última emissão visível no quadro.
+              Mostrando as últimas {NFSE_LIST_LIMIT} emissões mais recentes no quadro.
             </span>
             <span className="text-sm text-muted-foreground">
               Histórico preservado: {data?.total || 0} registro(s).

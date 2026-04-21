@@ -35,6 +35,23 @@ Validacao:
 - `npm test -- src/components/emissao/TomadorEmissao.test.tsx src/pages/NfseEmitPage.tomador-substituto.test.tsx`
 - `npm run build`
 
+## 0. Atualizacao rapida (21/04/2026) - listagem de NFSe com ultimas 10 emissoes
+
+Fonte: `codigo local` + `build local`.
+
+Estado atual:
+- `Notas Fiscais` mostra as ultimas 10 emissoes mais recentes
+- a busca usa `limit = 10`, `page = 1`, `createdAt DESC`
+- cada linha preserva numero, status, tomador, valor, provedor, data e acoes
+- o status continua visivel na tabela por `StatusBadge`
+- o historico total continua preservado no backend; a tela e apenas um quadro operacional compacto
+
+Regra operacional:
+1. lista visivel = ultimas 10 emissoes
+2. historico nao e apagado
+3. filtros de status/provedor continuam aplicaveis
+4. polling visual continua apenas para emissoes em andamento
+
 ## 0. Atualizacao rapida (21/04/2026) - visual elegante azul, Phosphor somente no Visual elegante e onboarding admin
 
 Fonte: `codigo local` + `git log local` + `build local`.

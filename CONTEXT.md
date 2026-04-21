@@ -70,6 +70,24 @@ Validacao desta rodada:
 - `npm test -- src/components/emissao/TomadorEmissao.test.tsx src/pages/NfseEmitPage.tomador-substituto.test.tsx`
 - `npm run build`
 
+
+## 0. Atualizacao de Contexto (2026-04-21) - listagem de NFSe volta a exibir ultimas 10 emissoes
+Fonte: `codigo local` + `build local`.
+
+Leitura consolidada:
+- a tela `Notas Fiscais` deixou de ficar limitada a uma unica emissao visivel
+- a listagem agora busca `page = 1`, `limit = 10`, `sort = createdAt`, `order = DESC`
+- objetivo: mostrar as ultimas 10 emissoes mais recentes com seus respectivos status
+- a coluna `Status` permanece como fonte visual principal do estado da emissao
+- os filtros de `Status` e `Provedor` continuam funcionando sobre esse recorte
+- polling visual continua ativo apenas quando houver emissao em `PENDING` ou `PROCESSING`
+
+Regra operacional:
+1. nao apagar historico
+2. nao reintroduzir paginacao nesta rodada
+3. manter a listagem como quadro operacional das ultimas 10 emissoes
+4. preservar detalhes, PDF e download por linha
+
 ## 0. Atualizacao de Contexto (2026-04-21) - tema visual elegante azul, icones condicionais e onboarding de usuarios
 Fonte: `codigo local` + `git log local` + `build local`.
 
