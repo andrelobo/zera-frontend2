@@ -71,6 +71,22 @@ Validacao desta rodada:
 - `npm run build`
 
 
+## 0. Atualizacao de Contexto (2026-04-21) - Emissao Rapida com prestador unico padrao
+Fonte: `codigo local` + `build local`.
+
+Leitura consolidada:
+- a tela `Emissao Rapida` nao deve exibir dois campos de prestador no cenario atual
+- como neste momento existe apenas um prestador operacional, a UI mostra um bloco unico `Prestador`
+- o CNPJ do prestador continua sendo carregado automaticamente e usado no payload
+- o campo manual `CNPJ do prestador` foi removido da interface para reduzir ambiguidade
+- a escolha/autocomplete de prestador fica como frente futura quando houver multiplos prestadores cadastrados
+- os campos de CPF do tomador, valor e servico permanecem inalterados
+
+Regra operacional:
+1. hoje: prestador padrao unico
+2. futuro: seletor de prestador so quando houver necessidade real de multi-prestador
+3. nao alterar contrato da emissao rapida por mudanca visual
+
 ## 0. Atualizacao de Contexto (2026-04-21) - listagem de NFSe volta a exibir ultimas 10 emissoes
 Fonte: `codigo local` + `build local`.
 

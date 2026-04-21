@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Send, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Building2, Loader2, Send, ShieldAlert } from 'lucide-react';
 import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 import { mapListaServicoFromConfig } from './nfseEmit.mappers';
 import { formatCNPJ } from '@/utils/validators';
@@ -69,10 +69,7 @@ const getApiError = (error: unknown): ApiError => {
 const NfseQuickEmitPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [empresaSearch, setEmpresaSearch] = useState('');
-  const [empresaSearchDebounced, setEmpresaSearchDebounced] = useState('');
   const [cnpj, setCnpj] = useState('');
-  const [empresaAutofillLabel, setEmpresaAutofillLabel] = useState<string | null>(null);
   const [cpfTomador, setCpfTomador] = useState('');
   const [valorDigits, setValorDigits] = useState<string>('');
   const [codigoServico, setCodigoServico] = useState('');
@@ -88,17 +85,6 @@ const NfseQuickEmitPage = () => {
   const valorNumber = useMemo(() => Number(valorDigits || '0') / 100, [valorDigits]);
   const valorMasked = useMemo(() => formatCurrencyFromDigits(valorDigits), [valorDigits]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setEmpresaSearchDebounced(empresaSearch), 250);
-    return () => clearTimeout(timer);
-  }, [empresaSearch]);
-
-  const canSearchEmpresa = empresaSearchDebounced.trim().length >= 2;
-  const { data: empresas = [], isLoading: empresasLoading } = useQuery({
-    queryKey: ['empresas', 'quick-emit'],
-    queryFn: empresasApi.list,
-    staleTime: 60_000,
-  });
   const empresaDefaultQuery = useQuery({
     queryKey: ['empresas', 'quick-emit-default'],
     queryFn: () => empresasApi.list({ limit: 20 }),
@@ -113,22 +99,9 @@ const NfseQuickEmitPage = () => {
   useEffect(() => {
     if (!empresaDefault) return;
     const defaultCnpj = empresaDefault.cnpj.replace(/\D/g, '');
-    if (cnpjClean === defaultCnpj && empresaSearch.includes(defaultCnpj.slice(-4))) return;
+    if (cnpjClean === defaultCnpj) return;
     setCnpj(formatCNPJ(defaultCnpj));
-    setEmpresaSearch(`${empresaDefault.razaoSocial} (${formatCNPJ(defaultCnpj)})`);
-    setEmpresaAutofillLabel(empresaDefault.razaoSocial);
-  }, [cnpjClean, empresaDefault, empresaSearch]);
-
-  const filteredEmpresas = useMemo(() => {
-    if (!canSearchEmpresa) return [];
-    const search = empresaSearchDebounced.trim().toLowerCase();
-    return empresas
-      .filter((empresa) => {
-        return empresa.razaoSocial.toLowerCase().includes(search)
-          || empresa.cnpj.replace(/\D/g, '').includes(search.replace(/\D/g, ''));
-      })
-      .slice(0, 8);
-  }, [canSearchEmpresa, empresaSearchDebounced, empresas]);
+  }, [cnpjClean, empresaDefault]);
 
   const empresaDetalheQuery = useQuery({
     queryKey: ['empresas', 'quick-emit-detail', cnpjClean],
@@ -226,61 +199,31 @@ const NfseQuickEmitPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">NFSe com CNPJ, CPF e valor</CardTitle>
+          <CardTitle className="text-base">NFSe rápida com prestador padrão, CPF e valor</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="empresaSearch">Empresa (autocomplete)</Label>
-              <Input
-                id="empresaSearch"
-                value={empresaSearch}
-                onChange={(e) => {
-                  setEmpresaSearch(e.target.value);
-                  setEmpresaAutofillLabel(null);
-                }}
-                placeholder="Digite razão social ou CNPJ"
-              />
-              {empresaAutofillLabel && (
-                <p className="text-xs text-muted-foreground">
-                  Empresa padrão carregada: {empresaAutofillLabel}
-                </p>
-              )}
-              {empresasLoading && (
-                <p className="text-sm text-muted-foreground">Carregando empresas...</p>
-              )}
-              {filteredEmpresas.length > 0 && (
-                <div className="max-h-44 overflow-auto rounded-md border p-1">
-                  {filteredEmpresas.map((empresa) => (
-                    <button
-                      key={`quick-empresa-${empresa.id}`}
-                      type="button"
-                      className="w-full rounded px-2 py-1 text-left text-sm hover:bg-accent"
-                      onClick={() => {
-                        setCnpj(formatCNPJ(empresa.cnpj));
-                        setEmpresaSearch(`${empresa.razaoSocial} (${formatCNPJ(empresa.cnpj)})`);
-                        setEmpresaAutofillLabel(null);
-                      }}
-                    >
-                      <span className="font-medium">{empresa.razaoSocial}</span> ({formatCNPJ(empresa.cnpj)})
-                    </button>
-                  ))}
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">
+                  <Building2 className="h-4 w-4" />
                 </div>
-              )}
-              {canSearchEmpresa && !empresasLoading && filteredEmpresas.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhuma empresa encontrada.</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ do prestador (manual, se necessário)</Label>
-              <Input
-                id="cnpj"
-                value={cnpj}
-                onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
-                placeholder="00.000.000/0000-00"
-                required
-              />
+                <div className="min-w-0">
+                  <Label>Prestador</Label>
+                  {empresaDefaultQuery.isLoading && !empresaDefault ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Carregando prestador padrão...</p>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {empresaDefault?.razaoSocial || 'Prestador padrão não encontrado'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {cnpjClean ? formatCNPJ(cnpjClean) : 'CNPJ será carregado automaticamente'}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">

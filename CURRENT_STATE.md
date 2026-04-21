@@ -35,6 +35,22 @@ Validacao:
 - `npm test -- src/components/emissao/TomadorEmissao.test.tsx src/pages/NfseEmitPage.tomador-substituto.test.tsx`
 - `npm run build`
 
+## 0. Atualizacao rapida (21/04/2026) - Emissao Rapida com prestador padrao unico
+
+Fonte: `codigo local` + `build local`.
+
+Estado atual:
+- `Emissao Rapida` exibe apenas um bloco `Prestador`
+- o prestador padrao e carregado automaticamente da lista de empresas
+- o CNPJ continua no estado interno e segue no payload de `/nfse/quick`
+- o antigo autocomplete de empresa e o campo manual de CNPJ do prestador foram retirados da tela
+- objetivo: reduzir confusao enquanto o produto opera com apenas um prestador
+
+Regra operacional:
+1. tela atual assume prestador unico
+2. multi-prestador deve virar seletor proprio em rodada futura
+3. CPF do tomador, valor e servico nao mudaram
+
 ## 0. Atualizacao rapida (21/04/2026) - listagem de NFSe com ultimas 10 emissoes
 
 Fonte: `codigo local` + `build local`.
