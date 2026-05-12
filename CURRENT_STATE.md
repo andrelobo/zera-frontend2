@@ -2,6 +2,26 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (12/05/2026) - auditoria de integracoes externas e excecao atual do IBGE
+
+Fonte: `codigo local` + `docs locais`.
+
+Estado atual:
+- o frontend usa o backend do ZERA como trilha principal para:
+  - CPF de tomador
+  - CNPJ de prestador/tomador
+  - CEP
+- municipios por UF ja possuem rota interna no backend
+- apesar disso, ainda existem duas chamadas diretas ao `IBGE Localidades` no fluxo ativo da emissao:
+  - `src/services/location.ts`
+  - `src/components/emissao/PrestacaoServicoSection.tsx`
+
+Leitura operacional correta:
+1. a direcao canonica continua sendo frontend -> backend do ZERA -> servicos externos
+2. as duas chamadas diretas ao IBGE devem ser tratadas como excecao remanescente
+3. a auditoria executiva desta frente foi registrada fora do repo raiz em `AUDITORIA_INTEGRACOES_EXTERNAS_ZERA_2026-05-12.pdf`
+4. qualquer correcao dessa centralizacao deve ser feita sem misturar ajuste arquitetural com regra fiscal
+
 ## 0. Atualizacao rapida (21/04/2026) - DANFSE padrao aceita tomador manual com decisao explicita de cadastro
 
 Fonte: `codigo local` + `testes locais` + `build local`.

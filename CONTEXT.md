@@ -27,6 +27,32 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+## 0. Atualizacao de Contexto (2026-05-12) - auditoria das integracoes externas e verdade atual da centralizacao
+Fonte: `codigo local` + `docs locais`.
+
+Leitura consolidada:
+- o frontend ja conversa com o backend do ZERA para os fluxos centrais de:
+  - CPF de tomador
+  - CNPJ de prestador/tomador
+  - CEP
+- a borda canonica de CPF continua sendo `GET /tomadores/lookup/cpf`
+- a borda canonica de CEP continua sendo `GET /empresas/lookup/cep/:cep`
+- a borda canonica de municipios existe em `GET /empresas/lookup/municipios`
+
+Verdade atual que nao deve ser omitida:
+- ainda existem duas chamadas diretas do frontend ao `IBGE Localidades` em fluxo ativo da emissao
+- elas aparecem exatamente em:
+  - `src/services/location.ts`
+  - `src/components/emissao/PrestacaoServicoSection.tsx`
+- `src/services/location.ts` alimenta `LocalPrestacaoSection`, que esta ligada a `NfseEmitPage`
+- `src/components/emissao/PrestacaoServicoSection.tsx` tambem esta ligado diretamente a `NfseEmitPage`
+
+Regra canonica desta frente:
+1. a direcao correta e o frontend falar somente com o backend do ZERA
+2. consumo direto de servicos externos no navegador deve ser tratado como divida tecnica remanescente
+3. qualquer centralizacao futura deve preservar comportamento e nao misturar limpeza arquitetural com alteracao fiscal
+4. manter o lema: sem quebrar, sem regredir, uma coisa de cada vez
+
 ## 0. Atualizacao de Contexto (2026-04-21) - DANFSE padrao com tomador manual, endereco obrigatorio e escolha de cadastro
 Fonte: `codigo local` + `testes locais` + `build local`.
 
