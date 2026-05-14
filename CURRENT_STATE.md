@@ -2,6 +2,22 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (14/05/2026) - dominio `zera.net.br` e dependencia operacional de CORS no backend
+
+Fonte: `execucao real` + `codigo local`.
+
+Estado atual:
+- o frontend passou a responder pelo dominio `https://zera.net.br`
+- a mudanca de dominio por si so nao garante acesso funcional ao backend
+- o comportamento observado em producao foi falha de `OPTIONS` em rotas como `/health` e `/auth/login`
+- a causa real foi ausencia da nova origem publica em `CORS_ORIGINS` no backend
+
+Leitura operacional correta:
+1. mudar dominio do frontend exige revisar `CORS_ORIGINS` no backend
+2. `FRONTEND_URL` e `FRONTEND_APP_URL` nao substituem a allowlist de CORS
+3. quando houver novo dominio, subdominio ou alias publico, o backend deve ser redeployado com a origem nova liberada
+4. o sintoma tipico desta falha e preflight `OPTIONS` quebrando antes do login ou do healthcheck
+
 ## 0. Atualizacao rapida (12/05/2026) - auditoria de integracoes externas e excecao atual do IBGE
 
 Fonte: `codigo local` + `docs locais`.

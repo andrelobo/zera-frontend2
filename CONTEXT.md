@@ -27,6 +27,23 @@ Leitura correta dos updates deste arquivo:
 - melhorias, alinhamentos visuais, rollout de polling e ajustes de BI acontecem sobre uma base ja produtiva
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
+
+## 0. Atualizacao de Contexto (2026-05-14) - dominio `zera.net.br` e regra canonica de CORS
+Fonte: `execucao real` + `codigo local`.
+
+Leitura consolidada:
+- o frontend passou a operar pelo dominio `https://zera.net.br`
+- a troca de dominio nao pode ser lida como mudanca apenas de Vercel ou DNS
+- no modelo atual do ZERA, qualquer nova origem publica do frontend depende de ajuste correspondente em `CORS_ORIGINS` no backend
+- a falha observada apos a mudanca foi preflight `OPTIONS` retornando erro antes de `/health` e `/auth/login`
+- a causa real nao estava em `FRONTEND_URL` nem em `FRONTEND_APP_URL`, e sim na allowlist de CORS do backend
+
+Regra canonica desta frente:
+1. novo dominio, subdominio ou alias publico do frontend exige revisar `CORS_ORIGINS` no backend
+2. mudar URL publica sem alinhar CORS pode derrubar login, healthcheck e demais chamadas do navegador
+3. a validacao correta dessa mudanca e testar `OPTIONS`, `/health` e `/auth/login` apos o redeploy
+4. manter o lema: sem quebrar, sem regredir, uma coisa de cada vez
+
 ## 0. Atualizacao de Contexto (2026-05-12) - auditoria das integracoes externas e verdade atual da centralizacao
 Fonte: `codigo local` + `docs locais`.
 
