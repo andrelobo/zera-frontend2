@@ -6,6 +6,7 @@ import { empresasApi, nfseApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Loader2, Save, Settings, ShieldCheck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
