@@ -76,16 +76,16 @@ Validacao:
 Fonte: `codigo local` + `build local`.
 
 Estado atual:
-- `Emissao Rapida` exibe apenas um bloco `Prestador`
-- o prestador padrao e carregado automaticamente da lista de empresas
-- o CNPJ continua no estado interno e segue no payload de `/nfse/quick`
-- o antigo autocomplete de empresa e o campo manual de CNPJ do prestador foram retirados da tela
-- objetivo: reduzir confusao enquanto o produto opera com apenas um prestador
+- `Emissao Rapida` e `Nova DANFSE` agora trabalham com seletor explicito de prestador
+- o `cnpj` enviado na emissao rapida vem da empresa escolhida pelo usuario, sem campo manual separado
+- a `Nova DANFSE` hidrata o card do prestador a partir da empresa selecionada e limpa tomador/servico ao trocar de contexto
+- a tela de cadastro do prestador passou a expor uma acao explicita de sincronizacao com a PlugNotas
+- o frontend continua sem fazer cadastro automatico no provider ao salvar empresa; essa sincronizacao permanece acao separada nesta rodada
 
 Regra operacional:
-1. tela atual assume prestador unico
-2. multi-prestador deve virar seletor proprio em rodada futura
-3. CPF do tomador, valor e servico nao mudaram
+1. a UI ja entrou em primeira fase de multi-prestador
+2. aptidao real de emissao ainda depende da cadeia PlugNotas no backend
+3. CPF do tomador, valor e servico continuam com o mesmo contrato funcional
 
 ## 0. Atualizacao rapida (21/04/2026) - listagem de NFSe com ultimas 10 emissoes
 

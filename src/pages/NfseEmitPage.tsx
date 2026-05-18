@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ArrowLeft, AlertCircle, Loader2, FileOutput, Shield } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, FileOutput, Shield, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
@@ -15,6 +15,8 @@ import { empresasApi, nfseApi, tomadoresApi } from '@/services/api';
 import type { EmitirNfseRequest, Empresa, Tomador } from '@/types/api';
 import { mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 import { resolveEmpresaTributacao, resolveIssAutomation, resolveParametroIssLabel } from './nfseEmit.tributacao';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -106,6 +108,12 @@ const splitLocalidadeUf = (value: string) => {
 const buildReferencia = () => `nfse-front-${Date.now()}`;
 const CODIGO_TRIBUTACAO_PADRAO = (import.meta.env.VITE_NFSE_CODIGO_TRIBUTACAO_PADRAO ?? '100').trim();
 
+const getEmpresaOptionValue = (empresa: Empresa) => {
+  const id = String(empresa.id || '').trim();
+  if (id) return id;
+  return String(empresa.cnpj || '').replace(/\D/g, '');
+};
+
 const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
   if (!empresa) return INITIAL_PRESTADOR;
   const endereco = empresa.endereco || {};
@@ -141,37 +149,93 @@ const NfseEmitPage: React.FC = () => {
   const [tomadorSubstituto, setTomadorSubstituto] = useState(false);
   const [syncTomadorCadastro, setSyncTomadorCadastro] = useState(false);
   const [referenciaExterna] = useState(buildReferencia());
-  const prestadorHydratedRef = useRef(false);
+  const [empresaSelecionadaValue, setEmpresaSelecionadaValue] = useState('');
+  const prestadorHydratedRef = useRef('');
+  const empresaAnteriorRef = useRef('');
   const prestadorCnpjDigits = prestador.cnpj.replace(/\D/g, '');
 
   const autosave = useCallback(() => {}, []);
 
-  const empresaQuery = useQuery({
-    queryKey: ['empresas', 'emit-normal'],
-    queryFn: async () => {
-      const list = await empresasApi.list();
-      const picked = pickEmpresaForEmissao(list) ?? null;
-      if (!picked) return null;
-      if (!picked.id) return picked;
+  const empresasQuery = useQuery({
+    queryKey: ['empresas', 'emit-normal-options'],
+    queryFn: () => empresasApi.list({ limit: 50 }),
+    staleTime: 60_000,
+  });
 
+  const empresasDisponiveis = useMemo(() => empresasQuery.data || [], [empresasQuery.data]);
+  const empresaOptions = useMemo(
+    () => empresasDisponiveis.map((empresa) => ({
+      value: getEmpresaOptionValue(empresa),
+      empresa,
+    })),
+    [empresasDisponiveis],
+  );
+  const empresaSelecionadaResumo = useMemo(
+    () => empresaOptions.find((option) => option.value === empresaSelecionadaValue)?.empresa || null,
+    [empresaOptions, empresaSelecionadaValue],
+  );
+
+  useEffect(() => {
+    if (empresasDisponiveis.length === 0) return;
+    const currentStillExists = empresaOptions.some((option) => option.value === empresaSelecionadaValue);
+    if (currentStillExists && empresaSelecionadaValue) return;
+    const picked = pickEmpresaForEmissao(empresasDisponiveis) ?? empresasDisponiveis[0];
+    if (!picked) return;
+    setEmpresaSelecionadaValue(getEmpresaOptionValue(picked));
+  }, [empresaOptions, empresaSelecionadaValue, empresasDisponiveis]);
+
+  const empresaDetalheQuery = useQuery({
+    queryKey: ['empresas', 'emit-normal-detail', empresaSelecionadaValue],
+    queryFn: async () => {
+      const selected = empresaSelecionadaResumo;
+      if (!selected) return null;
       try {
-        return await empresasApi.getById(picked.id);
+        if (selected.id) {
+          return await empresasApi.getById(selected.id);
+        }
+        const selectedCnpj = String(selected.cnpj || '').replace(/\D/g, '');
+        if (selectedCnpj.length === 14) {
+          return await empresasApi.getByCnpj(selectedCnpj);
+        }
       } catch {
-        return picked;
+        return selected;
       }
+      return selected;
     },
+    enabled: Boolean(empresaSelecionadaResumo),
     staleTime: 0,
     refetchOnMount: 'always',
   });
 
-  const empresaAtual = empresaQuery.data ?? null;
+  const empresaAtual = empresaDetalheQuery.data ?? empresaSelecionadaResumo ?? null;
 
   useEffect(() => {
-    if (prestadorHydratedRef.current) return;
+    if (!empresaSelecionadaValue) return;
     if (!empresaAtual) return;
+    if (prestadorHydratedRef.current === empresaSelecionadaValue) return;
     setPrestador(mapPrestadorFromEmpresa(empresaAtual));
-    prestadorHydratedRef.current = true;
-  }, [empresaAtual]);
+    prestadorHydratedRef.current = empresaSelecionadaValue;
+  }, [empresaAtual, empresaSelecionadaValue]);
+
+  useEffect(() => {
+    if (!empresaSelecionadaValue) return;
+    if (!empresaAnteriorRef.current) {
+      empresaAnteriorRef.current = empresaSelecionadaValue;
+      return;
+    }
+    if (empresaAnteriorRef.current === empresaSelecionadaValue) return;
+    empresaAnteriorRef.current = empresaSelecionadaValue;
+    prestadorHydratedRef.current = '';
+    setTomador(INITIAL_TOMADOR);
+    setPrestacao(INITIAL_PRESTACAO);
+    setErrors([]);
+    setTomadorSubstituto(false);
+    setSyncTomadorCadastro(false);
+    toast({
+      title: 'Prestador alterado',
+      description: 'Tomador e serviço foram limpos para evitar mistura entre empresas.',
+    });
+  }, [empresaSelecionadaValue]);
 
   const tomadoresQuery = useQuery({
     queryKey: ['tomadores', 'emit-normal', prestadorCnpjDigits],
@@ -183,7 +247,7 @@ const NfseEmitPage: React.FC = () => {
           limit: 30,
         });
       }
-      return tomadoresApi.list();
+      return [];
     },
     enabled: true,
     staleTime: 60_000,
@@ -251,13 +315,13 @@ const NfseEmitPage: React.FC = () => {
   useEffect(() => {
     if (!empresaAtual) return;
     if (favoritos.length > 0 || listaServico.length > 0) return;
-    if (empresaQuery.isSuccess) {
+    if (empresaAtual) {
       toast({
         title: 'Prestador sem parâmetros municipais',
         description: 'Cadastre em Prestador > Parâmetros Municipais para habilitar Serviços Favoritos/Lista Serviço.',
       });
     }
-  }, [empresaAtual, empresaQuery.isSuccess, favoritos.length, listaServico.length]);
+  }, [empresaAtual, favoritos.length, listaServico.length]);
 
   const valores = useMemo(() => {
     const valorBruto = parseCurrency(prestacao.valorServico);
@@ -445,6 +509,30 @@ const NfseEmitPage: React.FC = () => {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
+        <div className="section-card">
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="w-5 h-5 text-primary" />
+            <h2 className="section-title !mb-0">Contexto do Prestador</h2>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="prestadorEmitSelect">Empresa prestadora</Label>
+            <Select value={empresaSelecionadaValue} onValueChange={setEmpresaSelecionadaValue}>
+              <SelectTrigger id="prestadorEmitSelect">
+                <SelectValue placeholder={empresasQuery.isLoading ? 'Carregando prestadores...' : 'Selecione o prestador'} />
+              </SelectTrigger>
+              <SelectContent>
+                {empresaOptions.map(({ value, empresa }) => (
+                  <SelectItem key={value} value={value}>
+                    {`${empresa.razaoSocial} (${formatCNPJ(String(empresa.cnpj || '').replace(/\D/g, ''))})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              A emissão, os tomadores e os serviços abaixo seguem o prestador selecionado.
+            </p>
+          </div>
+        </div>
         <PrestadorSection
           data={prestador}
           onChange={setPrestador}

@@ -114,21 +114,22 @@ Validacao desta rodada:
 - `npm run build`
 
 
-## 0. Atualizacao de Contexto (2026-04-21) - Emissao Rapida com prestador unico padrao
+## 0. Atualizacao de Contexto (2026-05-18) - emissao entrou na primeira etapa funcional de multi-prestador
 Fonte: `codigo local` + `build local`.
 
 Leitura consolidada:
-- a tela `Emissao Rapida` nao deve exibir dois campos de prestador no cenario atual
-- como neste momento existe apenas um prestador operacional, a UI mostra um bloco unico `Prestador`
-- o CNPJ do prestador continua sendo carregado automaticamente e usado no payload
-- o campo manual `CNPJ do prestador` foi removido da interface para reduzir ambiguidade
-- a escolha/autocomplete de prestador fica como frente futura quando houver multiplos prestadores cadastrados
-- os campos de CPF do tomador, valor e servico permanecem inalterados
+- `Nova DANFSE` e `Emissao Rapida` deixaram de assumir a Burgus como prestador unico operacional
+- as duas telas agora possuem seletor explicito de prestador
+- a troca de prestador limpa tomador e servico na `Nova DANFSE` para evitar mistura entre empresas
+- `Emissao Rapida` continua enviando o mesmo contrato de backend (`cnpj`, `cpfTomador`, `valor`, `codigoServico`), mudando apenas a origem do `cnpj`
+- o frontend continua dependente do backend para a aptidao real de emissao; selecionar empresa na tela nao basta sem sincronizacao da cadeia PlugNotas
+- o cadastro do prestador ganhou uma acao explicita `Sincronizar com a PlugNotas` para subir certificado/cadastro do lado do provider sem acoplar isso ao botao de salvar nesta rodada
 
 Regra operacional:
-1. hoje: prestador padrao unico
-2. futuro: seletor de prestador so quando houver necessidade real de multi-prestador
-3. nao alterar contrato da emissao rapida por mudanca visual
+1. esta rodada e a primeira etapa funcional de multi-prestador, ainda conservadora
+2. o frontend nao deve mais fixar Burgus ou qualquer empresa como prestador padrao absoluto
+3. a aptidao real do novo prestador continua dependendo de certificado, parametros e sincronizacao com a PlugNotas
+4. nao transformar salvar cadastro em sincronizacao automatica de provider sem validacao operacional previa
 
 ## 0. Atualizacao de Contexto (2026-04-21) - listagem de NFSe volta a exibir ultimas 10 emissoes
 Fonte: `codigo local` + `build local`.

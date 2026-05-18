@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import axios from 'axios';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi, nfseApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { AlertTriangle, Loader2, Save, Settings } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle, Loader2, Save, Settings, ShieldCheck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LoadingState from '@/components/LoadingState';
 import RegimeEParametrosSection, { type RegimeTributario as RegimeTributarioTela } from '@/components/RegimeEParametrosSection';
@@ -25,7 +27,7 @@ import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
 import { formatPhone, normalizeLogradouro, sanitizeAddressNumber } from '@/utils/validators';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
-import type { Empresa } from '@/types/api';
+import type { ApiError, Empresa, SyncEmpresaPlugNotasResponse } from '@/types/api';
 
 interface EmpresaFormData {
   razaoSocial: string;
@@ -90,6 +92,23 @@ const campoLabel: Record<string, string> = {
 };
 
 const toCampoLabel = (field: string) => campoLabel[field] ?? field;
+
+const getApiError = (error: unknown, fallbackMessage: string): ApiError => {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const data = error.response.data as Partial<ApiError>;
+    return {
+      code: data.code || 'HTTP_ERROR',
+      message: data.message || fallbackMessage,
+      correlationId: data.correlationId,
+      details: data.details,
+    };
+  }
+
+  return {
+    code: 'UNEXPECTED_ERROR',
+    message: fallbackMessage,
+  };
+};
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 
 export const formatLocalidadeUfDisplay = (cidade?: string, uf?: string) => {
@@ -669,6 +688,13 @@ const EmpresaFormPage = () => {
     enabled: isEdit,
   });
 
+  const certificadoAtual = (((existing as unknown as Record<string, unknown> | undefined)?.certificado as {
+    filename?: string;
+    uploadedAt?: string;
+    expiresAt?: string;
+  } | undefined) ?? null);
+  const certificadoSincronizavel = Boolean(certificadoAtual?.filename || certificadoAtual?.uploadedAt);
+
   const [form, setForm] = useState<EmpresaFormData>({
     razaoSocial: '', cnpj: '', nomeFantasia: '', inscricaoMunicipal: '', inscricaoEstadual: '', suframa: '',
     situacaoCadastral: '', dataSituacaoCadastral: '', dataInicioAtividade: '',
@@ -704,6 +730,8 @@ const EmpresaFormPage = () => {
     camposFaltantes?: string[];
     camposFaltantesEmissao?: string[];
   } | null>(null);
+  const [plugNotasSyncResult, setPlugNotasSyncResult] = useState<SyncEmpresaPlugNotasResponse | null>(null);
+  const [plugNotasSyncError, setPlugNotasSyncError] = useState<ApiError | null>(null);
   const [localidadeUfInput, setLocalidadeUfInput] = useState('');
   const lastPrincipalCnaeRef = useRef('');
 
@@ -1165,6 +1193,35 @@ const EmpresaFormPage = () => {
     },
   });
 
+  const syncPlugNotasMutation = useMutation({
+    mutationFn: () => empresasApi.syncPlugNotasById(id!),
+    onSuccess: async (result) => {
+      setPlugNotasSyncError(null);
+      setPlugNotasSyncResult(result);
+      await refetchEmpresa();
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
+      queryClient.invalidateQueries({ queryKey: ['empresa', id] });
+      toast({
+        title: result.plugNotas.companyAction === 'already_exists'
+          ? 'Prestador reenquadrado na PlugNotas'
+          : 'Prestador sincronizado com a PlugNotas',
+        description: result.certificado.action === 'uploaded'
+          ? 'O certificado foi enviado ao provedor e o cadastro da empresa foi habilitado.'
+          : 'O cadastro da empresa foi habilitado reutilizando o certificado já conhecido pela PlugNotas.',
+      });
+    },
+    onError: (error) => {
+      const parsed = getApiError(error, 'Falha ao sincronizar prestador com a PlugNotas.');
+      setPlugNotasSyncResult(null);
+      setPlugNotasSyncError(parsed);
+      toast({
+        title: 'Falha ao sincronizar com a PlugNotas',
+        description: parsed.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const previewMutation = useMutation({
     mutationFn: async (cnpj: string) => {
       const settled = await Promise.allSettled([
@@ -1412,12 +1469,74 @@ const EmpresaFormPage = () => {
 
             <CertificadoDigitalCard
               cnpj={form.cnpj}
-              certificado={((existing as unknown as Record<string, unknown> | undefined)?.certificado as { filename?: string; uploadedAt?: string; expiresAt?: string } | undefined) ?? null}
+              certificado={certificadoAtual}
               onImported={async () => {
                 if (!isEdit) return;
                 await refetchEmpresa();
               }}
             />
+
+            {isEdit && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Sincronização com a PlugNotas</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Use esta ação para subir o certificado ao provedor e garantir que o prestador fique apto para emitir pela cadeia externa.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {!certificadoSincronizavel && (
+                    <Alert>
+                      <AlertTitle>Certificado ainda não disponível</AlertTitle>
+                      <AlertDescription>
+                        Importe o certificado digital desta empresa antes de sincronizar com a PlugNotas.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {plugNotasSyncError && (
+                    <Alert variant="destructive">
+                      <AlertTitle>Falha na sincronização</AlertTitle>
+                      <AlertDescription>
+                        <p><strong>Código:</strong> {plugNotasSyncError.code}</p>
+                        <p><strong>Mensagem:</strong> {plugNotasSyncError.message}</p>
+                        {plugNotasSyncError.correlationId && (
+                          <p><strong>Correlação:</strong> {plugNotasSyncError.correlationId}</p>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {plugNotasSyncResult && (
+                    <Alert>
+                      <ShieldCheck className="h-4 w-4" />
+                      <AlertTitle>Prestador sincronizado</AlertTitle>
+                      <AlertDescription>
+                        <p><strong>Empresa:</strong> {plugNotasSyncResult.empresa.razaoSocial || form.razaoSocial || 'Prestador'}</p>
+                        <p><strong>Certificado:</strong> {plugNotasSyncResult.certificado.action === 'uploaded' ? 'Enviado agora para a PlugNotas' : 'Reutilizado do provedor'}</p>
+                        <p><strong>Cadastro no provedor:</strong> {plugNotasSyncResult.plugNotas.companyAction === 'already_exists' ? 'Já existia e foi reenquadrado' : 'Criado e habilitado'}</p>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!certificadoSincronizavel || syncPlugNotasMutation.isPending}
+                      onClick={() => {
+                        setPlugNotasSyncError(null);
+                        setPlugNotasSyncResult(null);
+                        syncPlugNotasMutation.mutate();
+                      }}
+                    >
+                      {syncPlugNotasMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Sincronizar com a PlugNotas
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <IdentificacaoDocumentoCard
               nfseNum={nfseNumSincronizado}

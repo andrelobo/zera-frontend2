@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Building2, Loader2, Send, ShieldAlert } from 'lucide-react';
 import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
-import { mapListaServicoFromConfig } from './nfseEmit.mappers';
+import { mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 import { formatCNPJ } from '@/utils/validators';
 
 const CERT_REQUIRED_CODES = new Set(['CERTIFICADO_REQUIRED', 'QUICK_PRESTADOR_NO_CERT']);
@@ -69,7 +69,7 @@ const getApiError = (error: unknown): ApiError => {
 const NfseQuickEmitPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [cnpj, setCnpj] = useState('');
+  const [empresaSelecionadaCnpj, setEmpresaSelecionadaCnpj] = useState('');
   const [cpfTomador, setCpfTomador] = useState('');
   const [valorDigits, setValorDigits] = useState<string>('');
   const [codigoServico, setCodigoServico] = useState('');
@@ -79,29 +79,39 @@ const NfseQuickEmitPage = () => {
   const [success, setSuccess] = useState<EmitirNfseQuickResponse | null>(null);
   const [certRequiredBlock, setCertRequiredBlock] = useState(false);
 
-  const cnpjClean = useMemo(() => cnpj.replace(/\D/g, ''), [cnpj]);
+  const cnpjClean = useMemo(() => empresaSelecionadaCnpj.replace(/\D/g, ''), [empresaSelecionadaCnpj]);
   const cpfClean = useMemo(() => cpfTomador.replace(/\D/g, ''), [cpfTomador]);
   const codigoServicoClean = useMemo(() => codigoServico.replace(/\D/g, ''), [codigoServico]);
   const valorNumber = useMemo(() => Number(valorDigits || '0') / 100, [valorDigits]);
   const valorMasked = useMemo(() => formatCurrencyFromDigits(valorDigits), [valorDigits]);
 
-  const empresaDefaultQuery = useQuery({
-    queryKey: ['empresas', 'quick-emit-default'],
-    queryFn: () => empresasApi.list({ limit: 20 }),
+  const empresasQuery = useQuery({
+    queryKey: ['empresas', 'quick-emit-options'],
+    queryFn: () => empresasApi.list({ limit: 50 }),
     staleTime: 60_000,
   });
-  const empresaDefault = useMemo(() => {
-    const items = empresaDefaultQuery.data || [];
-    if (items.length === 0) return null;
-    return items.find((empresa) => empresa.razaoSocial.toLowerCase().includes('burgus')) || items[0];
-  }, [empresaDefaultQuery.data]);
+  const empresasDisponiveis = useMemo(() => empresasQuery.data || [], [empresasQuery.data]);
+  const empresaSelecionada = useMemo(
+    () => empresasDisponiveis.find((empresa) => empresa.cnpj.replace(/\D/g, '') === cnpjClean) || null,
+    [cnpjClean, empresasDisponiveis],
+  );
 
   useEffect(() => {
-    if (!empresaDefault) return;
-    const defaultCnpj = empresaDefault.cnpj.replace(/\D/g, '');
-    if (cnpjClean === defaultCnpj) return;
-    setCnpj(formatCNPJ(defaultCnpj));
-  }, [cnpjClean, empresaDefault]);
+    if (empresasDisponiveis.length === 0) return;
+    const currentStillExists = empresasDisponiveis.some((empresa) => empresa.cnpj.replace(/\D/g, '') === cnpjClean);
+    if (currentStillExists && cnpjClean.length === 14) return;
+    const preferred = pickEmpresaForEmissao(empresasDisponiveis) ?? empresasDisponiveis[0];
+    const defaultCnpj = preferred?.cnpj.replace(/\D/g, '') || '';
+    if (!defaultCnpj) return;
+    setEmpresaSelecionadaCnpj(defaultCnpj);
+  }, [cnpjClean, empresasDisponiveis]);
+
+  useEffect(() => {
+    setApiError(null);
+    setFormError(null);
+    setSuccess(null);
+    setCertRequiredBlock(false);
+  }, [cnpjClean]);
 
   const empresaDetalheQuery = useQuery({
     queryKey: ['empresas', 'quick-emit-detail', cnpjClean],
@@ -199,29 +209,37 @@ const NfseQuickEmitPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">NFSe rápida com prestador padrão, CPF e valor</CardTitle>
+          <CardTitle className="text-base">NFSe rápida com seleção de prestador, CPF e valor</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <div className="min-w-0">
-                  <Label>Prestador</Label>
-                  {empresaDefaultQuery.isLoading && !empresaDefault ? (
-                    <p className="mt-1 text-sm text-muted-foreground">Carregando prestador padrão...</p>
-                  ) : (
-                    <>
-                      <p className="mt-1 text-sm font-medium text-foreground">
-                        {empresaDefault?.razaoSocial || 'Prestador padrão não encontrado'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {cnpjClean ? formatCNPJ(cnpjClean) : 'CNPJ será carregado automaticamente'}
-                      </p>
-                    </>
-                  )}
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Label htmlFor="prestadorQuickSelect">Prestador</Label>
+                  <Select value={cnpjClean} onValueChange={setEmpresaSelecionadaCnpj}>
+                    <SelectTrigger id="prestadorQuickSelect">
+                      <SelectValue placeholder={empresasQuery.isLoading ? 'Carregando prestadores...' : 'Selecione o prestador'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {empresasDisponiveis.map((empresa) => {
+                        const empresaCnpj = empresa.cnpj.replace(/\D/g, '');
+                        return (
+                          <SelectItem key={empresa.id || empresaCnpj} value={empresaCnpj}>
+                            {`${empresa.razaoSocial} (${formatCNPJ(empresaCnpj)})`}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {empresaSelecionada
+                      ? `Emitindo por ${empresaSelecionada.razaoSocial} • ${formatCNPJ(cnpjClean)}`
+                      : 'Selecione a empresa prestadora para esta emissão.'}
+                  </p>
                 </div>
               </div>
             </div>

@@ -644,6 +644,10 @@ export const empresasApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then(r => r.data);
   },
+  syncPlugNotasById: (id: string) =>
+    api.post<SyncEmpresaPlugNotasResponse>(`/empresas/${id}/plugnotas/sync`).then((r) => r.data),
+  syncPlugNotasByCnpj: (cnpj: string) =>
+    api.post<SyncEmpresaPlugNotasResponse>(`/empresas/cnpj/${cnpj.replace(/\D/g, '')}/plugnotas/sync`).then((r) => r.data),
   lookupCnaeAnexo: (codigo: string) =>
     api.get<CnaeCatalogLookupItem>('/empresas/lookup/cnae-anexo', {
       params: { codigo: codigo.replace(/\D/g, '') || undefined },

@@ -581,6 +581,24 @@ export interface ImportCertificadoDigitalRequest {
   file: File;
 }
 
+export interface SyncEmpresaPlugNotasResponse {
+  synced: boolean;
+  empresa: {
+    id: string;
+    cnpj: string;
+    razaoSocial?: string | null;
+  };
+  certificado: {
+    providerCertificadoId?: string | null;
+    action: 'uploaded' | 'reused';
+  };
+  plugNotas: {
+    companyAction: 'created' | 'already_exists';
+    companyResponse?: unknown;
+    habilitacaoResponse?: unknown;
+  };
+}
+
 export interface ImportCertificadoDigitalResponse {
   cnpj: string;
   fileName: string;
