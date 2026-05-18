@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasApi, nfseApi } from '@/services/api';
 import { formatCep, lookupCep, normalizeCep } from '@/services/cep';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Loader2, Save, Settings, ShieldCheck } from 'lucide-react';
