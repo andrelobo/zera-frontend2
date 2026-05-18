@@ -5,6 +5,8 @@ interface NfseInferredData {
   descricao?: string;
   tomadorRazaoSocial?: string;
   tomadorCpfCnpj?: string;
+  prestadorRazaoSocial?: string;
+  prestadorCpfCnpj?: string;
   codigoServico?: string;
   numeroNfse?: string;
   dpsNum?: string;
@@ -55,11 +57,13 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
   const payloadObj = asRecord(payload);
 
   const payloadTomador = asRecord(payloadObj?.tomador);
+  const payloadPrestador = asRecord(payloadObj?.prestador);
   const payloadServico = asRecord(firstFromArray(payloadObj?.servico));
   const payloadServicoValor = asRecord(payloadServico?.valor);
 
   const providerResponseRoot = asRecord(firstFromArray(provider.providerResponse));
   const responseTomador = asRecord(providerResponseRoot?.tomador);
+  const responsePrestador = asRecord(providerResponseRoot?.prestador);
   const responseServico = asRecord(firstFromArray(providerResponseRoot?.servico));
   const responseServicoValor = asRecord(responseServico?.valor);
   const responseRetorno = asRecord(providerResponseRoot?.retorno);
@@ -81,6 +85,14 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
   const tomadorCpfCnpj =
     (typeof payloadTomador?.cpfCnpj === 'string' ? payloadTomador.cpfCnpj : undefined) ??
     (typeof responseTomador?.cpfCnpj === 'string' ? responseTomador.cpfCnpj : undefined);
+
+  const prestadorRazaoSocial =
+    (typeof payloadPrestador?.razaoSocial === 'string' ? payloadPrestador.razaoSocial : undefined) ??
+    (typeof responsePrestador?.razaoSocial === 'string' ? responsePrestador.razaoSocial : undefined);
+
+  const prestadorCpfCnpj =
+    (typeof payloadPrestador?.cpfCnpj === 'string' ? payloadPrestador.cpfCnpj : undefined) ??
+    (typeof responsePrestador?.cpfCnpj === 'string' ? responsePrestador.cpfCnpj : undefined);
 
   const codigoServico =
     (typeof payloadServico?.codigo === 'string' ? payloadServico.codigo : undefined) ??
@@ -107,6 +119,8 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
     descricao,
     tomadorRazaoSocial,
     tomadorCpfCnpj,
+    prestadorRazaoSocial,
+    prestadorCpfCnpj,
     codigoServico,
     numeroNfse,
     dpsNum,

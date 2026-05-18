@@ -2,6 +2,22 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (18/05/2026) - multi-prestador validado e nova exigencia para a listagem de NFSe
+
+Fonte: `execucao real` + `codigo local` + `build local`.
+
+Estado atual:
+- `Nova DANFSE` e `Emissao Rapida` ja permitem escolher explicitamente a empresa prestadora
+- um segundo prestador ja emitiu nota real apos sincronizacao com a PlugNotas e configuracao manual complementar da aba `NFS-e` no provider
+- a listagem `Notas Fiscais` continua mostrando status, tomador, valor, provedor e data
+- a listagem agora tambem contempla a prestadora associada a cada emissao
+
+Leitura operacional correta:
+1. a UI de emissao ja deixou de ser mono-prestador
+2. a listagem operacional de NFSe precisa acompanhar essa mudanca e deixar a prestadora visivel
+3. isso deve ser tratado como evolucao de leitura operacional, nao como refactor cosmetico
+4. filtros e detalhes futuros devem considerar prestadora como eixo legitimo de navegacao
+
 ## 0. Atualizacao rapida (14/05/2026) - dominio `zera.net.br` e dependencia operacional de CORS no backend
 
 Fonte: `execucao real` + `codigo local`.
@@ -95,6 +111,7 @@ Estado atual:
 - `Notas Fiscais` mostra as ultimas 10 emissoes mais recentes
 - a busca usa `limit = 10`, `page = 1`, `createdAt DESC`
 - cada linha preserva numero, status, tomador, valor, provedor, data e acoes
+- a tela agora exibe tambem a prestadora responsavel por cada nota
 - o status continua visivel na tabela por `StatusBadge`
 - o historico total continua preservado no backend; a tela e apenas um quadro operacional compacto
 

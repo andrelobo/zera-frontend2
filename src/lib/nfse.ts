@@ -18,6 +18,15 @@ export const getNfseTomadorDocumento = (nfse: Nfse): string => {
   return nfse.tomadorCnpjCpf || (nfse as Nfse & { tomadorCpfCnpj?: string | null }).tomadorCpfCnpj || nfse.tomador?.cpfCnpj || '—';
 };
 
+
+export const getNfsePrestadorNome = (nfse: Nfse): string => {
+  return nfse.prestador?.razaoSocial || nfse.empresa?.razaoSocial || '—';
+};
+
+export const getNfsePrestadorDocumento = (nfse: Nfse): string => {
+  return nfse.prestador?.cnpj || nfse.empresaCnpj || nfse.empresa?.cnpj || '—';
+};
+
 export const getNfseCodigoServico = (nfse: Nfse): string => {
   return nfse.codigoServico || nfse.servico?.codigoNacional || '—';
 };

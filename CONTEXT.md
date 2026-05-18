@@ -28,6 +28,21 @@ Leitura correta dos updates deste arquivo:
 - homologacao pontual de algum fluxo nao revoga a premissa de sistema em producao
 
 
+## 0. Atualizacao de Contexto (2026-05-18) - novo patamar multi-prestador e impacto direto na leitura da listagem DANFSE
+Fonte: `execucao real` + `codigo local` + `build local`.
+
+Leitura consolidada:
+- o frontend ja participa da primeira etapa funcional de multi-prestador com seletor explicito de empresa na `Nova DANFSE` e na `Emissao Rapida`
+- o segundo prestador ja emitiu nota real apos sincronizacao com a PlugNotas e configuracao operacional complementar no provider
+- isso muda a leitura do produto: a listagem operacional de NFSe nao pode mais pressupor que todas as notas pertencem implicitamente a um unico prestador
+- a tela `Notas Fiscais` passou a explicitar tambem a prestadora responsavel por cada emissao, sem perder o foco em status e tomador
+
+Regra operacional desta frente:
+1. multi-prestador deixou de ser preparacao interna e virou realidade operacional assistida
+2. qualquer quadro/listagem de emissao deve passar a considerar prestador como informacao de primeira classe
+3. a evolucao da listagem deve preservar os sinais atuais de status, tomador e acoes, apenas ampliando o contexto para a prestadora
+4. nao voltar a assumir prestador unico por omissao visual
+
 ## 0. Atualizacao de Contexto (2026-05-14) - dominio `zera.net.br` e regra canonica de CORS
 Fonte: `execucao real` + `codigo local`.
 
@@ -140,6 +155,7 @@ Leitura consolidada:
 - objetivo: mostrar as ultimas 10 emissoes mais recentes com seus respectivos status
 - a coluna `Status` permanece como fonte visual principal do estado da emissao
 - os filtros de `Status` e `Provedor` continuam funcionando sobre esse recorte
+- a listagem agora explicita tambem a prestadora responsavel pela emissao, preservando o tomador como eixo operacional relevante por linha
 - polling visual continua ativo apenas quando houver emissao em `PENDING` ou `PROCESSING`
 
 Regra operacional:

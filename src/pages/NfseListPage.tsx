@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Zap, Eye, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
-import { getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
+import { getNfsePrestadorDocumento, getNfsePrestadorNome, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 
@@ -67,6 +67,16 @@ const NfseListPage = () => {
   const inferredById = Object.fromEntries(
     items.map((nfse, idx) => [nfse.id, inferNfseDataFromProvider(providerDetails[idx]?.data)]),
   );
+
+  const getPrestadorLabel = (nfse: (typeof items)[number]) => {
+    const nome = getNfsePrestadorNome(nfse);
+    if (nome !== '—') return nome;
+    return (
+      inferredById[nfse.id]?.prestadorRazaoSocial ||
+      inferredById[nfse.id]?.prestadorCpfCnpj ||
+      getNfsePrestadorDocumento(nfse)
+    );
+  };
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -175,6 +185,7 @@ const NfseListPage = () => {
                 <TableRow>
                   <TableHead>Número</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Prestadora</TableHead>
                   <TableHead>Tomador</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Provedor</TableHead>
@@ -191,7 +202,10 @@ const NfseListPage = () => {
                   >
                     <TableCell className="font-medium">{nfse.numero || inferredById[nfse.id]?.numeroNfse || '—'}</TableCell>
                     <TableCell><StatusBadge status={nfse.status} /></TableCell>
-                    <TableCell className="max-w-[200px] truncate">
+                    <TableCell className="max-w-[220px] truncate">
+                      {getPrestadorLabel(nfse)}
+                    </TableCell>
+                    <TableCell className="max-w-[220px] truncate">
                       {getNfseTomadorNome(nfse) !== '—'
                         ? getNfseTomadorNome(nfse)
                         : (inferredById[nfse.id]?.tomadorRazaoSocial || inferredById[nfse.id]?.tomadorCpfCnpj || getNfseTomadorDocumento(nfse))}
