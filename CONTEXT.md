@@ -34,6 +34,7 @@ Fonte: `execucao real` + `codigo local` + `build local`.
 Leitura consolidada:
 - o frontend ja participa da primeira etapa funcional de multi-prestador com seletor explicito de empresa na `Nova DANFSE` e na `Emissao Rapida`
 - o segundo prestador ja emitiu nota real apos sincronizacao com a PlugNotas e configuracao operacional complementar no provider
+- quando a sincronizacao chegar a esse ponto, a UI deve comunicar pendencia manual da aba `NFS-e` em vez de tratar o onboarding como erro total
 - isso muda a leitura do produto: a listagem operacional de NFSe nao pode mais pressupor que todas as notas pertencem implicitamente a um unico prestador
 - a tela `Notas Fiscais` passou a explicitar tambem a prestadora responsavel por cada emissao, sem perder o foco em status e tomador
 

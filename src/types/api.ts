@@ -595,6 +595,9 @@ export interface SyncEmpresaPlugNotasResponse {
   plugNotas: {
     companyAction: 'created' | 'already_exists';
     companyResponse?: unknown;
+    habilitacaoStatus: 'configured' | 'manual_required';
+    habilitacaoMessage?: string | null;
+    habilitacaoManualSteps?: string[];
     habilitacaoResponse?: unknown;
   };
 }

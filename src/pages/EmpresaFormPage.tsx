@@ -1203,13 +1203,18 @@ const EmpresaFormPage = () => {
       await refetchEmpresa();
       queryClient.invalidateQueries({ queryKey: ['empresas'] });
       queryClient.invalidateQueries({ queryKey: ['empresa', id] });
+      const habilitacaoManual = result.plugNotas.habilitacaoStatus === 'manual_required';
       toast({
-        title: result.plugNotas.companyAction === 'already_exists'
-          ? 'Prestador reenquadrado na PlugNotas'
-          : 'Prestador sincronizado com a PlugNotas',
-        description: result.certificado.action === 'uploaded'
-          ? 'O certificado foi enviado ao provedor e o cadastro da empresa foi habilitado.'
-          : 'O cadastro da empresa foi habilitado reutilizando o certificado já conhecido pela PlugNotas.',
+        title: habilitacaoManual
+          ? 'Prestador sincronizado com pendência manual'
+          : (result.plugNotas.companyAction === 'already_exists'
+            ? 'Prestador reenquadrado na PlugNotas'
+            : 'Prestador sincronizado com a PlugNotas'),
+        description: habilitacaoManual
+          ? 'Cadastro e certificado foram sincronizados. Falta concluir a configuração da aba NFS-e no painel da PlugNotas.'
+          : (result.certificado.action === 'uploaded'
+            ? 'O certificado foi enviado ao provedor e o cadastro da empresa foi habilitado.'
+            : 'O cadastro da empresa foi habilitado reutilizando o certificado já conhecido pela PlugNotas.'),
       });
     },
     onError: (error) => {
@@ -1512,11 +1517,27 @@ const EmpresaFormPage = () => {
                   {plugNotasSyncResult && (
                     <Alert>
                       <ShieldCheck className="h-4 w-4" />
-                      <AlertTitle>Prestador sincronizado</AlertTitle>
+                      <AlertTitle>
+                        {plugNotasSyncResult.plugNotas.habilitacaoStatus === 'manual_required'
+                          ? 'Prestador sincronizado com pendência manual'
+                          : 'Prestador sincronizado'}
+                      </AlertTitle>
                       <AlertDescription>
                         <p><strong>Empresa:</strong> {plugNotasSyncResult.empresa.razaoSocial || form.razaoSocial || 'Prestador'}</p>
                         <p><strong>Certificado:</strong> {plugNotasSyncResult.certificado.action === 'uploaded' ? 'Enviado agora para a PlugNotas' : 'Reutilizado do provedor'}</p>
                         <p><strong>Cadastro no provedor:</strong> {plugNotasSyncResult.plugNotas.companyAction === 'already_exists' ? 'Já existia e foi reenquadrado' : 'Criado e habilitado'}</p>
+                        <p><strong>Habilitação NFS-e:</strong> {plugNotasSyncResult.plugNotas.habilitacaoStatus === 'manual_required' ? 'Pendente de configuração manual no painel da PlugNotas' : 'Concluída'}</p>
+                        {plugNotasSyncResult.plugNotas.habilitacaoMessage && (
+                          <p className="mt-2">{plugNotasSyncResult.plugNotas.habilitacaoMessage}</p>
+                        )}
+                        {plugNotasSyncResult.plugNotas.habilitacaoStatus === 'manual_required'
+                          && plugNotasSyncResult.plugNotas.habilitacaoManualSteps?.length ? (
+                          <ul className="mt-2 list-disc space-y-1 pl-5">
+                            {plugNotasSyncResult.plugNotas.habilitacaoManualSteps.map((step) => (
+                              <li key={step}>{step}</li>
+                            ))}
+                          </ul>
+                        ) : null}
                       </AlertDescription>
                     </Alert>
                   )}
