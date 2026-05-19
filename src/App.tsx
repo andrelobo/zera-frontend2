@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const AcceptInvitePage = lazy(() => import("@/pages/AcceptInvitePage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const DashboardClassicPage = lazy(() => import("@/pages/DashboardClassicPage"));
 const Dash2Page = lazy(() => import("@/pages/Dash2Page"));
 const GestorAiPage = lazy(() => import("@/pages/GestorAiPage"));
 const MyAccountPage = lazy(() => import("@/pages/MyAccountPage"));
@@ -157,6 +158,7 @@ const App = () => (
                   }
                 >
                   <Route path="/" element={<DashboardPage />} />
+                  <Route path="/dashboard-classico" element={<DashboardClassicPage />} />
                   <Route path="/dash2" element={<Dash2Page />} />
                   <Route path="/gestor-ai" element={<GestorAiPage />} />
                   <Route path="/account" element={<MyAccountPage />} />

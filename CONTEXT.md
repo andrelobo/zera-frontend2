@@ -5,6 +5,32 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-05-19) - nova home operacional no `/` e preservacao dos dashboards anteriores
+Fonte: `codigo local` + `build local`.
+
+Leitura consolidada:
+- o dashboard que abre o sistema deixou de ser o painel compacto legado e passou a ser uma home operacional multi-prestador
+- essa home nova combina:
+  - contagem e prontidao de prestadoras
+  - leitura de pendencias de onboarding
+  - pulso das emissoes recentes por status
+  - prioridades operacionais sugeridas
+  - ultimas emissoes com prestadora, tomador e status
+  - atalhos diretos para `Nova DANFSE`, `Emissao Rapida`, `O Prestador` e `Dash2`
+- o dashboard antigo nao foi removido; ele segue preservado em rota propria como baseline de comparacao e anti-regressao
+- `Dash2` continua existindo como trilha mais executiva/premium, enquanto `/` passa a cumprir o papel de entrada principal do sistema
+
+Rotas desta rodada:
+- `/` = nova home operacional multi-prestador
+- `/dashboard-classico` = dashboard legado preservado
+- `/dash2` = leitura executiva existente
+
+Regra operacional desta frente:
+1. a home principal nao pode mais assumir empresa principal implicita
+2. o ponto de entrada precisa mostrar panorama consolidado do ZERA, e nao somente um prestador isolado
+3. dashboards anteriores continuam acessiveis para preservar repertorio operacional e evitar regressao
+4. proximas evolucoes da home devem aprofundar leitura por prestadora sem voltar a logica mono-prestador
+
 ## 0. Premissa Canonica de Operacao
 
 - o `zera-frontend` deve ser tratado como **frontend ja em producao**

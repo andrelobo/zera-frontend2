@@ -2,6 +2,31 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (19/05/2026) - `/` virou home operacional multi-prestador
+
+Fonte: `codigo local` + `build local`.
+
+Estado atual:
+- a rota `/` deixou de abrir o dashboard compacto legado
+- agora ela entrega uma home de boas-vindas operacional com leitura consolidada de multi-prestador
+- a home nova mostra:
+  - quantidade de prestadoras
+  - prontidao operacional
+  - pendencias de onboarding
+  - prestadoras com emissao recente
+  - pulso das emissoes recentes por status
+  - prioridades operacionais sugeridas
+  - ultimas emissoes com prestadora, tomador e status
+  - atalhos diretos para prestador, emissao e Dash2
+- o dashboard antigo continua preservado em `/dashboard-classico`
+- o `Dash2` permanece em `/dash2` como trilha executiva complementar
+
+Leitura operacional correta:
+1. o ponto de entrada do sistema agora respeita o fato de que o ZERA e multi-prestador
+2. a home principal virou uma central de orientacao e acompanhamento, nao apenas um painel fiscal denso
+3. dashboards antigos seguem acessiveis para comparacao e continuidade
+4. a proxima camada natural dessa home e aprofundar status e filtros por prestadora
+
 ## 0. Atualizacao rapida (18/05/2026) - multi-prestador validado e nova exigencia para a listagem de NFSe
 
 Fonte: `execucao real` + `codigo local` + `build local`.
