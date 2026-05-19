@@ -34,6 +34,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useVisualTheme } from '@/hooks/useVisualTheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 type ActiveTab = 'dashboard' | 'prestador' | 'tomador' | 'emissao';
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
@@ -65,7 +67,9 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { state, isMobile, setOpenMobile } = useSidebar();
   const { isElegant } = useVisualTheme();
+  const { user } = useAuth();
   const isCollapsed = state === 'collapsed';
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
   const activeTab = useMemo<ActiveTab>(() => {
     if (location.pathname === '/') return 'dashboard';
@@ -164,7 +168,7 @@ const AppSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {activeTab === 'prestador' && !isCollapsed && (
+              {activeTab === 'prestador' && !isCollapsed && !isReadOnly && (
                 <div className="ml-4 border-l border-sidebar-border pl-2 space-y-0.5">
                   {prestadorSubItems.map((sub) => (
                     <SidebarMenuItem key={sub.key}>

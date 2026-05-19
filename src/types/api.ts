@@ -47,7 +47,7 @@ export interface User {
   updatedAt: string;
 }
 
-export type UserRole = 'admin' | 'manager' | 'user' | 'ADMIN' | 'OPERATOR';
+export type UserRole = 'admin' | 'manager' | 'user' | 'readonly' | 'ADMIN' | 'OPERATOR';
 
 export interface CreateUserRequest {
   email: string;

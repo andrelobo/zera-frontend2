@@ -17,6 +17,8 @@ import {
   getNfseValor,
 } from '@/lib/nfse';
 import { AlertTriangle, ArrowRight, Building2, CheckCircle2, Receipt, Rocket, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const metricCardClass =
   'rounded-[28px] border border-white/60 bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur';
@@ -84,6 +86,8 @@ const getPrestadoraReadiness = (empresa: any) => {
 };
 
 const DashboardPage = () => {
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
   const empresasQuery = useQuery({
     queryKey: ['empresas', 'dashboard-header'],
     queryFn: () => empresasApi.list({ limit: 24 }),
@@ -162,7 +166,7 @@ const DashboardPage = () => {
       ? {
           title: 'Abrir a primeira emissão desta leitura',
           copy: 'Ainda não há emissões recentes suficientes nesta home; vale usar a DANFSE completa para iniciar o pulso operacional.',
-          href: '/nfse/nova',
+          href: isReadOnly ? '/nfse' : '/nfse/nova',
           tone: 'sky',
         }
       : null,
@@ -191,16 +195,26 @@ const DashboardPage = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button asChild className="rounded-full bg-white px-5 text-slate-950 hover:bg-slate-100">
-                  <Link to="/nfse/nova">
-                    Nova DANFSE <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full border-white/20 bg-white/10 px-5 text-white hover:bg-white/15 hover:text-white">
-                  <Link to="/nfse/rapida">
-                    Emissão rápida <Rocket className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                {!isReadOnly ? (
+                  <>
+                    <Button asChild className="rounded-full bg-white px-5 text-slate-950 hover:bg-slate-100">
+                      <Link to="/nfse/nova">
+                        Nova DANFSE <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="rounded-full border-white/20 bg-white/10 px-5 text-white hover:bg-white/15 hover:text-white">
+                      <Link to="/nfse/rapida">
+                        Emissão rápida <Rocket className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <Button asChild className="rounded-full bg-white px-5 text-slate-950 hover:bg-slate-100">
+                    <Link to="/nfse">
+                      Ver notas fiscais <Receipt className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
                 <Button asChild variant="outline" className="rounded-full border-white/20 bg-transparent px-5 text-white hover:bg-white/10 hover:text-white">
                   <Link to="/dashboard-classico">
                     Dashboard clássico

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { ArrowLeft, AlertCircle, Loader2, FileOutput, Shield, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import PrestadorSection from '@/components/emissao/PrestadorSection';
 import TomadorEmissao, { INITIAL_TOMADOR, type TomadorEmissaoData } from '@/components/emissao/TomadorEmissao';
@@ -17,6 +18,8 @@ import { mapFavoritosFromParametroMunicipal, mapListaServicoFromConfig, pickEmpr
 import { resolveEmpresaTributacao, resolveIssAutomation, resolveParametroIssLabel } from './nfseEmit.tributacao';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 interface PrestadorData {
   nomeEmpresarial: string;
@@ -140,6 +143,8 @@ const mapPrestadorFromEmpresa = (empresa?: Empresa): PrestadorData => {
 const NfseEmitPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
   const [prestador, setPrestador] = useState<PrestadorData>(INITIAL_PRESTADOR);
   const [tomador, setTomador] = useState<TomadorEmissaoData>(INITIAL_TOMADOR);
@@ -401,6 +406,11 @@ const NfseEmitPage: React.FC = () => {
   }, []);
 
   const handleEmitir = async () => {
+    if (isReadOnly) {
+      toast({ title: 'Acesso somente leitura', description: 'Este perfil pode visualizar, mas não emitir DANFSE.', variant: 'destructive' });
+      return;
+    }
+
     const erros = validar();
     setErrors(erros);
     if (erros.length > 0) {
@@ -486,9 +496,9 @@ const NfseEmitPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={handleEmitir} disabled={emitMutation.isPending} className="btn-primary flex items-center gap-2 text-sm py-2">
+            <button onClick={handleEmitir} disabled={emitMutation.isPending || isReadOnly} className="btn-primary flex items-center gap-2 text-sm py-2">
               {emitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileOutput className="w-4 h-4" />}
-              <span className="hidden sm:inline">Emitir</span>
+              <span className="hidden sm:inline">{isReadOnly ? 'Somente leitura' : 'Emitir'}</span>
             </button>
           </div>
         </div>
@@ -509,6 +519,12 @@ const NfseEmitPage: React.FC = () => {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2 no-print">
+        {isReadOnly ? (
+          <Alert>
+            <AlertTitle>Acesso somente leitura</AlertTitle>
+            <AlertDescription>Este perfil pode acompanhar a DANFSE, mas não pode emitir notas.</AlertDescription>
+          </Alert>
+        ) : null}
         <div className="section-card">
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-5 h-5 text-primary" />

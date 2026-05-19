@@ -15,6 +15,8 @@ import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfsePrestadorDocumento, getNfsePrestadorNome, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_LIST_REFETCH_INTERVAL_MS = 15000;
@@ -29,6 +31,8 @@ const openBlobInNewTab = (blob: Blob) => {
 const NfseListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
   const page = 1;
   const limit = NFSE_LIST_LIMIT;
@@ -136,12 +140,16 @@ const NfseListPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Notas Fiscais</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/nfse/rapida')}>
-            <Zap className="mr-2 h-4 w-4" /> Emissão Rápida
-          </Button>
-          <Button onClick={() => navigate('/nfse/nova')}>
-            <Plus className="mr-2 h-4 w-4" /> Nova DANFSE
-          </Button>
+          {!isReadOnly ? (
+            <>
+              <Button variant="outline" onClick={() => navigate('/nfse/rapida')}>
+                <Zap className="mr-2 h-4 w-4" /> Emissão Rápida
+              </Button>
+              <Button onClick={() => navigate('/nfse/nova')}>
+                <Plus className="mr-2 h-4 w-4" /> Nova DANFSE
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
 

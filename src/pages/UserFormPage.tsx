@@ -245,6 +245,7 @@ const UserFormPage = () => {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="readonly">Somente leitura</SelectItem>
                     <SelectItem value="manager">Gestor</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                   </SelectContent>

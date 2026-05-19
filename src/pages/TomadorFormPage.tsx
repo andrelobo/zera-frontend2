@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, CheckCircle, Save } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import LoadingState from '@/components/LoadingState';
 import TomadorSection, { isCPF, type TomadorSectionData } from '@/components/TomadorSection';
 import { formatCep, normalizeCep } from '@/services/cep';
 import { empresasApi, tomadoresApi } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import { formatPhone, normalizeLogradouro, validateCNPJ, validateEmail } from '@/utils/validators';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const INITIAL_FORM: TomadorSectionData = {
   cnpjCpf: '',
@@ -75,6 +78,8 @@ const TomadorFormPage = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<TomadorSectionData>(INITIAL_FORM);
@@ -237,6 +242,28 @@ const TomadorFormPage = () => {
   };
 
   if (isEdit && isLoading) return <LoadingState />;
+  if (isReadOnly) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
+            <button onClick={() => navigate('/tomadores')} className="btn-secondary p-2" title="Voltar">
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight">O Tomador</h1>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <Alert>
+            <AlertTitle>Acesso somente leitura</AlertTitle>
+            <AlertDescription>Este perfil pode consultar tomadores, mas não pode criar nem editar cadastros.</AlertDescription>
+          </Alert>
+        </main>
+      </div>
+    );
+  }
   const configValida = docDigits.length >= 11 && docOk && !tomadorDuplicado && (form.email === '' || validateEmail(form.email));
 
   return (

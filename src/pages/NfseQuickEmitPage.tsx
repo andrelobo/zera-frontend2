@@ -15,6 +15,8 @@ import { ArrowLeft, Building2, Loader2, Send, ShieldAlert } from 'lucide-react';
 import ServicoAutocomplete from '@/components/emissao/ServicoAutocomplete';
 import { mapListaServicoFromConfig, pickEmpresaForEmissao } from './nfseEmit.mappers';
 import { formatCNPJ } from '@/utils/validators';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const CERT_REQUIRED_CODES = new Set(['CERTIFICADO_REQUIRED', 'QUICK_PRESTADOR_NO_CERT']);
 const QUICK_SERVICE_ERROR_CODES = new Set(['INVALID_CODIGO_SERVICO', 'QUICK_CODIGO_SERVICO_INVALIDO']);
@@ -69,6 +71,8 @@ const getApiError = (error: unknown): ApiError => {
 const NfseQuickEmitPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
   const [empresaSelecionadaCnpj, setEmpresaSelecionadaCnpj] = useState('');
   const [cpfTomador, setCpfTomador] = useState('');
   const [valorDigits, setValorDigits] = useState<string>('');
@@ -191,6 +195,11 @@ const NfseQuickEmitPage = () => {
     setApiError(null);
     setSuccess(null);
 
+    if (isReadOnly) {
+      toast({ title: 'Acesso somente leitura', description: 'Este perfil pode visualizar, mas não emitir notas.', variant: 'destructive' });
+      return;
+    }
+
     const validationError = validate();
     setFormError(validationError);
     if (validationError || certRequiredBlock) return;
@@ -213,6 +222,12 @@ const NfseQuickEmitPage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isReadOnly ? (
+              <Alert>
+                <AlertTitle>Acesso somente leitura</AlertTitle>
+                <AlertDescription>Este perfil pode acompanhar o sistema, mas não pode emitir NFSe rápida.</AlertDescription>
+              </Alert>
+            ) : null}
             <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">
@@ -370,9 +385,9 @@ const NfseQuickEmitPage = () => {
             )}
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={mutation.isPending || certRequiredBlock}>
+              <Button type="submit" disabled={mutation.isPending || certRequiredBlock || isReadOnly}>
                 {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                Emitir NFSe rápida
+                {isReadOnly ? 'Somente leitura' : 'Emitir NFSe rápida'}
               </Button>
             </div>
           </form>

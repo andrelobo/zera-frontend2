@@ -29,6 +29,8 @@ import { getCTNByCode } from '@/utils/ctn-data';
 import { getNBSDescricao } from '@/utils/nbs-data';
 import { formatPhone, normalizeLogradouro, sanitizeAddressNumber } from '@/utils/validators';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 import type { ApiError, Empresa, SyncEmpresaPlugNotasResponse } from '@/types/api';
 
 interface EmpresaFormData {
@@ -700,6 +702,8 @@ export const hasConfigOperacionaisContextMismatch = (
 const EmpresaFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const isEdit = !!id;
@@ -1401,6 +1405,26 @@ const EmpresaFormPage = () => {
   }, [rbt12Number, simplesCalculo, simplesAnexo]);
 
   if (isEdit && isLoading) return <LoadingState />;
+  if (isReadOnly) {
+    return (
+      <div className="min-h-screen flex w-full">
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="bg-card border-b border-border sticky top-0 z-10 px-4 sm:px-6 py-2 flex items-center gap-2">
+            <div className="flex items-center gap-3 shrink-0">
+              <SidebarTrigger />
+              <h2 className="text-base font-semibold text-foreground">O Prestador</h2>
+            </div>
+          </header>
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4">
+            <Alert>
+              <AlertTitle>Acesso somente leitura</AlertTitle>
+              <AlertDescription>Este perfil pode acompanhar empresas pela listagem, mas não pode abrir formulários de cadastro ou edição.</AlertDescription>
+            </Alert>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex w-full">

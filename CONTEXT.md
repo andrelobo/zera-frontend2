@@ -5,6 +5,28 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-05-19) - role `readonly` entrou como trilha segura de visualizacao
+Fonte: `codigo local` + `build local`.
+
+Leitura consolidada:
+- o frontend agora reconhece a role `readonly` como perfil de visualizacao segura
+- esse perfil continua vendo dashboards, listagens e leituras operacionais relevantes
+- a UI deixa de oferecer para `readonly`:
+  - `Nova DANFSE`
+  - `Emissao Rapida`
+  - criacao/edicao/exclusao de tomadores
+  - criacao/edicao/exclusao de prestadoras
+  - formularios operacionais de cadastro
+  - sincronizacao manual de artifacts na detalhe da NFSe
+- o dashboard inicial multi-prestador passa a trocar CTAs de emissao por leitura quando o usuario estiver em `readonly`
+- o sidebar continua navegavel, mas o frontend evita conduzir esse perfil para fluxos de escrita
+
+Regra operacional desta frente:
+1. `readonly` existe para acompanhar, nao para operar
+2. a UI deve refletir esse perfil de forma honesta, sem botao falso que termina em erro de permissao
+3. listagens e dashboards seguem disponiveis para esse perfil
+4. o backend continua sendo a verdade final das restricoes
+
 ## 0. Atualizacao de Contexto (2026-05-19) - nova home operacional no `/` e preservacao dos dashboards anteriores
 Fonte: `codigo local` + `build local`.
 

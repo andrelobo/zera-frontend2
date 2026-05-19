@@ -13,6 +13,8 @@ import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
 import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
 import { formatCNPJ } from '@/utils/validators';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const ACTIVE_NFSE_STATUSES = new Set(['PENDING', 'PROCESSING']);
 const NFSE_DETAIL_REFETCH_INTERVAL_MS = 15000;
@@ -128,6 +130,8 @@ const formatParametroIssAplicado = (value?: string | null) => {
 const NfseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
   const shouldRefetchActiveEmission = (status?: string) =>
     Boolean(status && ACTIVE_NFSE_STATUSES.has(status));
@@ -355,15 +359,17 @@ const NfseDetailPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Arquivos</CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending}
-            >
-              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
-              Sincronizar
-            </Button>
+            {!isReadOnly ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => syncMutation.mutate()}
+                disabled={syncMutation.isPending}
+              >
+                <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+                Sincronizar
+              </Button>
+            ) : null}
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">

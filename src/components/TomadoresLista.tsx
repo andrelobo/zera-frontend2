@@ -13,13 +13,17 @@ export interface TomadorListaItem {
 interface Props {
   tomadores: TomadorListaItem[];
   loading: boolean;
-  onEditar: (tomador: TomadorListaItem) => void;
-  onExcluir: (id: string) => void;
-  onNovo: () => void;
+  onEditar?: (tomador: TomadorListaItem) => void;
+  onExcluir?: (id: string) => void;
+  onNovo?: () => void;
   editingId?: string | null;
 }
 
 const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExcluir, onNovo, editingId = null }) => {
+  const canCreate = typeof onNovo === 'function';
+  const canEdit = typeof onEditar === 'function';
+  const canDelete = typeof onExcluir === 'function';
+  const showActions = canEdit || canDelete;
   const [filtro, setFiltro] = useState('');
 
   const tomadoresFiltrados = useMemo(() => {
@@ -59,13 +63,15 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
               onChange={(e) => setFiltro(e.target.value)}
             />
           </div>
-          <button
-            onClick={onNovo}
-            className="btn-primary flex items-center gap-1.5 text-sm py-1.5 px-3"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Novo Tomador</span>
-          </button>
+          {canCreate ? (
+            <button
+              onClick={() => onNovo?.()}
+              className="btn-primary flex items-center gap-1.5 text-sm py-1.5 px-3"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Novo Tomador</span>
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -83,7 +89,7 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                 <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden md:table-cell">Localidade</th>
                 <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden lg:table-cell">E-mail</th>
                 <th className="text-center py-2 px-3 font-medium text-muted-foreground hidden sm:table-cell w-20">SubTrib</th>
-                <th className="text-right py-2 px-3 font-medium text-muted-foreground w-24">Ações</th>
+                {showActions ? <th className="text-right py-2 px-3 font-medium text-muted-foreground w-24">Ações</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -102,28 +108,34 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                       {t.substitutoTributario ? 'Sim' : 'Não'}
                     </span>
                   </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => onEditar(t)}
-                        className="rounded-full border border-sky-200 bg-sky-50 p-1.5 text-sky-800 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
-                        title="Editar"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`Excluir o tomador "${t.razaoSocial}"?`)) {
-                            onExcluir(t.id);
-                          }
-                        }}
-                        className="rounded-full border border-rose-200 bg-rose-50 p-1.5 text-rose-800 shadow-sm transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-950"
-                        title="Excluir"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {showActions ? (
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit ? (
+                          <button
+                            onClick={() => onEditar?.(t)}
+                            className="rounded-full border border-sky-200 bg-sky-50 p-1.5 text-sky-800 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        ) : null}
+                        {canDelete ? (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Excluir o tomador "${t.razaoSocial}"?`)) {
+                                onExcluir?.(t.id);
+                              }
+                            }}
+                            className="rounded-full border border-rose-200 bg-rose-50 p-1.5 text-rose-800 shadow-sm transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-950"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

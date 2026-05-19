@@ -8,6 +8,8 @@ import ErrorState from '@/components/ErrorState';
 import TomadoresLista, { type TomadorListaItem } from '@/components/TomadoresLista';
 import { toast } from '@/hooks/use-toast';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
+import { useAuth } from '@/contexts/AuthContext';
+import { isReadOnlyRole } from '@/lib/roles';
 
 const formatDoc = (value?: string) => {
   const digits = (value || '').replace(/\D/g, '');
@@ -30,6 +32,8 @@ const formatDoc = (value?: string) => {
 const TomadoresPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
   const { data: tomadores = [], isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['tomadores'],
@@ -76,9 +80,9 @@ const TomadoresPage = () => {
       <TomadoresLista
         tomadores={items}
         loading={isLoading}
-        onNovo={() => navigate('/tomadores/novo')}
-        onEditar={(tomador) => navigate(`/tomadores/${tomador.id}`)}
-        onExcluir={(id) => deleteMutation.mutate(id)}
+        onNovo={!isReadOnly ? () => navigate('/tomadores/novo') : undefined}
+        onEditar={!isReadOnly ? (tomador) => navigate(`/tomadores/${tomador.id}`) : undefined}
+        onExcluir={!isReadOnly ? (id) => deleteMutation.mutate(id) : undefined}
         editingId={null}
       />
     </div>

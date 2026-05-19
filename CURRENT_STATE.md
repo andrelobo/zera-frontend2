@@ -2,6 +2,32 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (19/05/2026) - frontend passou a respeitar a role `readonly`
+
+Fonte: `codigo local` + `build local`.
+
+Estado atual:
+- a role `readonly` ja e entendida pelo frontend
+- esse perfil pode ver:
+  - home operacional
+  - dashboards
+  - listagem e detalhe de NFSe
+  - listagem de prestadoras
+  - listagem de tomadores
+- esse perfil nao recebe CTA para:
+  - emitir
+  - emissao rapida
+  - novo tomador
+  - nova empresa
+  - exclusoes
+  - sincronizacao manual de artifacts
+- rotas de formulario operacional exibem bloqueio explicito quando acessadas com `readonly`
+
+Leitura operacional correta:
+1. agora existe um perfil visual seguro para testes de investidor/demonstracao
+2. o frontend ja nao trata `readonly` como `user` comum
+3. o comportamento multi-prestador continua visivel para esse perfil, mas sem poder operacional
+
 ## 0. Atualizacao rapida (19/05/2026) - `/` virou home operacional multi-prestador
 
 Fonte: `codigo local` + `build local`.
