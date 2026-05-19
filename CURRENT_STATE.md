@@ -10,6 +10,8 @@ Estado atual:
 - `Nova DANFSE` e `Emissao Rapida` ja permitem escolher explicitamente a empresa prestadora
 - um segundo prestador ja emitiu nota real apos sincronizacao com a PlugNotas e configuracao manual complementar da aba `NFS-e` no provider
 - a tela do prestador agora precisa refletir esse cenario como sucesso com pendencia operacional manual, e nao como falha total de sincronizacao
+- a tela do prestador agora tambem informa que a sincronizacao usa os dados atuais de serie/numeracao para tentar a configuracao minima da aba `NFS-e`
+- o cadastro do prestador agora tambem persiste toggles operacionais da PlugNotas; a automacao direta dos toggles por ator continua condicionada ao contrato oficial do provider
 - a listagem `Notas Fiscais` continua mostrando status, tomador, valor, provedor e data
 - a listagem agora tambem contempla a prestadora associada a cada emissao
 

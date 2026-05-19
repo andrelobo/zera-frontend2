@@ -155,6 +155,14 @@ export interface Empresa {
   nfseNum?: string;
   dpsNum?: string;
   serieDpsNum?: string;
+  plugNotasNfse?: {
+    ativoNfseNacional?: boolean;
+    consultaAutomaticaDfe?: boolean;
+    consultarDfePrestador?: boolean;
+    consultarDfeTomador?: boolean;
+    consultarDfeIntermediario?: boolean;
+    emailAutomatico?: boolean;
+  };
   fone?: string;
   email?: string;
   certificado?: {
@@ -232,6 +240,14 @@ export interface CreateEmpresaRequest {
   dpsNum?: string;
   serieDpsNum?: string;
   email?: string;
+  plugNotasNfse?: {
+    ativoNfseNacional?: boolean;
+    consultaAutomaticaDfe?: boolean;
+    consultarDfePrestador?: boolean;
+    consultarDfeTomador?: boolean;
+    consultarDfeIntermediario?: boolean;
+    emailAutomatico?: boolean;
+  };
 }
 
 export type UpdateEmpresaRequest = Partial<CreateEmpresaRequest>;

@@ -66,6 +66,12 @@ interface EmpresaFormData {
   telefone: string;
   whatsapp: string;
   email: string;
+  plugNotasAtivoNfseNacional: boolean;
+  plugNotasConsultaAutomaticaDfe: boolean;
+  plugNotasConsultarDfePrestador: boolean;
+  plugNotasConsultarDfeTomador: boolean;
+  plugNotasConsultarDfeIntermediario: boolean;
+  plugNotasEmailAutomatico: boolean;
 }
 export type { EmpresaFormData };
 
@@ -379,6 +385,12 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
     telefone: formatPhone(String(empresa.telefone || empresa.fone || empresa.whatsapp || legacy.ddd_telefone_1 || previous.telefone || '')),
     whatsapp: formatPhone(String(empresa.whatsapp || empresa.telefone || empresa.fone || legacy.ddd_telefone_1 || previous.whatsapp || '')),
     email: empresa.email || String(legacy.email || previous.email),
+    plugNotasAtivoNfseNacional: empresa.plugNotasNfse?.ativoNfseNacional ?? previous.plugNotasAtivoNfseNacional ?? true,
+    plugNotasConsultaAutomaticaDfe: empresa.plugNotasNfse?.consultaAutomaticaDfe ?? previous.plugNotasConsultaAutomaticaDfe ?? true,
+    plugNotasConsultarDfePrestador: empresa.plugNotasNfse?.consultarDfePrestador ?? previous.plugNotasConsultarDfePrestador ?? true,
+    plugNotasConsultarDfeTomador: empresa.plugNotasNfse?.consultarDfeTomador ?? previous.plugNotasConsultarDfeTomador ?? true,
+    plugNotasConsultarDfeIntermediario: empresa.plugNotasNfse?.consultarDfeIntermediario ?? previous.plugNotasConsultarDfeIntermediario ?? true,
+    plugNotasEmailAutomatico: empresa.plugNotasNfse?.emailAutomatico ?? previous.plugNotasEmailAutomatico ?? false,
   };
 };
 
@@ -591,6 +603,14 @@ export const buildEmpresaUpdatePayload = (
     email: form.email || undefined,
     telefone: form.telefone || form.whatsapp || undefined,
     whatsapp: form.whatsapp || form.telefone || undefined,
+    plugNotasNfse: {
+      ativoNfseNacional: form.plugNotasAtivoNfseNacional,
+      consultaAutomaticaDfe: form.plugNotasConsultaAutomaticaDfe,
+      consultarDfePrestador: form.plugNotasConsultarDfePrestador,
+      consultarDfeTomador: form.plugNotasConsultarDfeTomador,
+      consultarDfeIntermediario: form.plugNotasConsultarDfeIntermediario,
+      emailAutomatico: form.plugNotasEmailAutomatico,
+    },
     nfseNum: extra.nfseNum || undefined,
     dpsNum: extra.dpsNum || undefined,
     serieDpsNum: extra.serieDpsNum || undefined,
@@ -704,6 +724,12 @@ const EmpresaFormPage = () => {
     opcaoPeloSimples: '', opcaoPeloMei: '', dataOpcaoPeloSimples: '', dataExclusaoDoSimples: '',
     regimeTributario: '', aliquotaSimplesNacional: '', apuracaoSimplesNacional: '', rbt12: '',
     endereco: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', cep: '', telefone: '', whatsapp: '', email: '',
+    plugNotasAtivoNfseNacional: true,
+    plugNotasConsultaAutomaticaDfe: true,
+    plugNotasConsultarDfePrestador: true,
+    plugNotasConsultarDfeTomador: true,
+    plugNotasConsultarDfeIntermediario: true,
+    plugNotasEmailAutomatico: false,
   });
   const initialSubTab = (() => {
     const secao = searchParams.get('secao');
@@ -1483,15 +1509,73 @@ const EmpresaFormPage = () => {
               }}
             />
 
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Configuração operacional NFS-e</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Defina aqui as preferências operacionais que o ZERA tentará aplicar na PlugNotas durante a sincronização do prestador.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <ToggleSwitch
+                    checked={form.plugNotasAtivoNfseNacional}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasAtivoNfseNacional: value }))}
+                    label="Ativar emissão de NFS-e Nacional"
+                  />
+                  <ToggleSwitch
+                    checked={form.plugNotasConsultaAutomaticaDfe}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasConsultaAutomaticaDfe: value }))}
+                    label="Ativar consulta automática de DF-e"
+                  />
+                  <ToggleSwitch
+                    checked={form.plugNotasConsultarDfePrestador}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasConsultarDfePrestador: value }))}
+                    label="Consulta DF-e por Prestador"
+                  />
+                  <ToggleSwitch
+                    checked={form.plugNotasConsultarDfeTomador}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasConsultarDfeTomador: value }))}
+                    label="Consulta DF-e por Tomador"
+                  />
+                  <ToggleSwitch
+                    checked={form.plugNotasConsultarDfeIntermediario}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasConsultarDfeIntermediario: value }))}
+                    label="Consulta DF-e por Intermediário"
+                  />
+                  <ToggleSwitch
+                    checked={form.plugNotasEmailAutomatico}
+                    onChange={(value) => setForm((prev) => ({ ...prev, plugNotasEmailAutomatico: value }))}
+                    label="E-mail automático"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Os toggles por ator já ficam persistidos no cadastro do ZERA. A automação direta deles na PlugNotas continua dependendo de contrato oficial confirmado do provider.
+                </p>
+              </CardContent>
+            </Card>
+
             {isEdit && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm">Sincronização com a PlugNotas</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Use esta ação para subir o certificado ao provedor e garantir que o prestador fique apto para emitir pela cadeia externa.
+                    Use esta ação para subir o certificado, cadastrar a empresa no provedor e tentar aplicar a configuração mínima de NFS-e Nacional com base nos dados desta tela.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>O que o ZERA já tenta automatizar</AlertTitle>
+                    <AlertDescription>
+                      <p>Certificado, cadastro da empresa, ativação mínima de NFS-e Nacional, consulta automática de DF-e e numeração inicial de RPS.</p>
+                      <p className="mt-2">
+                        <strong>Série usada:</strong> {serieDpsNumSincronizado || '01'}{' '}
+                        <strong className="ml-2">Numeração inicial:</strong> {dpsNumSincronizado || nfseNumSincronizado || '1'}
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+
                   {!certificadoSincronizavel && (
                     <Alert>
                       <AlertTitle>Certificado ainda não disponível</AlertTitle>
