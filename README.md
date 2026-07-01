@@ -27,6 +27,26 @@ npm run dev
 
 Aplicação disponível em `http://localhost:8080`.
 
+## API em produção
+
+Para produção, configure `VITE_API_BASE_URL` com a URL HTTPS do backend.
+
+Exemplo:
+
+```env
+VITE_API_BASE_URL=/api
+```
+
+No modelo atual, a Vercel faz proxy de `/api/*` para a Oracle via `vercel.json`.
+
+Exemplo de endpoint publico:
+
+```text
+https://manaus-nfse-dashboard.vercel.app/api/health
+```
+
+Evite expor o frontend HTTPS apontando direto para `http://IP:3000` no navegador.
+
 ## Scripts
 
 - `npm run dev`: inicia o servidor de desenvolvimento
