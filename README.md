@@ -37,7 +37,7 @@ Exemplo:
 VITE_API_BASE_URL=/api
 ```
 
-No modelo atual, a Vercel faz proxy de `/api/*` para a Oracle via `vercel.json`.
+No modelo atual, a Vercel publica uma Function em `/api/*` que encaminha as chamadas para a Oracle.
 
 Exemplo de endpoint publico:
 
@@ -46,6 +46,13 @@ https://manaus-nfse-dashboard.vercel.app/api/health
 ```
 
 Evite expor o frontend HTTPS apontando direto para `http://IP:3000` no navegador.
+
+Configure tambem no projeto da Vercel:
+
+```env
+VITE_API_BASE_URL=/api
+ORACLE_BACKEND_URL=http://136.248.90.172:3000
+```
 
 ## Scripts
 
