@@ -4,8 +4,20 @@ function buildUpstreamUrl(requestUrl: string) {
   const publicUrl = new URL(requestUrl);
   const upstreamBase = process.env.ORACLE_BACKEND_URL?.trim() || DEFAULT_UPSTREAM;
   const normalizedBase = upstreamBase.endsWith('/') ? upstreamBase.slice(0, -1) : upstreamBase;
-  const upstreamPath = publicUrl.pathname.replace(/^\/api/, '') || '/';
-  return `${normalizedBase}${upstreamPath}${publicUrl.search}`;
+  const rawPath = publicUrl.searchParams.get('path') || '';
+  const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+
+  const upstreamUrl = new URL(`${normalizedBase}${normalizedPath}`);
+
+  for (const [key, value] of publicUrl.searchParams.entries()) {
+    if (key === 'path') {
+      continue;
+    }
+
+    upstreamUrl.searchParams.append(key, value);
+  }
+
+  return upstreamUrl.toString();
 }
 
 export default {
