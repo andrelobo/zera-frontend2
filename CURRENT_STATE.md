@@ -2,6 +2,30 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (03/08/2026) - Slice 8 LOBONOTAS: frontend migrado para contrato canonico
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Estado atual:
+- o frontend deixou de depender exclusivamente do shape legado da PlugNotas para ler numero/DPS da emissao
+- `inferNfseDataFromProvider` passou a priorizar o bloco canonico neutro `canonico` (`numeroNfse`, `dpsNumero`, `dpsSerie`) antes de recorrer ao `providerResponse` bruto
+- o contrato canonico e aditivo: quando o backend expuser `canonico`, ele vence; caso contrario, a inferencia legada continua funcionando (zero regressao)
+- `ProviderResponse` ganhou o campo opcional `canonico` e o union `NfseProvider` ganhou `LOBONOTAS`
+- a lista de NFSe passou a oferecer `Nacional` (LOBONOTAS) no filtro de provedor, preservando PlugNotas/Manaus/Mock
+- o dashboard deixou de preferir itens `PLUGNOTAS`: agora prefere emissoes com identificadores fiscais reais, independente do provider
+
+Leitura operacional correta:
+1. o frontend esta pronto para consumir `canonico`/`status`/`provider` quando o backend publicar esses campos
+2. emissoes legadas PLUGNOTAS continuam exibindo normalmente pelo fallback de shape
+3. nenhum filtro ou tela quebra com o novo provider LOBONOTAS
+4. a regra segue: sem quebrar, sem regredir, uma coisa de cada vez
+
+Validacao:
+- `vitest run src/lib/nfse-provider.test.ts src/hooks/useDashboardData.test.ts` -> 8 testes passando
+- `npm test` -> 134 passando / 14 falhas pre-existentes (NfseEmitPage.tomador-substituto, NfseQuickEmitPage, tomadores.persistence, PrestadorSection, CertificadoDigitalCard) confirmadas tambem em checkout limpo
+- `npm run build` -> ok
+- `eslint` nos arquivos alterados -> 0 erros
+
 ## 0. Atualizacao rapida (19/05/2026) - frontend passou a respeitar a role `readonly`
 
 Fonte: `codigo local` + `build local`.

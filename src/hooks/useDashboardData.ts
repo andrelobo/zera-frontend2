@@ -95,9 +95,16 @@ function resolveTomadorNome(
   return nome || 'Emissão expressa';
 }
 
-export function selectDashboardItems<T extends { provider?: string | null }>(items: T[]): T[] {
-  const plugNotasItems = items.filter((item) => String(item.provider || '').trim().toUpperCase() === 'PLUGNOTAS');
-  return plugNotasItems.length > 0 ? plugNotasItems : items;
+export function selectDashboardItems<T extends {
+  provider?: string | null;
+  numeroNfse?: string | null;
+  dpsNum?: string | null;
+  numero?: string | null;
+}>(items: T[]): T[] {
+  const canonicalItems = items.filter(
+    (item) => Boolean(item.numeroNfse || item.dpsNum || item.numero),
+  );
+  return canonicalItems.length > 0 ? canonicalItems : items;
 }
 
 export function mapNfseItemsToDashboardNotas(items: Nfse[]): NotaDashboard[] {
