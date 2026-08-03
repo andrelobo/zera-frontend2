@@ -5,6 +5,28 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-08-03) - Slice 8 LOBONOTAS: fim das chamadas diretas ao IBGE no fluxo de emissao
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Leitura consolidada:
+- as duas chamadas diretas ao `IBGE Localidades` registradas como divida tecnica (auditoria de 12/05/2026 e roadmap `04` Slice 8 item 4) foram removidas:
+  - `src/components/emissao/PrestacaoServicoSection.tsx` (dropdown de municipio da emissao)
+  - `src/services/location.ts` (fallback de `listMunicipiosByUf`)
+- `PrestacaoServicoSection` passou a usar `listMunicipiosByUf` de `@/services/location`, que agora consome exclusivamente `GET /empresas/lookup/municipios` (rota canonica do backend)
+- `listMunicipiosByUf` simplificada: UF invalida retorna `[]`; falha da API interna retorna `[]` (sem fallback externo e sem rethrow de erro)
+
+Regra operacional:
+1. frontend de municipios fala somente com o backend do ZERA (direcao canonica)
+2. `LocalPrestacaoSection` e o dropdown da emissao degradam para lista vazia se a rota interna falhar, sem quebrar o formulario
+3. nenhum payload fiscal, fluxo de emissao ou shape PlugNotas foi alterado
+4. mantido o mantra: sem quebrar, sem regredir, uma coisa de cada vez
+
+Validacao:
+- `npx vitest run src/services/location.test.ts` -> 3 testes passando
+- `npm test` -> 134 passando / 14 falhas pre-existentes (mesmo baseline)
+- `npm run build` -> ok
+- `eslint` nos arquivos alterados -> 0 erros (4 warnings pre-existentes: fast-refresh e exhaustive-deps)
+
 ## 0. Atualizacao de Contexto (2026-08-03) - Slice 8 LOBONOTAS: consumo do contrato canonico no frontend
 Fonte: `codigo local` + `testes locais` + `build local` + doc `03-CONTRATO-E-COMPATIBILIDADE.md` do backend.
 
