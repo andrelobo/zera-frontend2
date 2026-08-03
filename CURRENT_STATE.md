@@ -2,6 +2,28 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (03/08/2026) - Slice 8 LOBONOTAS: municipios centralizados no backend (fim do IBGE direto)
+
+Fonte: `codigo local` + `testes locais` + `build local`.
+
+Estado atual:
+- as duas chamadas diretas ao `IBGE Localidades` do fluxo de emissao foram removidas
+- `src/components/emissao/PrestacaoServicoSection.tsx` e `src/services/location.ts` nao consomem mais `servicodados.ibge.gov.br`
+- municipios por UF passam a vir exclusivamente de `GET /empresas/lookup/municipios` (rota canonica do backend)
+- `listMunicipiosByUf` simplificada: retorna lista vazia em falha de rede/API e para UF invalida (sem fallback externo)
+
+Leitura operacional correta:
+1. o frontend fala somente com o backend do ZERA para municipios (direcao canonica)
+2. `LocalPrestacaoSection` e o dropdown de municipio da emissao degradam para lista vazia se a API interna falhar, sem quebrar o form
+3. nenhuma regra fiscal ou payload de emissao foi alterado
+4. a divida registrada em `CONTEXT.md` (12/05/2026) e no roadmap (Slice 8, item 4) foi encerrada
+
+Validacao:
+- `vitest run src/services/location.test.ts` -> 3 testes passando
+- `npm test` -> 134 passando / 14 falhas pre-existentes (mesmo baseline)
+- `npm run build` -> ok
+- `eslint` nos arquivos alterados -> 0 erros (4 warnings pre-existentes)
+
 ## 0. Atualizacao rapida (03/08/2026) - Slice 8 LOBONOTAS: frontend migrado para contrato canonico
 
 Fonte: `codigo local` + `testes locais` + `build local`.

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Briefcase, Percent, ChevronDown, Search, MapPin, Star, List, Hash, FileText, DollarSign, Calculator, BadgePercent, Scissors, ShieldCheck, Receipt } from 'lucide-react';
 import { searchCTN, getCTNByCode } from '@/utils/ctn-data';
+import { listMunicipiosByUf, type MunicipioOption } from '@/services/location';
 
 export interface PrestacaoServicoData {
   codigoServico: string;
@@ -123,10 +124,6 @@ const UF_LIST = [
   'PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'
 ];
 
-interface Municipio {
-  nome: string;
-}
-
 const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarRetencoesFederais, favoritos = [], optanteSimples = false, tomadorSubstituto = false, listaServico = [] }) => {
   const update = (field: keyof PrestacaoServicoData, value: string | boolean) => {
     onChange({ ...data, [field]: value });
@@ -190,7 +187,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
 
   // Local prestação state
   const [ufSelecionada, setUfSelecionada] = useState('');
-  const [municipios, setMunicipios] = useState<Municipio[]>([]);
+  const [municipios, setMunicipios] = useState<MunicipioOption[]>([]);
   const [municipioQuery, setMunicipioQuery] = useState('');
   const [showLocalDropdown, setShowLocalDropdown] = useState(false);
   const [loadingMunicipios, setLoadingMunicipios] = useState(false);
@@ -207,9 +204,8 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
       return;
     }
     setLoadingMunicipios(true);
-    fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${ufSelecionada}/municipios?orderBy=nome`)
-      .then(res => res.json())
-      .then((data: Municipio[]) => {
+    listMunicipiosByUf(ufSelecionada)
+      .then((data) => {
         setMunicipios(data);
         setLoadingMunicipios(false);
       })
