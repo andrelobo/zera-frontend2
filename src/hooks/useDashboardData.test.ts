@@ -2,24 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { resolveDashboardRbt12, selectDashboardItems } from './useDashboardData';
 
 describe('selectDashboardItems', () => {
-  it('prefers PLUGNOTAS items when they exist', () => {
+  it('prefers items with canonical fiscal identifiers regardless of provider', () => {
     const items = [
       { id: '1', provider: 'MANUAL' },
-      { id: '2', provider: 'PLUGNOTAS' },
-      { id: '3', provider: 'plugnotas' },
+      { id: '2', provider: 'PLUGNOTAS', numeroNfse: '1001' },
+      { id: '3', provider: 'LOBONOTAS', dpsNum: '38' },
     ];
 
     expect(selectDashboardItems(items)).toEqual([
-      { id: '2', provider: 'PLUGNOTAS' },
-      { id: '3', provider: 'plugnotas' },
+      { id: '2', provider: 'PLUGNOTAS', numeroNfse: '1001' },
+      { id: '3', provider: 'LOBONOTAS', dpsNum: '38' },
     ]);
   });
 
-  it('falls back to all items when none are marked as PLUGNOTAS', () => {
+  it('keeps legacy PLUGNOTAS emissions when they carry identifiers', () => {
+    const items = [
+      { id: '1', provider: 'PLUGNOTAS', numeroNfse: '1002', dpsNum: '40' },
+      { id: '2', provider: 'LOBONOTAS', numeroNfse: '2001' },
+    ];
+
+    expect(selectDashboardItems(items)).toEqual(items);
+  });
+
+  it('falls back to all items when none carry fiscal identifiers', () => {
     const items = [
       { id: '1', provider: '' },
       { id: '2' },
-      { id: '3', provider: 'MANUAL' },
+      { id: '3', provider: 'PLUGNOTAS' },
     ];
 
     expect(selectDashboardItems(items)).toEqual(items);

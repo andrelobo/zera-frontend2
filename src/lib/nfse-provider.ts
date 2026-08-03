@@ -49,8 +49,16 @@ const toNumber = (value: unknown): number | undefined => {
   return undefined;
 };
 
+const asString = (value: unknown): string | undefined => {
+  if (typeof value === 'string' && value.trim() !== '') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return undefined;
+};
+
 export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): NfseInferredData => {
   if (!provider) return {};
+
+  const canonico = asRecord(provider.canonico) ?? {};
 
   const providerRequest = asRecord(provider.providerRequest);
   const payload = firstFromArray(providerRequest?.payload);
@@ -99,20 +107,14 @@ export const inferNfseDataFromProvider = (provider?: ProviderResponse | null): N
     (typeof responseServico?.codigo === 'string' ? responseServico.codigo : undefined);
 
   const numeroNfseRaw = responseRetorno?.numeroNfse ?? providerResponseRoot?.numeroNfse;
-  const numeroNfse =
-    typeof numeroNfseRaw === 'string'
+  const numeroNfse = asString(canonico?.numeroNfse)
+    ?? (typeof numeroNfseRaw === 'string'
       ? numeroNfseRaw
-      : (typeof numeroNfseRaw === 'number' ? String(numeroNfseRaw) : undefined);
-  const dpsNumRaw = responseDps?.numero;
-  const dpsNum =
-    typeof dpsNumRaw === 'string'
-      ? dpsNumRaw
-      : (typeof dpsNumRaw === 'number' ? String(dpsNumRaw) : undefined);
-  const serieDpsRaw = responseDps?.serie;
-  const serieDpsNum =
-    typeof serieDpsRaw === 'string'
-      ? serieDpsRaw
-      : (typeof serieDpsRaw === 'number' ? String(serieDpsRaw) : undefined);
+      : (typeof numeroNfseRaw === 'number' ? String(numeroNfseRaw) : undefined));
+  const dpsNum = asString(canonico?.dpsNumero)
+    ?? asString(responseDps?.numero);
+  const serieDpsNum = asString(canonico?.dpsSerie)
+    ?? asString(responseDps?.serie);
 
   return {
     valor,

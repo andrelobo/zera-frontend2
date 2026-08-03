@@ -348,7 +348,18 @@ export interface TomadorCpfLookupResponse {
 
 // NFSe
 export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELLED';
-export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK';
+export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK' | 'LOBONOTAS';
+
+export interface NfseCanonicalIdentifiers {
+  dpsId?: string;
+  dpsNumero?: string;
+  dpsSerie?: string;
+  numeroNfse?: string;
+  protocolo?: string;
+  idNota?: string;
+  codigoVerificacao?: string;
+  dataAutorizacao?: string;
+}
 
 export interface NfseAddress {
   logradouro?: string;
@@ -498,6 +509,7 @@ export interface ProviderResponse {
   provider?: string;
   externalId?: string | null;
   status?: NfseStatus;
+  canonico?: NfseCanonicalIdentifiers | null;
   providerRequest?: unknown;
   providerResponse?: unknown;
   error?: string | null;

@@ -5,6 +5,39 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. Atualizacao de Contexto (2026-08-03) - Slice 8 LOBONOTAS: consumo do contrato canonico no frontend
+Fonte: `codigo local` + `testes locais` + `build local` + doc `03-CONTRATO-E-COMPATIBILIDADE.md` do backend.
+
+Leitura consolidada:
+- seguindo a Fase 2 do roadmap (`03-CONTRATO-E-COMPATIBILIDADE.md` §5), o frontend passou a consumir `canonico`/`status`/`provider` antes de inferir dados do shape PlugNotas
+- `inferNfseDataFromProvider` (`src/lib/nfse-provider.ts`) agora prioriza o bloco canonico neutro (`numeroNfse`, `dpsNumero`, `dpsSerie`) e so recorre ao `providerResponse` bruto legado quando `canonico` nao existir
+- o contrato permanece aditivo: o backend ainda nao publica `canonico` no `provider-response` (status: `codigo local` backend), mas o frontend ja esta preparado para quando publicar; emissoes PLUGNOTAS seguem com inferencia legada normal
+
+Mudancas de contrato/estrutura:
+- `src/types/api.ts`:
+  - `NfseProvider` agora inclui `'LOBONOTAS'`
+  - novo tipo `NfseCanonicalIdentifiers` (`dpsId`, `dpsNumero`, `dpsSerie`, `numeroNfse`, `protocolo`, `idNota`, `codigoVerificacao`, `dataAutorizacao`)
+  - `ProviderResponse` ganhou `canonico?: NfseCanonicalIdentifiers | null`
+- `src/services/api.ts`: `providerResponse` e `providerResponseByExternalId` passam a mapear `canonico` quando presente
+- `src/hooks/useDashboardData.ts`: `selectDashboardItems` deixou de preferir `PLUGNOTAS`; passa a preferir emissoes com identificadores fiscais reais, independente do provider
+- `src/pages/NfseListPage.tsx`: filtro de provedor ganhou a opcao `Nacional` (LOBONOTAS), mantendo PlugNotas/Manaus/Mock
+
+Consumidores afetados (sem mudanca de contrato publico):
+- `NfseDetailPage.tsx`, `NfseListPage.tsx`, `EmpresaFormPage.tsx` (espelho Portal Nacional) usam `inferNfseDataFromProvider`, agora canonico-first
+- `useDashboardData.ts`/dashboards usam `selectDashboardItems` neutro
+
+Regra operacional:
+1. o frontend nao precisa mais conhecer shape PlugNotas para emissao nova LOBONOTAS
+2. `provider-response` continua sendo usado por telas existentes ate o backend publicar `canonico` no resumo
+3. nada foi removido: o shape legado permanece como fallback para emissao PLUGNOTAS (regra de compatibilidade do doc 03 §5)
+4. manter o mantra: sem quebrar, sem regredir, uma coisa de cada vez
+
+Validacao:
+- `npx vitest run src/lib/nfse-provider.test.ts src/hooks/useDashboardData.test.ts` -> 8 testes passando
+- `npm test` -> 134 passando / 14 falhas pre-existentes confirmadas em checkout limpo
+- `npm run build` -> ok
+- `eslint` nos arquivos alterados -> 0 erros (1 warning pre-existente de `exhaustive-deps` em `useDashboardData.ts`)
+
 ## 0. Atualizacao de Contexto (2026-05-19) - role `readonly` entrou como trilha segura de visualizacao
 Fonte: `codigo local` + `build local`.
 

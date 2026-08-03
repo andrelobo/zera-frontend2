@@ -175,6 +175,7 @@ const NfseListPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Provedores</SelectItem>
+            <SelectItem value="LOBONOTAS">Nacional</SelectItem>
             <SelectItem value="PLUGNOTAS">PlugNotas</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
             <SelectItem value="MOCK">Mock</SelectItem>
