@@ -2,6 +2,27 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. Atualizacao rapida (03/08/2026) - tentar novamente emissao que falhou antes da transmissao
+
+Fonte: `codigo local` + `build local` + `teste focado`.
+
+Estado atual:
+- a tela de detalhe de uma NFSe `ERROR` passou a oferecer `Tentar emitir novamente` somente quando nao ha `externalId` nem resposta do provider
+- a acao exige confirmacao explicita, chama `POST /nfse/:id/reemitir` e navega para a nova emissao
+- a tentativa antiga permanece visivel como auditoria; perfil `readonly` nao recebe a acao
+- o fluxo cobre a emissao LOBONOTAS `6a70eb85caa874f842b4a576`, que falhou antes da transmissao pelo erro de pipeline da numeracao DPS ja corrigido no backend
+
+Validacao:
+- `npm run build` -> ok
+- `vitest run src/services/api.new-flows.test.ts` -> **20/20 testes** verdes
+- lint dos arquivos alterados -> 0 erros
+- pacote critico: 75 verdes / 3 falhas pre-existentes (PrestadorSection e CertificadoDigitalCard), sem relacao com esta mudanca
+
+Leitura operacional correta:
+1. abrir o detalhe da tentativa com erro e confirmar a reemissao cria uma nota nova com os mesmos dados fiscais
+2. a UI nao oferece reemissao automatica quando ha qualquer evidencia de transmissao, evitando duplicidade fiscal
+3. acompanhar a nova emissao ate `AUTHORIZED`, `PENDING` ou novo erro real do Ambiente Nacional
+
 ## 0. Atualizacao rapida (03/08/2026) - Slice 8 LOBONOTAS: municipios centralizados no backend (fim do IBGE direto)
 
 Fonte: `codigo local` + `testes locais` + `build local`.

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { nfseApi } from '@/services/api';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingState from '@/components/LoadingState';
@@ -7,7 +7,8 @@ import ErrorState from '@/components/ErrorState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, ExternalLink } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, ExternalLink, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
@@ -130,6 +131,7 @@ const formatParametroIssAplicado = (value?: string | null) => {
 const NfseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isReadOnly = isReadOnlyRole(user?.role || 'user');
 
@@ -172,6 +174,18 @@ const NfseDetailPage = () => {
     onSuccess: (result) => {
       toast({ title: 'Sincronização de arquivos', description: result.synced ? 'Arquivos sincronizados com sucesso.' : `Nenhuma alteração (${result.reason}).` });
       refetchArtifacts();
+    },
+  });
+
+  const reemitMutation = useMutation({
+    mutationFn: () => nfseApi.reemitir(id!),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ['nfse'] });
+      toast({
+        title: 'Nova tentativa criada',
+        description: `A emissao foi reenviada com seguranca. Nova emissao: ${result.emissionId}.`,
+      });
+      navigate(`/nfse/${result.emissionId}`);
     },
   });
 
@@ -230,6 +244,13 @@ const NfseDetailPage = () => {
   const tomadorDocRaw = getNfseTomadorDocumento(nfse) !== '—' ? getNfseTomadorDocumento(nfse) : rawInferred.tomadorCpfCnpj || inferred.tomadorCpfCnpj || '—';
   const tomadorDocDigits = tomadorDocRaw.replace(/\D/g, '');
   const tomadorDoc = tomadorDocDigits.length === 14 ? formatCNPJ(tomadorDocDigits) : tomadorDocRaw;
+  const canRetryPreTransmission =
+    !isReadOnly &&
+    nfse.status === 'ERROR' &&
+    !nfse.externalId &&
+    Boolean(providerResp) &&
+    providerResp?.externalId == null &&
+    providerResp?.providerResponse == null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -324,6 +345,36 @@ const NfseDetailPage = () => {
               ) : (
                 <p className="text-muted-foreground">Sem detalhes de erro.</p>
               )}
+              {canRetryPreTransmission ? (
+                <div className="border-t border-destructive/20 pt-3">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={reemitMutation.isPending}
+                      >
+                        <RotateCcw className={`mr-2 h-4 w-4 ${reemitMutation.isPending ? 'animate-spin' : ''}`} />
+                        Tentar emitir novamente
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar nova tentativa de emissao?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          A tentativa anterior falhou antes da transmissao e sera preservada para auditoria. Uma nova emissao sera criada com os mesmos dados fiscais.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => reemitMutation.mutate()}>
+                          Confirmar e emitir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         )}

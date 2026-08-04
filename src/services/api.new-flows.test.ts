@@ -128,6 +128,21 @@ describe('new API flows', () => {
     });
   });
 
+  it('retries a pre-transmission NFSe error through the dedicated endpoint', async () => {
+    const { nfseApi } = await import('@/services/api');
+    const response = {
+      emissionId: 'em-retry-1',
+      idempotentReplay: false,
+      result: { status: 'PENDING', provider: 'LOBONOTAS' },
+    };
+    mockPost.mockResolvedValue({ data: response });
+
+    await expect(nfseApi.reemitir('6a70eb85caa874f842b4a576')).resolves.toEqual(response);
+    expect(mockPost).toHaveBeenCalledWith(
+      '/nfse/6a70eb85caa874f842b4a576/reemitir',
+    );
+  });
+
   it('queries cpf lookup for tomador enrichment', async () => {
     const { tomadoresApi } = await import('@/services/api');
     const response = {

@@ -407,6 +407,8 @@ export const nfseApi = {
     api.post<EmitirNfseResponse>('/nfse/emitir', data).then(r => r.data),
   emitirQuick: (data: EmitirNfseQuickRequest) =>
     api.post<EmitirNfseQuickResponse>('/nfse/quick', data).then(r => r.data),
+  reemitir: (id: string) =>
+    api.post<EmitirNfseResponse>(`/nfse/${id}/reemitir`).then(r => r.data),
   servicosList: (
     input?: { q?: string; limit?: number; page?: number },
     options?: { skipGlobalErrorToast?: boolean },
