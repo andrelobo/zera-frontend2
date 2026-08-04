@@ -2,6 +2,24 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. RETOMAR DAQUI (04/08/2026) - botao de reemissao temporariamente nao deve ser usado
+
+Fonte: `frontend em producao` + `logs e respostas reais do backend/SEFIN`.
+
+Estado operacional:
+- a tela e o endpoint de reemissao funcionam, e o backend agora preserva corretamente `LOBONOTAS`
+- a NFS-e PlugNotas numero 47 (`6a71420f451c04dbcc7a438c`) foi autorizada e sera mantida
+- a origem que aparece como `NFSe 6a70eb85`, criada em 03/08/2026 15:27:02, e `6a70eb85caa874f842b4a576`
+- **nao clicar novamente em `Tentar emitir novamente`** nesta origem ate o backend concluir GZip/Base64
+- ultima chamada gerou DPS 60 no provider correto/SEFIN producao, mas recebeu `E1226 - Estrutura descompactada mal formada`; nenhuma NFS-e LOBONOTAS foi autorizada
+
+Retomada:
+1. backend implementa compactacao GZip + Base64Binary no campo JSON `dps`
+2. backend implementa descompactacao da resposta NFS-e e testes deterministas
+3. apos deploy confirmado, fazer uma unica tentativa pela mesma tela e acompanhar o novo ID
+
+Backend relacionado ao pausar: `446a620`, deploy `30872158142` verde.
+
 ## 0. Atualizacao rapida (03/08/2026) - tentar novamente emissao que falhou antes da transmissao
 
 Fonte: `codigo local` + `build local` + `teste focado`.

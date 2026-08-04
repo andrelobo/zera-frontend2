@@ -5,6 +5,17 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. HANDOVER IMEDIATO (2026-08-04) - emissao LOBONOTAS pausada em E1226
+
+Fonte: `execucao real frontend` + `logs reais backend` + `resposta real SEFIN Nacional`.
+
+- Nao usar novamente o botao de reemissao da `6a70eb85caa874f842b4a576` ate liberacao do backend.
+- A nota PlugNotas 47 (`6a71420f451c04dbcc7a438c`) foi autorizada e sera mantida.
+- O fluxo agora chega corretamente ao LOBONOTAS/SEFIN producao, mas a DPS 60 foi rejeitada com `E1226` porque o XML ainda nao foi compactado em GZip + Base64 dentro do JSON.
+- Nenhuma nota LOBONOTAS foi autorizada nessas tentativas.
+- Proximo passo pertence ao backend: codec request/response, testes e deploy. Depois, uma unica tentativa autenticada pelo frontend.
+- Detalhes completos: `CURRENT_STATE.md` do backend, secao `RETOMAR DAQUI`.
+
 ## 0. Atualizacao de Contexto (2026-08-03) - Slice 8 LOBONOTAS: fim das chamadas diretas ao IBGE no fluxo de emissao
 Fonte: `codigo local` + `testes locais` + `build local`.
 
