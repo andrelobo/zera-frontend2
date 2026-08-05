@@ -422,7 +422,7 @@ const PrestadorSection: React.FC<Props> = ({
                 className="field-input"
                 placeholder="(00) 00000-0000"
                 value={data.whatsapp}
-                onChange={(e) => update('whatsapp', e.target.value)}
+                onChange={(e) => update('whatsapp', formatPhone(e.target.value))}
                 onBlur={(e) => update('whatsapp', formatPhone(e.target.value))}
               />
             </div>

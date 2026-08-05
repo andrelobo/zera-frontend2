@@ -35,7 +35,7 @@ const formatDateLabel = (value?: string) => {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('pt-BR');
+  return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 };
 
 const getExpirationProgress = (value?: string) => {
@@ -218,6 +218,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
           <div className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="space-y-1">
+              <p className="font-semibold">Certificado digital já importado</p>
               <p>{certificadoAtual?.filename || 'Certificado importado'}</p>
               {expiresAtLabel && (
                 <div className="space-y-1">
