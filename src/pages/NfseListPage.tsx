@@ -116,7 +116,7 @@ const NfseListPage = () => {
       a.href = url;
       a.download = `nfse-${nfseId}.pdf`;
       a.click();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
       try {
         const blob = await nfseApi.downloadRemotePdf(nfseId);
@@ -125,7 +125,7 @@ const NfseListPage = () => {
         a.href = url;
         a.download = `nfse-${nfseId}-remote.pdf`;
         a.click();
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       } catch {
         // handled by interceptor
       }

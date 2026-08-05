@@ -197,7 +197,7 @@ const NfseDetailPage = () => {
       a.href = url;
       a.download = filename;
       a.click();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
       // handled by interceptor
     }
