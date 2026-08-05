@@ -2,6 +2,27 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. ATUALIZACAO (05/08/2026) - FIX DOWNLOAD DE XML/PDF NA TELA; AGUARDANDO COMMIT
+
+Fonte: `execucao real em producao` + `codigo local` + `build local` + `testes locais`.
+
+Estado operacional:
+- o backend ja baixa XML/PDF da NFS-e 48 corretamente em producao (ver CURRENT_STATE.md do backend) — o problema restante era **so no frontend**:
+  - `downloadFile` (`NfseDetailPage.tsx`) e `handleDownloadPdf` (`NfseListPage.tsx`) chamavam `a.click()` e **revogavam o blob URL imediatamente** (`URL.revokeObjectURL(url)` na linha seguinte), abortando o download no navegador.
+- Fix aplicado (NAO commitado ainda):
+  - `NfseDetailPage.tsx` `downloadFile`: revogacao movida para `window.setTimeout(() => URL.revokeObjectURL(url), 60_000)`; caminho remoto continua direto na URL sem blob.
+  - `NfseListPage.tsx` `handleDownloadPdf`: mesma adia a revogacao (caminhos local e remoto).
+  - `openBlobInNewTab` ja usava setTimeout — alinhado ao novo padrao.
+- Validacao local:
+  - `eslint` nos 2 arquivos -> 0 erros;
+  - `npm run build` -> ok (`✓ built in 10.08s`);
+  - `npm test` -> **135 passando / 14 falhas pre-existentes** (mesmo baseline, sem regressao).
+
+Retomada:
+1. commit + push do fix (ex.: `fix(nfse): adia revogacao do blob URL no download de XML/PDF`);
+2. apos deploy Vercel, validar download pela tela no **front atual `https://manaus-nfse-dashboard.vercel.app`** (NFS-e 48) — XML e PDF;
+3. sem novo teste pendente de backend; nova emissao LOBONOTAS deve fechar artefatos pelo caminho ja validado.
+
 ## 0. RETOMAR DAQUI (04/08/2026) - botao de reemissao temporariamente nao deve ser usado
 
 Fonte: `frontend em producao` + `logs e respostas reais do backend/SEFIN`.

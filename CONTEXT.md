@@ -5,6 +5,17 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. HANDOVER IMEDIATO (2026-08-05) - download de XML/PDF corrigido; fix pendente de commit
+
+Fonte: `execucao real` + `codigo local` + `build local` + `testes locais`.
+
+- Validacao real concluida: o backend/proxy/dominio baixam XML e PDF da NFS-e 48 (SEFIN) em producao (200; XML 9070 bytes; PDF 10213 bytes). O sintoma "clicou e nao baixou" era 100% frontend.
+- Causa raiz: `URL.revokeObjectURL(url)` era chamado na linha seguinte a `a.click()`, revogando o blob antes do navegador iniciar o download.
+- Fix aplicado em `src/pages/NfseDetailPage.tsx` (`downloadFile`) e `src/pages/NfseListPage.tsx` (`handleDownloadPdf`): revogacao adiada via `window.setTimeout(..., 60_000)`.
+- Validacao: `eslint` 0 erros, `npm run build` ok, `npm test` -> 135 passando / 14 falhas pre-existentes (mesmo baseline).
+- **Proximo passo: commit + push do fix e confirmar deploy Vercel**; depois validar o download pela tela no front atual `https://manaus-nfse-dashboard.vercel.app`.
+- Detalhes completos: `CURRENT_STATE.md` deste repo (topo) e do backend (secao ATUALIZACAO 05/08/2026).
+
 ## 0. HANDOVER IMEDIATO (2026-08-04) - emissao LOBONOTAS pausada em E1226
 
 Fonte: `execucao real frontend` + `logs reais backend` + `resposta real SEFIN Nacional`.
