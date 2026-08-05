@@ -2,6 +2,22 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. ATUALIZACAO (05/08/2026) - ACOES DE SINCRONIZACAO/REMOTO PLUGNOTAS DESABILITADAS NA UI
+
+Fonte: `codigo local` + `eslint local` + `build local` + `testes locais`.
+
+Estado operacional:
+- alinhado ao backend (kill switch `PLUGNOTAS_DISABLED`): a UI deixa de oferecer acoes de sincronizacao/download remoto que terminariam em erro para notas PlugNotas historicas.
+- `NfseDetailPage.tsx`: botoes `Sincronizar`, `XML Remoto` e `PDF Remoto` desabilitados (com `title` explicativo) quando `nfse.provider` e PLUGNOTAS; `openPdfPreview` pula o fallback remoto para PLUGNOTAS (abre apenas PDF local, sem erro).
+- `NfseListPage.tsx`: helper `isPlugNotasProvider`; `handleOpenPdf`/`handleDownloadPdf` recebem `provider` e pulam fallback remoto para PLUGNOTAS; handlers atualizados com `nfse.provider`.
+- `EmpresaFormPage.tsx`: card `Sincronizacao com a PlugNotas` agora exibe Alert "Sincronizacao desabilitada" e o botao do mutation fica `disabled` com `title` explicativo (mutation/estados `syncPlugNotas*` preservados).
+- Validacao local: `eslint` 0 erros (warnings pre-existentes); `npm run build` ok; `npm test` -> mesmo baseline (14 falhas pre-existentes, sem regressao).
+
+Retomada:
+1. commit + push (ex.: `feat(nfse): desabilita acoes de sincronizacao/remoto para notas PLUGNOTAS`);
+2. apos deploy Vercel, conferir na tela (NFS-e 47 PlugNotas): botoes desabilitados e PDF/XML somente do persistido;
+3. nenhum novo teste pendente de backend.
+
 ## 0. ATUALIZACAO (05/08/2026) - FIX DOWNLOAD DE XML/PDF NA TELA; AGUARDANDO COMMIT
 
 Fonte: `execucao real em producao` + `codigo local` + `build local` + `testes locais`.

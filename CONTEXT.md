@@ -5,6 +5,18 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. HANDOVER IMEDIATO (2026-08-05) - acoes de sincronizacao/remoto PlugNotas desabilitadas na UI
+
+Fonte: `codigo local` + `eslint local` + `build local` + `testes locais`.
+
+- Alinhado ao backend (kill switch `PLUGNOTAS_DISABLED`): a UI deixa de oferecer acoes de sincronizacao e download remoto que terminariam em erro para notas PlugNotas historicas.
+- `NfseDetailPage.tsx`: botoes `Sincronizar`, `XML Remoto` e `PDF Remoto` desabilitados (com `title` explicativo) para notas PLUGNOTAS; `openPdfPreview` pula fallback remoto (abre so o PDF local).
+- `NfseListPage.tsx`: helper `isPlugNotasProvider`; `handleOpenPdf`/`handleDownloadPdf` recebem `provider` e pulam fallback remoto para PLUGNOTAS.
+- `EmpresaFormPage.tsx`: card `Sincronizacao com a PlugNotas` vira Alert "Sincronizacao desabilitada" com botao `disabled` (mutation/estados `syncPlugNotas*` preservados).
+- Validacao: `eslint` 0 erros, `npm run build` ok, `npm test` -> 135 passando / 14 falhas pre-existentes (mesmo baseline).
+- **Proximo passo: commit + push do backend e do front; apos deploy Vercel conferir botoes desabilitados na NFS-e 47.**
+- Detalhes completos: `CURRENT_STATE.md` deste repo (topo) e do backend (secao PLUGNOTAS DESATIVADO 05/08/2026).
+
 ## 0. HANDOVER IMEDIATO (2026-08-05) - download de XML/PDF corrigido; fix pendente de commit
 
 Fonte: `execucao real` + `codigo local` + `build local` + `testes locais`.
