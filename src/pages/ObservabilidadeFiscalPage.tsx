@@ -98,9 +98,11 @@ const ObservabilidadeFiscalPage = () => {
     try {
       const data = await nfseApi.observabilityByExternalId(normalized);
       setTrace(data as ObservabilityResponse);
-    } catch (error: any) {
+    } catch (error) {
       setTrace(null);
-      setTraceError(error?.response?.data?.message || 'Não foi possível consultar a observabilidade desta emissão.');
+      const apiMessage = (error as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
+      setTraceError(apiMessage || 'Não foi possível consultar a observabilidade desta emissão.');
     } finally {
       setLoadingTrace(false);
     }

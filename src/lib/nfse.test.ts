@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Nfse } from '@/types/api';
 import { getNfseTomadorDocumento } from './nfse';
 
 describe('nfse helpers', () => {
@@ -8,7 +9,7 @@ describe('nfse helpers', () => {
       status: 'ERROR',
       provider: 'PLUGNOTAS',
       tomadorCpfCnpj: '61020788100',
-    } as any;
+    } as Nfse & { tomadorCpfCnpj?: string | null };
 
     expect(getNfseTomadorDocumento(nfse)).toBe('61020788100');
   });

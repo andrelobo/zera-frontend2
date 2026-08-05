@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { empresasApi, nfseApi } from '@/services/api';
+import type { Empresa } from '@/types/api';
 import {
   getNfsePrestadorDocumento,
   getNfsePrestadorNome,
@@ -29,7 +30,7 @@ const formatCnpj = (value?: string | null) => {
   return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
 };
 
-const getPrestadoraReadiness = (empresa: any) => {
+const getPrestadoraReadiness = (empresa: Empresa) => {
   const hasCertificate = Boolean(
     empresa?.providerCertificadoId ||
       empresa?.certificado?.nomeArquivo ||
@@ -106,7 +107,7 @@ const DashboardPage = () => {
     staleTime: 60_000,
   });
 
-  const empresas = ((empresasQuery.data || []) as any[]).filter(Boolean);
+  const empresas = (empresasQuery.data || []).filter(Boolean);
   const notas = nfseQuery.data?.data || [];
 
   const prestadoras = useMemo(

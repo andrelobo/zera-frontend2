@@ -146,6 +146,7 @@ export interface Empresa {
     cep?: string;
     descricaoCidade?: string;
     estado?: string;
+    codigoMunicipio?: string;
   };
   cidade?: string;
   uf?: string;
@@ -165,8 +166,18 @@ export interface Empresa {
   };
   fone?: string;
   email?: string;
+  providerCertificadoId?: string;
+  providerData?: {
+    endereco?: {
+      municipio?: { codigo_ibge?: string };
+      codigoCidade?: string;
+    };
+  };
   certificado?: {
     filename?: string;
+    fileName?: string;
+    nomeArquivo?: string;
+    arquivo?: string;
     mimeType?: string;
     size?: number;
     sha256?: string;
