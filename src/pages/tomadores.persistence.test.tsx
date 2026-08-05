@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '@/contexts/AuthContext';
 import TomadorFormPage from './TomadorFormPage';
 import TomadoresPage from './TomadoresPage';
 
@@ -75,10 +76,12 @@ const renderWithProviders = (
 ) => render(
   <QueryClientProvider client={queryClient}>
     <MemoryRouter initialEntries={[route]}>
-      <Routes>
-        <Route path={path} element={ui} />
-        <Route path="/tomadores" element={<div>Tomadores</div>} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path={path} element={ui} />
+          <Route path="/tomadores" element={<div>Tomadores</div>} />
+        </Routes>
+      </AuthProvider>
     </MemoryRouter>
   </QueryClientProvider>,
 );

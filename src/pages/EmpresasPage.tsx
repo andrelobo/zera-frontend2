@@ -22,7 +22,7 @@ const EmpresasPage = () => {
 
   const { data: empresas, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['empresas'],
-    queryFn: empresasApi.list,
+    queryFn: () => empresasApi.list(),
   });
   const shouldShowError = useDebouncedTruthy(Boolean(isError && !isFetching && !empresas), 400);
 

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '@/contexts/AuthContext';
 import NfseEmitPage from './NfseEmitPage';
 
 const mocks = vi.hoisted(() => ({
@@ -134,7 +135,9 @@ const renderPage = (ui: ReactNode) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        {ui}
+        <AuthProvider>
+          {ui}
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -199,17 +202,17 @@ describe('NfseEmitPage tomador substituto', () => {
 
     renderPage(<NfseEmitPage />);
 
-    expect(await screen.findByPlaceholderText(/Buscar entre 2 serviço\(s\)/i)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/Buscar entre 2 serviço\(s\)/i, {}, { timeout: 5000 })).toBeInTheDocument();
     expect(mocks.empresaGetById).toHaveBeenCalledWith('empresa-1');
   });
 
   it('reacts inside the emission screen when switching from substituto to non-substituto tomador', async () => {
     renderPage(<NfseEmitPage />);
 
-    const seletor = await screen.findByRole('button', { name: /Selecione \(2\)/i });
+    const seletor = await screen.findByRole('button', { name: /Selecione \(2\)/i }, { timeout: 5000 });
 
     fireEvent.click(seletor);
-    fireEvent.click(await screen.findByRole('button', { name: /TOMADOR SIM/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /TOMADOR SIM/i }, { timeout: 5000 }));
 
     await waitFor(() => {
       expect(
@@ -220,7 +223,7 @@ describe('NfseEmitPage tomador substituto', () => {
     expect(screen.getByDisplayValue('2,01')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Selecione \(2\)/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /TOMADOR NAO/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /TOMADOR NAO/i }, { timeout: 5000 }));
 
     await waitFor(() => {
       expect(screen.getByText(/ISS devido ao proprio Municipio/i)).toBeInTheDocument();

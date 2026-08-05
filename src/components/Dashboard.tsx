@@ -14,7 +14,7 @@ interface DashboardProps {
   rbt12: number;
   cnaeAnexo: string;
   regime: string | null;
-  configOperacionais?: { id: string; natureza: string; descricao: string }[];
+  configOperacionais?: { id?: string; natureza?: string; descricao?: string }[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ prestadorId, nomeEmpresa, rbt12, cnaeAnexo, regime, configOperacionais = [] }) => {

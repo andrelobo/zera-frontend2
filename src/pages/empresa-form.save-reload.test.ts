@@ -48,6 +48,12 @@ describe('EmpresaFormPage save/reload', () => {
       telefone: '(92) 99159-4210',
       whatsapp: '(92) 99159-4210',
       email: 'contato@econtabilis.com',
+      plugNotasAtivoNfseNacional: false,
+      plugNotasConsultaAutomaticaDfe: false,
+      plugNotasConsultarDfePrestador: false,
+      plugNotasConsultarDfeTomador: false,
+      plugNotasConsultarDfeIntermediario: false,
+      plugNotasEmailAutomatico: false,
     };
 
     const canonical = buildCanonicalParametroMunicipal([], form);

@@ -6,6 +6,7 @@ import type {
   Nfse, EmitirNfseRequest, EmitirNfseResponse, NfseArtifactsStatus, ProviderResponse,
   NfseFilters, PaginatedResponse, EmitirNfseQuickRequest, EmitirNfseQuickResponse, ServicoCatalogItem, NfseBiSummary,
   Tomador, CreateTomadorRequest, UpdateTomadorRequest, CnaeCatalogLookupItem, TomadorCpfLookupResponse,
+  SyncEmpresaPlugNotasResponse,
 } from '@/types/api';
 import { roleToApi } from '@/lib/roles';
 

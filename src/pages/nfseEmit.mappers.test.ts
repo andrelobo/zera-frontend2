@@ -174,8 +174,8 @@ describe('nfseEmit mappers', () => {
   it('maps lista servico from formato atual e ignora residuos legados', () => {
     const empresa = baseEmpresa({
       configOperacionais: [
-        { id: 'a1', natureza: 'Contabilidade', descricao: 'Serviço contábil', codigoServico: '171901', aliquota: '5,00' },
-        { id: 'b2', codigo: 'Psicologia', nomeServico: 'Atendimento psicológico' } as unknown as { id: string; natureza: string; descricao: string },
+        { id: 'a1', natureza: 'Contabilidade', descricao: 'Serviço contábil', codigoServico: '171901', aliquota: '5,00' } as unknown as NonNullable<Empresa['configOperacionais']>[number],
+        { id: 'b2', codigo: 'Psicologia', nomeServico: 'Atendimento psicológico' } as unknown as NonNullable<Empresa['configOperacionais']>[number],
       ],
     });
 

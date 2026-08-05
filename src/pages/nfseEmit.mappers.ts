@@ -80,7 +80,7 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
           if (!ctn && !nbs) return null;
           return { ctn, ctnDescricao, nbs, nbsDescricao };
         })
-        .filter((v): v is FavoritoVinculo => Boolean(v));
+        .filter((v): v is NonNullable<typeof v> => Boolean(v));
       const fallbackCtn = pickFirstString(raw, ['ctn', 'ctnCodigo']);
       const fallbackNbs = pickFirstString(raw, ['nbs', 'nbsCodigo']);
       const hasExplicitFallback = Boolean(fallbackCtn || fallbackNbs);
@@ -111,7 +111,7 @@ export const mapFavoritosFromParametroMunicipal = (empresa?: Empresa): FavoritoM
         vinculos: vinculosCorrigidos,
       };
     })
-    .filter((item): item is FavoritoMapeado => Boolean(item));
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   if (favoritos.length > 0) return favoritos;
 
@@ -166,7 +166,7 @@ export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[]
             codigoServico,
           } satisfies ListaServicoItem;
         })
-        .filter((item): item is ListaServicoItem => Boolean(item)),
+        .filter((item): item is NonNullable<typeof item> => Boolean(item)),
     );
 
   if (listaParametroMunicipal.length > 0) {
@@ -195,7 +195,7 @@ export const mapListaServicoFromConfig = (empresa?: Empresa): ListaServicoItem[]
         aliquota: pickFirstString(raw, ['aliquota']) || undefined,
       };
     })
-    .filter((item): item is ListaServicoItem => Boolean(item));
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   const unique = new Map<string, ListaServicoItem>();
   mapped.forEach((item) => {

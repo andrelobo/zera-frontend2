@@ -462,6 +462,7 @@ export interface EmitirNfseRequest {
     cpfCnpj: string;
     razaoSocial: string;
     inscricaoMunicipal?: string;
+    email?: string;
     endereco?: NfseAddress;
   };
   servico: {

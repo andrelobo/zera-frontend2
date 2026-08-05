@@ -258,7 +258,7 @@ const isEmpresaAutocompleteCandidate = (empresa: Empresa) => {
 };
 
 const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaFormData => {
-  const legacy = empresa as Record<string, unknown>;
+  const legacy = empresa as unknown as Record<string, unknown>;
   const endereco = (empresa.endereco || {}) as Record<string, unknown>;
   const providerData = (legacy.providerData as Record<string, unknown> | undefined) ?? {};
   const atividadePrincipal = Array.isArray(providerData.atividade_principal)
@@ -375,7 +375,7 @@ const mapEmpresaToForm = (empresa: Empresa, previous: EmpresaFormData): EmpresaF
       || providerData.rbt12
       || previous.rbt12,
     ),
-    endereco: normalizeLogradouro(empresa.endereco?.logradouro || endereco.logradouro || previous.endereco),
+    endereco: normalizeLogradouro(empresa.endereco?.logradouro || String(endereco.logradouro || previous.endereco)),
     numero: String(empresa.endereco?.numero || endereco.numero || previous.numero),
     complemento: toUpperTrimmed(empresa.endereco?.complemento || endereco.complemento || previous.complemento),
     bairro: toUpperTrimmed(empresa.endereco?.bairro || endereco.bairro || previous.bairro),
@@ -429,7 +429,7 @@ const mapEmpresaCnaesListaToRegime = (empresa: Empresa): CNAEAtividade[] => {
         anexoLoading: Boolean(item?.anexoLoading),
       } satisfies CNAEAtividade;
     })
-    .filter((item): item is CNAEAtividade => item !== null);
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 };
 
 export const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[] => {
@@ -483,7 +483,7 @@ export const mapEmpresaParametroMunicipal = (empresa: Empresa): CnaeAdicionado[]
         vinculadoSN: Boolean(raw.vinculadoSN),
       } satisfies CnaeAdicionado;
     })
-    .filter((item): item is CnaeAdicionado => item !== null);
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 };
 
 const mapEmpresaConfigOperacionais = (empresa: Empresa): ConfigOperacionalItem[] => {
@@ -780,9 +780,9 @@ const EmpresaFormPage = () => {
   useEffect(() => {
     if (existing) {
       setForm((prev) => mapEmpresaToForm(existing, prev));
-      setNfseNum(String((existing as Record<string, unknown>).nfseNum ?? ''));
-      setDpsNum(String((existing as Record<string, unknown>).dpsNum ?? ''));
-      setSerieDpsNum(String((existing as Record<string, unknown>).serieDpsNum ?? ''));
+      setNfseNum(String((existing as unknown as Record<string, unknown>).nfseNum ?? ''));
+      setDpsNum(String((existing as unknown as Record<string, unknown>).dpsNum ?? ''));
+      setSerieDpsNum(String((existing as unknown as Record<string, unknown>).serieDpsNum ?? ''));
       const cnaesFromBackend = mapEmpresaCnaesListaToRegime(existing);
       if (cnaesFromBackend.length > 0) {
         setCnaesRegime(cnaesFromBackend);

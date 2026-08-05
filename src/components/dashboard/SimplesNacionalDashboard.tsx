@@ -28,7 +28,7 @@ interface Props {
   };
   dadosMensais: MesData[];
   analiseClientes: ClienteAnalise[];
-  configOperacionais?: { id: string; natureza: string; descricao: string }[];
+  configOperacionais?: { id?: string; natureza?: string; descricao?: string }[];
   simuladorContent?: React.ReactNode;
   splitPaymentContent?: React.ReactNode;
 }

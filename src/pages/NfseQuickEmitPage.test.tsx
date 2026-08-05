@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '@/contexts/AuthContext';
 import NfseQuickEmitPage from './NfseQuickEmitPage';
 
 const mocks = vi.hoisted(() => ({
@@ -88,7 +89,9 @@ const renderPage = (ui: ReactNode) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        {ui}
+        <AuthProvider>
+          {ui}
+        </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );

@@ -38,6 +38,12 @@ const emptyForm = (): EmpresaFormData => ({
   telefone: '',
   whatsapp: '',
   email: '',
+  plugNotasAtivoNfseNacional: false,
+  plugNotasConsultaAutomaticaDfe: false,
+  plugNotasConsultarDfePrestador: false,
+  plugNotasConsultarDfeTomador: false,
+  plugNotasConsultarDfeIntermediario: false,
+  plugNotasEmailAutomatico: false,
 });
 
 type Fixture = {
