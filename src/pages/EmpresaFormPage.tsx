@@ -1590,6 +1590,13 @@ const EmpresaFormPage = () => {
                 <CardContent className="space-y-3">
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Sincronização desabilitada</AlertTitle>
+                    <AlertDescription>
+                      A sincronização com a PlugNotas está permanentemente desabilitada. O provedor operacional é o LOBONOTAS; notas históricas PlugNotas permanecem apenas para leitura.
+                    </AlertDescription>
+                  </Alert>
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>O que o ZERA já tenta automatizar</AlertTitle>
                     <AlertDescription>
                       <p>Certificado, cadastro da empresa, ativação mínima de NFS-e Nacional, consulta automática de DF-e e numeração inicial de RPS.</p>
@@ -1654,7 +1661,8 @@ const EmpresaFormPage = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      disabled={!certificadoSincronizavel || syncPlugNotasMutation.isPending}
+                      disabled
+                      title="Sincronização com a PlugNotas permanentemente desabilitada"
                       onClick={() => {
                         setPlugNotasSyncError(null);
                         setPlugNotasSyncResult(null);

@@ -92,12 +92,22 @@ const NfseListPage = () => {
     setSearchParams(params);
   };
 
-  const handleOpenPdf = async (event: React.MouseEvent, nfseId: string) => {
+  const isPlugNotasProvider = (provider?: string) =>
+    provider?.trim().toUpperCase() === 'PLUGNOTAS';
+
+  const handleOpenPdf = async (
+    event: React.MouseEvent,
+    nfseId: string,
+    provider?: string,
+  ) => {
     event.stopPropagation();
     try {
       const blob = await nfseApi.downloadPdf(nfseId);
       openBlobInNewTab(blob);
     } catch {
+      if (isPlugNotasProvider(provider)) {
+        return;
+      }
       try {
         const blob = await nfseApi.downloadRemotePdf(nfseId);
         openBlobInNewTab(blob);
@@ -107,7 +117,11 @@ const NfseListPage = () => {
     }
   };
 
-  const handleDownloadPdf = async (event: React.MouseEvent, nfseId: string) => {
+  const handleDownloadPdf = async (
+    event: React.MouseEvent,
+    nfseId: string,
+    provider?: string,
+  ) => {
     event.stopPropagation();
     try {
       const blob = await nfseApi.downloadPdf(nfseId);
@@ -118,6 +132,9 @@ const NfseListPage = () => {
       a.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
+      if (isPlugNotasProvider(provider)) {
+        return;
+      }
       try {
         const blob = await nfseApi.downloadRemotePdf(nfseId);
         const url = URL.createObjectURL(blob);
@@ -244,7 +261,7 @@ const NfseListPage = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full border border-violet-200 bg-violet-50 text-violet-800 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
-                          onClick={(event) => handleOpenPdf(event, nfse.id)}
+                          onClick={(event) => handleOpenPdf(event, nfse.id, nfse.provider)}
                           title="Visualizar PDF"
                         >
                           <Eye className="h-4 w-4" />
@@ -253,7 +270,7 @@ const NfseListPage = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full border border-amber-200 bg-amber-50 text-amber-800 shadow-sm hover:border-amber-300 hover:bg-amber-100 hover:text-amber-950"
-                          onClick={(event) => handleDownloadPdf(event, nfse.id)}
+                          onClick={(event) => handleDownloadPdf(event, nfse.id, nfse.provider)}
                           title="Baixar PDF"
                         >
                           <Download className="h-4 w-4" />

@@ -208,6 +208,9 @@ const NfseDetailPage = () => {
       const blob = await nfseApi.downloadPdf(id!);
       openBlobInNewTab(blob);
     } catch {
+      if (nfse?.provider?.trim().toUpperCase() === 'PLUGNOTAS') {
+        return;
+      }
       try {
         const blob = await nfseApi.downloadRemotePdf(id!);
         openBlobInNewTab(blob);
@@ -251,6 +254,8 @@ const NfseDetailPage = () => {
     Boolean(providerResp) &&
     providerResp?.externalId == null &&
     providerResp?.providerResponse == null;
+
+  const isPlugNotasProvider = nfse.provider?.trim().toUpperCase() === 'PLUGNOTAS';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -415,7 +420,12 @@ const NfseDetailPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => syncMutation.mutate()}
-                disabled={syncMutation.isPending}
+                disabled={syncMutation.isPending || isPlugNotasProvider}
+                title={
+                  isPlugNotasProvider
+                    ? 'Sincronização desabilitada para notas históricas PlugNotas'
+                    : undefined
+                }
               >
                 <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
                 Sincronizar
@@ -424,10 +434,30 @@ const NfseDetailPage = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={() => downloadFile(() => nfseApi.downloadRemoteXml(id!), `nfse-${id}-remote.xml`)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadFile(() => nfseApi.downloadRemoteXml(id!), `nfse-${id}-remote.xml`)}
+                disabled={isPlugNotasProvider}
+                title={
+                  isPlugNotasProvider
+                    ? 'Download remoto desabilitado para notas históricas PlugNotas'
+                    : undefined
+                }
+              >
                 <Download className="mr-2 h-3.5 w-3.5" /> XML Remoto
               </Button>
-              <Button variant="outline" size="sm" onClick={() => downloadFile(() => nfseApi.downloadRemotePdf(id!), `nfse-${id}-remote.pdf`)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadFile(() => nfseApi.downloadRemotePdf(id!), `nfse-${id}-remote.pdf`)}
+                disabled={isPlugNotasProvider}
+                title={
+                  isPlugNotasProvider
+                    ? 'Download remoto desabilitado para notas históricas PlugNotas'
+                    : undefined
+                }
+              >
                 <Download className="mr-2 h-3.5 w-3.5" /> PDF Remoto
               </Button>
             </div>
