@@ -2,6 +2,54 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. ATUALIZACAO (07/08/2026) - REBRANDING INCREMENTAL PARA JUPATI (FUNDAMENTOS + SHELL + LEITURA OPERACIONAL)
+
+Fonte: `docs/JUPATI_DESIGN_SYSTEM.md` + prancha visual aprovada + codigo local +
+testes + lint + build.
+
+Estado atual:
+
+- **Jupati** e a marca visivel do produto, com assinatura "Sua operacao, bem
+  conectada."; LOBONOTAS permanece motor fiscal; Muirakitan Tecnologia, empresa
+  responsavel; PlugNotas, provider historico `LEGACY_DISABLED`.
+- Design system versionado em `docs/JUPATI_DESIGN_SYSTEM.md` e classificacao da
+  migracao em `docs/JUPATI_REBRAND_INVENTORY.md`.
+- Tokens semanticos Jupati aplicados em light/dark: azul-noturno, verde amazonico,
+  prata, marfim e superficies claras; Manrope em titulos e Inter na interface.
+- Novo `BrandLogo`/`BrandMark`, favicon e assets `public/brand/jupati-*`; SVG atual e
+  asset de implementacao coerente com a direcao aprovada, **nao** o master vetorial
+  definitivo ainda pendente.
+- Metadata, login, convite, sidebar, header, home, Dash2, listagem/detalhe de NFS-e,
+  loading e textos prioritarios migrados para a linguagem Jupati.
+- Shell consolidado em Phosphor; seletor `classic/elegant` e implementacao associada
+  removidos. Light/dark permanece.
+- Provider na UI: LOBONOTAS -> "Ambiente Nacional"; PLUGNOTAS -> "Legado
+  (PlugNotas)". Paineis de sincronizacao PlugNotas permanecem ocultos e sem acao.
+- Status novo da UI = `CANCELED`; `CANCELLED` segue aceito somente como leitura
+  temporaria de compatibilidade.
+
+Compatibilidade preservada:
+
+- nenhuma troca global de `zera`;
+- `zera_token`, caches/eventos, nomes de repositorio, rotas `/nfse/*`, contratos da
+  API, provider `LOBONOTAS`, dados/fixtures `PLUGNOTAS` e assets historicos ZERA nao
+  foram renomeados nem removidos.
+
+Validacao:
+
+- `npm run build` -> OK;
+- `npm run lint` -> 0 erros, 40 warnings preexistentes;
+- `npm test` -> **151/151 testes verdes** (28 arquivos);
+- `git diff --check` -> OK.
+
+Proximos passos:
+
+1. produzir e aprovar o master vetorial definitivo do simbolo/wordmark;
+2. revisar visualmente todas as paginas em light/dark, mobile e zoom 200%;
+3. continuar migracao de hardcodes visuais nas telas densas sem alterar semantica
+   fiscal;
+4. definir janela para remocao futura de assets e chaves visuais legadas.
+
 ## 0. ATUALIZACAO (05/08/2026) - ACOES DE SINCRONIZACAO/REMOTO PLUGNOTAS DESABILITADAS NA UI
 
 Fonte: `codigo local` + `eslint local` + `build local` + `testes locais`.

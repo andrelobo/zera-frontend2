@@ -13,7 +13,7 @@ import { Plus, Zap, Eye, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfsePrestadorDocumento, getNfsePrestadorNome, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
-import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
@@ -92,8 +92,7 @@ const NfseListPage = () => {
     setSearchParams(params);
   };
 
-  const isPlugNotasProvider = (provider?: string) =>
-    provider?.trim().toUpperCase() === 'PLUGNOTAS';
+  const isPlugNotasProvider = isLegacyProvider;
 
   const handleOpenPdf = async (
     event: React.MouseEvent,
@@ -182,7 +181,7 @@ const NfseListPage = () => {
             <SelectItem value="AUTHORIZED">Autorizada</SelectItem>
             <SelectItem value="REJECTED">Rejeitada</SelectItem>
             <SelectItem value="ERROR">Erro</SelectItem>
-            <SelectItem value="CANCELLED">Cancelada</SelectItem>
+            <SelectItem value="CANCELED">Cancelada</SelectItem>
           </SelectContent>
         </Select>
 
@@ -193,7 +192,7 @@ const NfseListPage = () => {
           <SelectContent>
             <SelectItem value="all">Todos Provedores</SelectItem>
             <SelectItem value="LOBONOTAS">Nacional</SelectItem>
-            <SelectItem value="PLUGNOTAS">PlugNotas</SelectItem>
+            <SelectItem value="PLUGNOTAS">Legado (PlugNotas)</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
             <SelectItem value="MOCK">Mock</SelectItem>
           </SelectContent>
@@ -239,7 +238,7 @@ const NfseListPage = () => {
                     <TableCell className="text-right font-mono">
                       {(getNfseValor(nfse) > 0 ? getNfseValor(nfse) : (inferredById[nfse.id]?.valor || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </TableCell>
-                    <TableCell className="text-xs uppercase text-muted-foreground">{nfse.provider}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{getProviderDisplayName(nfse.provider)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {format(new Date(nfse.createdAt), 'dd/MM/yy HH:mm')}
                     </TableCell>
@@ -248,30 +247,33 @@ const NfseListPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full border border-sky-200 bg-sky-50 text-sky-800 shadow-sm hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
+                          className="h-11 w-11 rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-muted"
                           onClick={(event) => {
                             event.stopPropagation();
                             navigate(`/nfse/${nfse.id}`);
                           }}
                           title="Detalhes da DANFSE"
+                          aria-label="Abrir detalhes da DANFSE"
                         >
                           <FileText className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full border border-violet-200 bg-violet-50 text-violet-800 shadow-sm hover:border-violet-300 hover:bg-violet-100 hover:text-violet-950"
+                          className="h-11 w-11 rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-muted"
                           onClick={(event) => handleOpenPdf(event, nfse.id, nfse.provider)}
                           title="Visualizar PDF"
+                          aria-label="Visualizar PDF"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full border border-amber-200 bg-amber-50 text-amber-800 shadow-sm hover:border-amber-300 hover:bg-amber-100 hover:text-amber-950"
+                          className="h-11 w-11 rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-muted"
                           onClick={(event) => handleDownloadPdf(event, nfse.id, nfse.provider)}
                           title="Baixar PDF"
+                          aria-label="Baixar PDF"
                         >
                           <Download className="h-4 w-4" />
                         </Button>

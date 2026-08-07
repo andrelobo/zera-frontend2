@@ -1,21 +1,11 @@
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2,
-  Users,
-  Receipt,
-  Landmark,
-  Settings,
-  ClipboardList,
-  LayoutDashboard,
-  type LucideIcon,
-} from 'lucide-react';
-import {
   Bank,
   Buildings,
   ClipboardText,
   House,
-  Receipt as ReceiptPhosphor,
+  Receipt,
   SlidersHorizontal,
   UsersThree,
   type Icon as PhosphorIcon,
@@ -33,40 +23,27 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useVisualTheme } from '@/hooks/useVisualTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
+import BrandLogo from '@/components/BrandLogo';
 
 type ActiveTab = 'dashboard' | 'prestador' | 'tomador' | 'emissao';
 type PrestadorSubTab = 'cadastro' | 'regime' | 'parametros';
 
-type AdaptiveIconProps = {
-  className: string;
-  classic: LucideIcon;
-  elegant: PhosphorIcon;
-  isElegant: boolean;
-};
-
-const AdaptiveIcon = ({ className, classic: ClassicIcon, elegant: ElegantIcon, isElegant }: AdaptiveIconProps) => (
-  isElegant ? <ElegantIcon className={className} weight="duotone" /> : <ClassicIcon className={className} />
-);
-
 const prestadorSubItems: Array<{
   key: PrestadorSubTab;
   label: string;
-  classicIcon: LucideIcon;
-  elegantIcon: PhosphorIcon;
+  icon: PhosphorIcon;
 }> = [
-  { key: 'cadastro', label: 'Dados Cadastrais', classicIcon: ClipboardList, elegantIcon: ClipboardText },
-  { key: 'regime', label: 'Regime Tributário', classicIcon: Landmark, elegantIcon: Bank },
-  { key: 'parametros', label: 'Parâmetros Fiscais', classicIcon: Settings, elegantIcon: SlidersHorizontal },
+  { key: 'cadastro', label: 'Dados cadastrais', icon: ClipboardText },
+  { key: 'regime', label: 'Regime tributário', icon: Bank },
+  { key: 'parametros', label: 'Parâmetros fiscais', icon: SlidersHorizontal },
 ];
 
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state, isMobile, setOpenMobile } = useSidebar();
-  const { isElegant } = useVisualTheme();
   const { user } = useAuth();
   const isCollapsed = state === 'collapsed';
   const isReadOnly = isReadOnlyRole(user?.role || 'user');
@@ -122,11 +99,12 @@ const AppSidebar = () => {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="p-4">
-        <div className="flex items-center">
-          <span className="text-sm font-bold text-sidebar-foreground leading-tight">
-            Skale IA
-          </span>
-        </div>
+        <BrandLogo
+          size="sm"
+          inverse
+          markOnly={isCollapsed}
+          className={isCollapsed ? 'justify-center' : undefined}
+        />
       </SidebarHeader>
 
       <SidebarContent>
@@ -140,15 +118,15 @@ const AppSidebar = () => {
                 <SidebarMenuButton
                   isActive={activeTab === 'dashboard'}
                   onClick={goDashboard}
-                  tooltip="Dashboard"
+                  tooltip="Visão geral"
                   className={
                     activeTab === 'dashboard'
                       ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
                       : ''
                   }
                 >
-                  <AdaptiveIcon classic={LayoutDashboard} elegant={House} isElegant={isElegant} className="w-4 h-4" />
-                  <span>Dashboard</span>
+                  <House className="h-4 w-4" weight="duotone" />
+                  <span>Visão geral</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -156,21 +134,23 @@ const AppSidebar = () => {
                 <SidebarMenuButton
                   isActive={activeTab === 'prestador'}
                   onClick={goPrestador}
-                  tooltip="O Prestador"
+                  tooltip="Empresas"
                   className={
                     activeTab === 'prestador'
                       ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
                       : ''
                   }
                 >
-                  <AdaptiveIcon classic={Building2} elegant={Buildings} isElegant={isElegant} className="w-4 h-4" />
-                  <span>O Prestador</span>
+                  <Buildings className="h-4 w-4" weight="duotone" />
+                  <span>Empresas</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
               {activeTab === 'prestador' && !isCollapsed && !isReadOnly && (
                 <div className="ml-4 border-l border-sidebar-border pl-2 space-y-0.5">
-                  {prestadorSubItems.map((sub) => (
+                  {prestadorSubItems.map((sub) => {
+                    const SubIcon = sub.icon;
+                    return (
                     <SidebarMenuItem key={sub.key}>
                       <SidebarMenuButton
                         isActive={prestadorSubTab === sub.key}
@@ -182,16 +162,12 @@ const AppSidebar = () => {
                             : 'text-sidebar-foreground/70'
                         }`}
                       >
-                        <AdaptiveIcon
-                          classic={sub.classicIcon}
-                          elegant={sub.elegantIcon}
-                          isElegant={isElegant}
-                          className="w-3.5 h-3.5"
-                        />
+                        <SubIcon className="h-3.5 w-3.5" weight="regular" />
                         <span>{sub.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -206,7 +182,7 @@ const AppSidebar = () => {
                       : ''
                   }
                 >
-                  <AdaptiveIcon classic={Users} elegant={UsersThree} isElegant={isElegant} className="w-4 h-4" />
+                  <UsersThree className="h-4 w-4" weight="duotone" />
                   <span>Tomadores</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -215,15 +191,15 @@ const AppSidebar = () => {
                 <SidebarMenuButton
                   isActive={activeTab === 'emissao'}
                   onClick={goEmissao}
-                  tooltip="DANFSE"
+                  tooltip="Operação fiscal"
                   className={
                     activeTab === 'emissao'
                       ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground'
                       : ''
                   }
                 >
-                  <AdaptiveIcon classic={Receipt} elegant={ReceiptPhosphor} isElegant={isElegant} className="w-4 h-4" />
-                  <span>DANFSE</span>
+                  <Receipt className="h-4 w-4" weight="duotone" />
+                  <span>Operação fiscal</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -234,7 +210,7 @@ const AppSidebar = () => {
       <SidebarFooter className="p-3">
         {!isCollapsed && (
           <p className="text-[9px] text-sidebar-foreground/40 text-center">
-            Portal Nacional NFS-e
+            Uma solução<br />Muirakitan Tecnologia
           </p>
         )}
       </SidebarFooter>

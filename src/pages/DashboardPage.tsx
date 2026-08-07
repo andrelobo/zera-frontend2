@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
 
 const metricCardClass =
-  'rounded-[28px] border border-white/60 bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur';
+  'rounded-[18px] border border-border bg-card shadow-md';
 
 const formatCnpj = (value?: string | null) => {
   const digits = (value || '').replace(/\D/g, '');
@@ -179,9 +179,9 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_28%),radial-gradient(circle_at_85%_12%,_rgba(14,165,233,0.14),_transparent_24%),linear-gradient(180deg,_#f8fbff_0%,_#eef4ff_52%,_#f8fbff_100%)]">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(108,166,93,0.16),_transparent_28%),linear-gradient(180deg,_#F7F5F0_0%,_#EBE6DE_58%,_#F7F5F0_100%)]">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[34px] border border-white/60 bg-[linear-gradient(135deg,_#0f172a_0%,_#12326d_58%,_#2563eb_100%)] px-6 py-8 text-white shadow-[0_30px_90px_rgba(15,23,42,0.28)] sm:px-8 lg:px-10">
+        <section className="overflow-hidden rounded-[18px] border border-white/10 bg-[linear-gradient(135deg,_#071020_0%,_#0A1728_58%,_#122238_100%)] px-6 py-8 text-ivory-100 shadow-lg sm:px-8 lg:px-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-5">
               <Badge variant="outline" className="border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.26em] text-white/85">
@@ -189,16 +189,16 @@ const DashboardPage = () => {
               </Badge>
               <div className="space-y-3">
                 <h1 className="max-w-3xl text-3xl font-semibold tracking-tight sm:text-5xl">
-                  Bem-vindo ao ZERA multi-prestador.
+                  Bem-vindo à Jupati.
                 </h1>
-                <p className="max-w-2xl text-sm leading-7 text-slate-200 sm:text-base">
+                <p className="max-w-2xl text-sm leading-7 text-silver-300 sm:text-base">
                   Esta entrada nova troca o painel apertado por uma visão consolidada do que importa agora: prestadoras prontas, pendências de onboarding e o pulso das últimas emissões.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 {!isReadOnly ? (
                   <>
-                    <Button asChild className="rounded-full bg-white px-5 text-slate-950 hover:bg-slate-100">
+                    <Button asChild className="rounded-full bg-warm-50 px-5 text-night-950 hover:bg-ivory-100">
                       <Link to="/nfse/nova">
                         Nova DANFSE <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
@@ -210,7 +210,7 @@ const DashboardPage = () => {
                     </Button>
                   </>
                 ) : (
-                  <Button asChild className="rounded-full bg-white px-5 text-slate-950 hover:bg-slate-100">
+                  <Button asChild className="rounded-full bg-warm-50 px-5 text-night-950 hover:bg-ivory-100">
                     <Link to="/nfse">
                       Ver notas fiscais <Receipt className="ml-2 h-4 w-4" />
                     </Link>
@@ -225,31 +225,31 @@ const DashboardPage = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-100/85">Prestadoras</div>
+              <div className="rounded-[18px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-silver-300">Prestadoras</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{totalPrestadoras}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
-                  Base operacional cadastrada no ZERA.
+                <p className="mt-2 text-sm leading-6 text-silver-300">
+                  Empresas conectadas à base operacional Jupati.
                 </p>
               </div>
-              <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100/85">Prontas</div>
+              <div className="rounded-[18px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-leaf-500">Prontas</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{prontas}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
+                <p className="mt-2 text-sm leading-6 text-silver-300">
                   Melhor sinal de prontidão para emissão.
                 </p>
               </div>
-              <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-100/85">Em revisão</div>
+              <div className="rounded-[18px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-warning">Em revisão</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{emAtencao}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
+                <p className="mt-2 text-sm leading-6 text-silver-300">
                   Pedem ajuste antes de ganhar confiança operacional.
                 </p>
               </div>
-              <div className="rounded-[28px] border border-white/15 bg-white/10 p-5 backdrop-blur">
+              <div className="rounded-[18px] border border-white/15 bg-white/10 p-5 backdrop-blur">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-rose-100/85">Com emissão recente</div>
                 <div className="mt-3 text-4xl font-semibold text-white">{prestadorasComEmissaoRecente}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
+                <p className="mt-2 text-sm leading-6 text-silver-300">
                   Prestadoras vistas nas últimas notas monitoradas. {onboarding} ainda estão em onboarding.
                 </p>
               </div>
@@ -260,39 +260,39 @@ const DashboardPage = () => {
         <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <Card className={metricCardClass}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 Panorama de prestadoras
               </CardDescription>
-              <CardTitle className="text-2xl font-semibold tracking-tight text-slate-950">
+              <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                 Quem já está pronta e quem ainda pede cuidado
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               {prestadoras.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+                <div className="rounded-[14px] border border-dashed border-border bg-muted/40 p-6 text-sm leading-6 text-muted-foreground">
                   Ainda não há prestadoras suficientes para compor esta leitura consolidada.
                 </div>
               ) : (
                 prestadoras.map((prestadora) => (
-                  <div key={prestadora.id} className="rounded-[26px] border border-slate-200 bg-slate-50/90 p-5">
+                  <div key={prestadora.id} className="rounded-[14px] border border-border bg-muted/50 p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-slate-950">{prestadora.razaoSocial}</h3>
+                          <h3 className="text-lg font-semibold text-foreground">{prestadora.razaoSocial}</h3>
                           <span
                             className={[
                               'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
                               prestadora.readiness.tone === 'ready'
-                                ? 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-success/10 text-success'
                                 : prestadora.readiness.tone === 'attention'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-rose-100 text-rose-700',
+                                  ? 'bg-warning/10 text-warning-foreground'
+                                  : 'bg-destructive/10 text-destructive',
                             ].join(' ')}
                           >
                             {prestadora.readiness.label}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground">
                           {prestadora.nomeFantasia || 'Sem nome fantasia'} · {formatCnpj(prestadora.cnpj)}
                         </p>
                       </div>
@@ -308,7 +308,7 @@ const DashboardPage = () => {
                       {prestadora.readiness.notes.map((note) => (
                         <div
                           key={note}
-                          className="rounded-2xl border border-white bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
+                          className="rounded-[14px] border border-white bg-white px-4 py-3 text-sm font-medium text-foreground/80 shadow-sm"
                         >
                           {note}
                         </div>
@@ -323,41 +323,41 @@ const DashboardPage = () => {
           <div className="space-y-6">
             <Card className={metricCardClass}>
               <CardHeader className="pb-4">
-                <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                   Últimas emissões
                 </CardDescription>
-                <CardTitle className="text-2xl font-semibold tracking-tight text-slate-950">
+                <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                   Leitura rápida do que acabou de acontecer
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {nfseQuery.isLoading ? (
-                  <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                  <div className="rounded-[14px] border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">
                     Carregando últimas emissões...
                   </div>
                 ) : notas.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                  <div className="rounded-[14px] border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">
                     Ainda não há emissões recentes para esta visão.
                   </div>
                 ) : (
                   notas.map((nota) => (
-                    <div key={nota.id} className="rounded-[24px] border border-slate-200 bg-slate-50/90 p-4">
+                    <div key={nota.id} className="rounded-[14px] border border-border bg-muted/50 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 space-y-1">
-                          <div className="truncate text-sm font-semibold text-slate-950">
+                          <div className="truncate text-sm font-semibold text-foreground">
                             {getNfsePrestadorNome(nota) !== '—' ? getNfsePrestadorNome(nota) : getNfsePrestadorDocumento(nota)}
                           </div>
-                          <div className="truncate text-sm text-slate-600">
+                          <div className="truncate text-sm text-muted-foreground">
                             {getNfseTomadorNome(nota) !== '—' ? getNfseTomadorNome(nota) : getNfseTomadorDocumento(nota)}
                           </div>
                         </div>
                         <StatusBadge status={nota.status} />
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium text-slate-700">
+                        <span className="font-medium text-foreground/80">
                           {getNfseValor(nota).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </span>
-                        <Button asChild variant="ghost" className="h-auto rounded-full px-3 py-1.5 text-slate-700">
+                        <Button asChild variant="ghost" className="h-auto rounded-full px-3 py-1.5 text-foreground/80">
                           <Link to="/nfse">
                             Ver lista completa <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
@@ -369,30 +369,30 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[28px] border border-slate-900/10 bg-slate-950 text-white shadow-[0_20px_70px_rgba(15,23,42,0.26)]">
+            <Card className="rounded-[18px] border border-white/10 bg-night-950 text-white shadow-[0_20px_70px_rgba(15,23,42,0.26)]">
               <CardHeader className="pb-4">
-                <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-sky-200/85">
+                <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-silver-300">
                   Direção desta home
                 </CardDescription>
                 <CardTitle className="text-2xl font-semibold tracking-tight text-white">
                   O dashboard de entrada agora precisa servir operação, não só estética.
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm leading-7 text-slate-300">
+              <CardContent className="space-y-4 text-sm leading-7 text-silver-300">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-1 h-4 w-4 text-emerald-300" />
+                  <CheckCircle2 className="mt-1 h-4 w-4 text-success" />
                   <p>Consolidar várias prestadoras sem esconder pendências de onboarding.</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Receipt className="mt-1 h-4 w-4 text-sky-300" />
+                  <Receipt className="mt-1 h-4 w-4 text-sage-400" />
                   <p>Mostrar rápido as últimas emissões, com status útil e prestadora visível.</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <ShieldAlert className="mt-1 h-4 w-4 text-amber-300" />
+                  <ShieldAlert className="mt-1 h-4 w-4 text-warning" />
                   <p>Preservar o dashboard clássico e o Dash2 sem regressão de rota.</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Building2 className="mt-1 h-4 w-4 text-violet-300" />
+                  <Building2 className="mt-1 h-4 w-4 text-silver-300" />
                   <p>Preparar terreno para uma próxima camada com filtros e leituras por prestadora.</p>
                 </div>
               </CardContent>
@@ -403,44 +403,44 @@ const DashboardPage = () => {
         <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <Card className={metricCardClass}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 Pulso das emissões
               </CardDescription>
-              <CardTitle className="text-2xl font-semibold tracking-tight text-slate-950">
+              <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                 Como a fila recente está se comportando
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Autorizadas</div>
-                <div className="mt-3 text-3xl font-semibold text-slate-950">{notasAutorizadas}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Notas recentes que já fecharam bem.</p>
+              <div className="rounded-[14px] border border-success/25 bg-success/10 p-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-success">Autorizadas</div>
+                <div className="mt-3 text-3xl font-semibold text-foreground">{notasAutorizadas}</div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Notas recentes que já fecharam bem.</p>
               </div>
-              <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Processando</div>
-                <div className="mt-3 text-3xl font-semibold text-slate-950">{notasProcessando}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Emissões que ainda estão rodando ou aguardando retorno.</p>
+              <div className="rounded-[14px] border border-info/25 bg-info/10 p-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-info">Processando</div>
+                <div className="mt-3 text-3xl font-semibold text-foreground">{notasProcessando}</div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Emissões que ainda estão rodando ou aguardando retorno.</p>
               </div>
-              <div className="rounded-[24px] border border-rose-100 bg-rose-50 p-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700">Erro ou rejeição</div>
-                <div className="mt-3 text-3xl font-semibold text-slate-950">{notasComErro}</div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Leituras que merecem ataque mais rápido da operação.</p>
+              <div className="rounded-[14px] border border-destructive/25 bg-destructive/10 p-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-destructive">Erro ou rejeição</div>
+                <div className="mt-3 text-3xl font-semibold text-foreground">{notasComErro}</div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Leituras que merecem ataque mais rápido da operação.</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className={metricCardClass}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 Prioridades agora
               </CardDescription>
-              <CardTitle className="text-2xl font-semibold tracking-tight text-slate-950">
+              <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                 O que vale atacar primeiro
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
               {prioridades.length === 0 ? (
-                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-900">
+                <div className="rounded-[14px] border border-success/25 bg-success/10 p-5 text-sm leading-6 text-foreground">
                   O quadro geral está saudável. A melhor próxima ação é aprofundar a leitura por prestadora e acompanhar as emissões novas.
                 </div>
               ) : (
@@ -449,12 +449,12 @@ const DashboardPage = () => {
                     key={prioridade.title}
                     to={prioridade.href}
                     className={[
-                      'rounded-[24px] border p-5 transition hover:shadow-sm',
+                      'rounded-[14px] border p-5 transition hover:shadow-sm',
                       prioridade.tone === 'rose'
-                        ? 'border-rose-200 bg-rose-50 text-rose-950 hover:bg-rose-100/80'
+                        ? 'border-destructive/25 bg-destructive/10 text-foreground hover:bg-destructive/15'
                         : prioridade.tone === 'amber'
-                          ? 'border-amber-200 bg-amber-50 text-amber-950 hover:bg-amber-100/80'
-                          : 'border-sky-200 bg-sky-50 text-sky-950 hover:bg-sky-100/80',
+                          ? 'border-warning/25 bg-warning/10 text-foreground hover:bg-warning/15'
+                          : 'border-info/25 bg-info/10 text-foreground hover:bg-info/15',
                     ].join(' ')}
                   >
                     <div className="flex items-start gap-3">
@@ -474,19 +474,19 @@ const DashboardPage = () => {
         <section className="grid gap-4 md:grid-cols-3">
           <Card className={metricCardClass}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-slate-950">Cadastro de prestadoras</CardTitle>
-              <CardDescription>O ponto certo para revisar dados, certificado e configuração PlugNotas.</CardDescription>
+              <CardTitle className="text-lg font-semibold text-foreground">Cadastro de prestadoras</CardTitle>
+              <CardDescription>Revise dados, certificado e prontidão para a operação fiscal.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline" className="w-full rounded-full">
-                <Link to="/empresas">Abrir O Prestador</Link>
+                <Link to="/empresas">Abrir Empresas</Link>
               </Button>
             </CardContent>
           </Card>
 
           <Card className={metricCardClass}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-slate-950">Emissão operacional</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">Emissão operacional</CardTitle>
               <CardDescription>Entrar direto na DANFSE completa, agora sem pressupor empresa única.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -498,7 +498,7 @@ const DashboardPage = () => {
 
           <Card className={metricCardClass}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-slate-950">Visão executiva</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">Visão executiva</CardTitle>
               <CardDescription>Manter o Dash2 vivo para leitura premium e comparativa.</CardDescription>
             </CardHeader>
             <CardContent>

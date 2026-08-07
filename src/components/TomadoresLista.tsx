@@ -114,8 +114,9 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                         {canEdit ? (
                           <button
                             onClick={() => onEditar?.(t)}
-                            className="rounded-full border border-sky-200 bg-sky-50 p-1.5 text-sky-800 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
+                            className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm transition-colors hover:bg-muted"
                             title="Editar"
+                            aria-label={`Editar tomador ${t.razaoSocial}`}
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -127,8 +128,9 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
                                 onExcluir?.(t.id);
                               }
                             }}
-                            className="rounded-full border border-rose-200 bg-rose-50 p-1.5 text-rose-800 shadow-sm transition-colors hover:border-rose-300 hover:bg-rose-100 hover:text-rose-950"
+                            className="flex h-11 w-11 items-center justify-center rounded-md border border-destructive/30 bg-destructive/10 text-destructive shadow-sm transition-colors hover:bg-destructive/15"
                             title="Excluir"
+                            aria-label={`Excluir tomador ${t.razaoSocial}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

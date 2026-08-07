@@ -25,7 +25,7 @@ const ParametroMunicipalSection = ({
 }: ParametroMunicipalSectionProps) => {
   return (
     <div className={standalone ? '' : 'mt-5 pt-5 border-t border-border'}>
-      <h3 className="text-sm font-bold flex items-center gap-2 mb-3" style={{ color: 'hsl(144, 72%, 28%)' }}>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-primary">
         Parâmetro Municipal
       </h3>
 

@@ -7,6 +7,11 @@ Objetivo:
 - separar claramente o que é `emissão` do que é `analytics`;
 - evitar regra fiscal inventada na UI.
 
+Este contrato integra o frontend ao ZERA como plataforma SaaS fiscal multiempresa.
+Emissao e analytics sao capacidades complementares: dashboards, relatorios e
+inteligencia tributaria consomem dados canonicos do backend sem substituir o motor
+fiscal deterministico.
+
 ## 1. Regra canônica do frontend
 
 - O frontend deve consumir dados canônicos do backend.

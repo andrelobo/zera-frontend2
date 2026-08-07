@@ -51,7 +51,7 @@ const getExpirationProgress = (value?: string) => {
   const remaining = expiration.getTime() - now.getTime();
   const progress = total <= 0 ? 0 : Math.max(0, Math.min(100, Math.round((remaining / total) * 100)));
 
-  const tone = progress <= 10 ? 'bg-red-500' : progress <= 30 ? 'bg-amber-500' : 'bg-emerald-500';
+  const tone = progress <= 10 ? 'bg-destructive' : progress <= 30 ? 'bg-warning' : 'bg-success';
   return { progress, tone };
 };
 
@@ -214,23 +214,23 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
           <ShieldCheck className="w-5 h-5 text-primary" />
           Certificado CNPJ A1
         </h2>
-        <div className="mb-3 rounded-md border border-emerald-600/25 bg-emerald-600/10 px-3 py-2">
-          <div className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <div className="mb-3 rounded-md border border-success/25 bg-success/10 px-3 py-2">
+          <div className="flex items-start gap-2 text-sm text-success" role="status">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="space-y-1">
               <p className="font-semibold">Certificado digital já importado</p>
               <p>{certificadoAtual?.filename || 'Certificado importado'}</p>
               {expiresAtLabel && (
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                  <p className="text-xs font-medium text-foreground/80">
                     Validade: {expiresAtLabel}
                     {expirationStatus ? ` · ${expirationStatus}` : ''}
                   </p>
                   {expirationProgress && (
-                    <div className="h-2 overflow-hidden rounded-full bg-emerald-950/10 dark:bg-white/10">
+                    <div className="h-2 overflow-hidden rounded-full bg-success/15">
                       <div className="flex h-full w-full">
                         <div
-                          className="h-full bg-emerald-950/10 dark:bg-white/10"
+                          className="h-full bg-foreground/10"
                           style={{ width: `${100 - expirationProgress.progress}%` }}
                         />
                         <div
@@ -243,7 +243,7 @@ const CertificadoDigitalCard: React.FC<Props> = ({ cnpj = '', certificado, onImp
                 </div>
               )}
               {importDiagnosticMessage && (
-                <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                <p className="text-xs font-medium text-warning-foreground">
                   Diagnostico da validade: {importDiagnosticMessage}
                 </p>
               )}

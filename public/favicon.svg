@@ -1,19 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="teal" x1="10" y1="8" x2="34" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#36C7B6" />
-      <stop offset="100%" stop-color="#20B7A5" />
-    </linearGradient>
-    <linearGradient id="amber" x1="30" y1="8" x2="56" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F0C46A" />
-      <stop offset="100%" stop-color="#E2B04F" />
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="#162238" />
-  <circle cx="25" cy="30" r="12" fill="none" stroke="url(#teal)" stroke-width="5" />
-  <circle cx="39" cy="30" r="12" fill="none" stroke="url(#amber)" stroke-width="5" />
-  <path d="M34 37 L38 34 L38.5 40 Z" fill="#20B7A5" />
-  <path d="M30 22.5 L26 26.5 L25.5 21 Z" fill="#E2B04F" />
-  <circle cx="32" cy="30" r="6" fill="#162238" />
-  <text x="32" y="33" text-anchor="middle" font-size="10" font-weight="700" fill="#E8EDF5" font-family="Inter, system-ui, sans-serif">0</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jupati">
+  <rect width="64" height="64" rx="14" fill="#071020"/>
+  <g fill="none" stroke-linecap="round" stroke-width="3">
+    <path d="M8 18c13 0 16 28 28 28s13-28 20-28" stroke="#C3C5B6"/>
+    <path d="M8 25c12 0 16 14 24 14s15-14 24-14" stroke="#EBE6DE"/>
+    <path d="M8 32c12 0 16-14 24-14s12 14 24 14" stroke="#829B7F"/>
+    <path d="M8 46c12 0 15-28 28-28s14 28 20 28" stroke="#6CA65D"/>
+  </g>
 </svg>

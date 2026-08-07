@@ -127,8 +127,8 @@ const SimplesNacionalSection: React.FC<Props> = ({
                   isWarning
                     ? 'bg-destructive/10 border-destructive/20 text-destructive'
                     : isInfo
-                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300'
-                    : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-700 dark:text-yellow-300'
+                    ? 'bg-info/10 border-info/20 text-info'
+                    : 'bg-warning/10 border-warning/20 text-warning-foreground'
                 }`}
               >
                 {isWarning ? <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />}

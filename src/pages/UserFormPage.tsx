@@ -149,21 +149,21 @@ const UserFormPage = () => {
       </div>
 
       {inviteResult ? (
-        <Card className="border-emerald-200 bg-emerald-50/70">
+        <Card className="border-success/25 bg-success/10">
           <CardContent className="space-y-4 pt-6">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 rounded-full bg-emerald-600/10 p-2 text-emerald-700">
+            <div className="flex items-start gap-3" role="status" aria-live="polite">
+              <div className="mt-1 rounded-full bg-success/15 p-2 text-success">
                 <MailPlus className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="font-semibold text-emerald-950">Convite pronto para envio</h2>
-                <p className="mt-1 text-sm text-emerald-900/75">
+                <h2 className="font-semibold text-foreground">Convite pronto para envio</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   O usuário está inativo até aceitar o convite e definir a própria senha.
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Input value={inviteLink} readOnly className="bg-white" />
+              <Input value={inviteLink} readOnly className="bg-background" aria-label="Link de convite" />
               <Button type="button" onClick={copyInviteLink} className="shrink-0">
                 <Copy className="mr-2 h-4 w-4" />
                 Copiar link

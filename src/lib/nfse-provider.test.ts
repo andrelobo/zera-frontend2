@@ -1,12 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import type { NfseCanonicalIdentifiers, NfseStatus, ProviderResponse } from '@/types/api';
-import { inferNfseDataFromProvider } from './nfse-provider';
+import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from './nfse-provider';
 
 const buildProviderResponse = (overrides: Partial<ProviderResponse> = {}): ProviderResponse => ({
   id: 'prov-1',
   raw: {},
   receivedAt: '2026-03-21T00:00:00.000Z',
   ...overrides,
+});
+
+describe('provider presentation', () => {
+  it('uses operational labels without changing provider identifiers', () => {
+    expect(getProviderDisplayName('LOBONOTAS')).toBe('Ambiente Nacional');
+    expect(getProviderDisplayName('PLUGNOTAS')).toBe('Legado (PlugNotas)');
+    expect(getProviderDisplayName('MOCK')).toBe('Ambiente de teste');
+  });
+
+  it('recognizes only PlugNotas as legacy provider', () => {
+    expect(isLegacyProvider(' plugnotas ')).toBe(true);
+    expect(isLegacyProvider('LOBONOTAS')).toBe(false);
+  });
 });
 
 describe('inferNfseDataFromProvider', () => {

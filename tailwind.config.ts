@@ -56,6 +56,25 @@ export default {
             DEFAULT: "hsl(var(--warning))",
             foreground: "hsl(var(--warning-foreground))",
           },
+          info: {
+            DEFAULT: "hsl(var(--info))",
+            foreground: "hsl(var(--info-foreground))",
+          },
+          night: {
+            950: "#071020",
+            900: "#0A1728",
+            800: "#122238",
+          },
+          forest: {
+            700: "#384E37",
+            600: "#466A3F",
+          },
+          leaf: { 500: "#6CA65D" },
+          sage: { 400: "#829B7F" },
+          stone: { 500: "#A7A7A5" },
+          silver: { 300: "#C3C5B6" },
+          ivory: { 100: "#EBE6DE" },
+          warm: { 50: "#F7F5F0" },
           sidebar: {
             DEFAULT: "hsl(var(--sidebar-background))",
             foreground: "hsl(var(--sidebar-foreground))",
@@ -71,6 +90,15 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Manrope", "Inter", "system-ui", "sans-serif"],
+      },
+      boxShadow: {
+        sm: "0 1px 2px rgb(7 16 32 / 0.06)",
+        md: "0 12px 32px -22px rgb(7 16 32 / 0.34)",
+        lg: "0 24px 60px -32px rgb(7 16 32 / 0.48)",
       },
       keyframes: {
         "accordion-down": {

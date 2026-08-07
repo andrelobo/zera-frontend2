@@ -152,14 +152,45 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-primary p-4">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center space-y-3">
-          <BrandLogo size="lg" showTagline centered className="mx-auto flex-col gap-2" />
-          <CardTitle className="text-xl font-semibold tracking-tight">Painel de Emissão de NFSe</CardTitle>
-          <CardDescription>Operação Manaus</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <main className="relative min-h-screen overflow-hidden bg-night-950 p-4 text-ivory-100 sm:p-6 lg:p-8">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.08]">
+        <svg viewBox="0 0 1440 900" className="h-full w-full" preserveAspectRatio="none">
+          {Array.from({ length: 12 }, (_, index) => (
+            <path
+              key={index}
+              d={`M-80 ${90 + index * 54} C 320 ${-40 + index * 65}, 460 ${940 - index * 38}, 920 ${420 + index * 18} S 1320 ${140 + index * 36}, 1520 ${240 + index * 24}`}
+              fill="none"
+              stroke={index % 3 === 0 ? '#6CA65D' : '#C3C5B6'}
+              strokeWidth="1.2"
+            />
+          ))}
+        </svg>
+      </div>
+
+      <div className="relative mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+        <section className="hidden max-w-2xl lg:block">
+          <BrandLogo size="lg" showTagline inverse />
+          <p className="mt-12 text-xs font-semibold uppercase tracking-[0.24em] text-leaf-500">
+            Operação e inteligência empresarial
+          </p>
+          <h1 className="mt-4 max-w-xl font-display text-5xl font-semibold leading-[1.08] tracking-tight text-ivory-100">
+            Clareza para operar. Estrutura para crescer.
+          </h1>
+          <p className="mt-6 max-w-xl text-base leading-7 text-silver-300">
+            Empresas, pessoas, serviços, documentos e dados conectados em uma plataforma segura e compreensível.
+          </p>
+          <p className="mt-12 text-xs tracking-wide text-stone-500">
+            Uma solução Muirakitan Tecnologia
+          </p>
+        </section>
+
+        <Card className="mx-auto w-full max-w-md animate-fade-in border-white/10 bg-white shadow-lg">
+          <CardHeader className="space-y-3 pb-5 text-center lg:text-left">
+            <BrandLogo size="md" showTagline centered className="mb-3 flex-col gap-1 lg:hidden" />
+            <CardTitle className="font-display text-2xl font-semibold tracking-tight">Acesse sua operação</CardTitle>
+            <CardDescription>Entre com suas credenciais para continuar.</CardDescription>
+          </CardHeader>
+          <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
@@ -184,18 +215,22 @@ const LoginPage = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="h-11 w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
           </form>
-          <div className="mt-5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 space-y-1.5">
+          <div aria-live="polite" className="mt-5 space-y-1.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
             <p className="text-xs font-medium text-foreground">{loading ? LOADING_STEPS[stepIndex] : warmupMessage}</p>
             <p className="text-xs text-muted-foreground">{WAITING_TIPS[tipIndex]}</p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+            <p className="mt-6 text-center text-[11px] text-muted-foreground lg:hidden">
+              Uma solução Muirakitan Tecnologia
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 };
 

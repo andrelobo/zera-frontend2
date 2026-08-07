@@ -3,7 +3,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
-import VisualThemeToggle from '@/components/VisualThemeToggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -14,27 +13,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  BotMessageSquare,
-  ChevronDown,
-  LogOut,
-  RadioTower,
-  UserCog,
-  UserRound,
-  type LucideIcon,
-} from 'lucide-react';
-import {
   Broadcast,
   CaretDown,
-  Robot,
   SignOut,
   UserCircle,
   UserGear,
-  type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import { calcularSimplesAnexoIII, formatCurrency, formatPercent } from '@/utils/simples-nacional';
 import { useAuth } from '@/contexts/AuthContext';
 import { normalizeRole } from '@/lib/roles';
-import { useVisualTheme } from '@/hooks/useVisualTheme';
 
 const TICKER_STORAGE_KEY = 'zera_global_ticker_tributario_v1';
 type HeaderSnapshot = {
@@ -42,17 +29,6 @@ type HeaderSnapshot = {
   issReferencia: number;
   aliquotaEfetiva: number;
 };
-
-type AdaptiveIconProps = {
-  className: string;
-  classic: LucideIcon;
-  elegant: PhosphorIcon;
-  isElegant: boolean;
-};
-
-const AdaptiveIcon = ({ className, classic: ClassicIcon, elegant: ElegantIcon, isElegant }: AdaptiveIconProps) => (
-  isElegant ? <ElegantIcon className={className} weight="duotone" /> : <ClassicIcon className={className} />
-);
 
 const fallbackCalculo = calcularSimplesAnexoIII(120000, 'III');
 const FALLBACK_SNAPSHOT: HeaderSnapshot = {
@@ -93,7 +69,6 @@ const getInitials = (nameOrEmail: string | undefined) => {
 const AppLayout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { isElegant } = useVisualTheme();
   const [snapshot, setSnapshot] = useState<HeaderSnapshot>(() => {
     if (typeof window === 'undefined') return FALLBACK_SNAPSHOT;
     return parseSnapshot(window.localStorage.getItem(TICKER_STORAGE_KEY)) || FALLBACK_SNAPSHOT;
@@ -149,14 +124,8 @@ const AppLayout = () => {
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <SidebarTrigger className="text-white hover:text-white/80" />
               <div className="hidden sm:block h-5 w-px bg-white/20" />
-              <span className="hidden sm:flex text-[10px] font-semibold text-white/50 tracking-widest items-center gap-1.5">
-                <AdaptiveIcon
-                  classic={BotMessageSquare}
-                  elegant={Robot}
-                  isElegant={isElegant}
-                  className="w-4 h-4 animate-[bounce_2s_ease-in-out_infinite]"
-                />
-                Inteligência Fiscal IA
+              <span className="hidden items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-silver-300 sm:flex">
+                Operação bem conectada
               </span>
             </div>
             <div className="hidden md:flex items-center gap-5 min-w-0">
@@ -165,7 +134,7 @@ const AppLayout = () => {
                   {index > 0 && <div className="h-5 w-px bg-white/10" />}
                   <div className="text-left">
                     <p className="text-[8px] text-white/40 uppercase tracking-widest font-medium">{kpi.label}</p>
-                    <p className={`text-xs font-bold tabular-nums ${kpi.accent ? 'text-red-300' : 'text-white'}`}>{kpi.value}</p>
+                    <p className={`text-xs font-bold tabular-nums ${kpi.accent ? 'text-warning' : 'text-white'}`}>{kpi.value}</p>
                   </div>
                 </div>
               ))}
@@ -183,7 +152,7 @@ const AppLayout = () => {
                       </AvatarFallback>
                     </Avatar>
                     <span className="hidden sm:inline max-w-[180px] truncate text-sm text-white">{displayName}</span>
-                    <AdaptiveIcon classic={ChevronDown} elegant={CaretDown} isElegant={isElegant} className="h-4 w-4 text-white/70" />
+                    <CaretDown className="h-4 w-4 text-white/70" weight="bold" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -193,26 +162,25 @@ const AppLayout = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/account')}>
-                    <AdaptiveIcon classic={UserRound} elegant={UserCircle} isElegant={isElegant} className="mr-2 h-4 w-4" />
+                    <UserCircle className="mr-2 h-4 w-4" weight="duotone" />
                     Minha Conta
                   </DropdownMenuItem>
                   {isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/observabilidade-fiscal')}>
-                      <AdaptiveIcon classic={RadioTower} elegant={Broadcast} isElegant={isElegant} className="mr-2 h-4 w-4" />
+                      <Broadcast className="mr-2 h-4 w-4" weight="duotone" />
                       Observabilidade Fiscal
                     </DropdownMenuItem>
                   ) : null}
                   <ThemeToggle menuItem />
-                  <VisualThemeToggle />
                   {isAdmin ? (
                     <DropdownMenuItem onClick={() => navigate('/users')}>
-                      <AdaptiveIcon classic={UserCog} elegant={UserGear} isElegant={isElegant} className="mr-2 h-4 w-4" />
+                      <UserGear className="mr-2 h-4 w-4" weight="duotone" />
                       Usuários
                     </DropdownMenuItem>
                   ) : null}
                   {isAdmin ? <DropdownMenuSeparator /> : null}
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-                    <AdaptiveIcon classic={LogOut} elegant={SignOut} isElegant={isElegant} className="mr-2 h-4 w-4" />
+                    <SignOut className="mr-2 h-4 w-4" weight="duotone" />
                     Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>

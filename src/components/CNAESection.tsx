@@ -267,7 +267,7 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
                           const anexo = anexoCache[entry.codigo];
                           const isIII = anexo?.toUpperCase().includes('III');
                           return (
-                            <span className={`flex items-center gap-0.5 text-[10px] px-1 py-0.5 rounded font-medium shrink-0 ${isIII ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-destructive bg-destructive/10'}`}>
+                            <span className={`flex shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-medium ${isIII ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                               {isIII ? <ShieldCheck className="w-2.5 h-2.5" /> : <ShieldX className="w-2.5 h-2.5" />}
                               {anexo || '?'}
                             </span>
@@ -313,7 +313,7 @@ const CNAESection: React.FC<Props> = ({ cnpj, cnaeEscolhido, onCnaeEscolhidoChan
                       <span>{atividade.descricao}</span>
                       {atividade.anexoLoading && <span className="text-muted-foreground"> - <Loader2 className="w-3 h-3 animate-spin inline" /></span>}
                       {!atividade.anexoLoading && atividade.anexo !== undefined && (
-                        <span className={atividade.anexo?.toUpperCase().includes('III') ? 'text-green-600' : 'text-destructive'}>
+                        <span className={atividade.anexo?.toUpperCase().includes('III') ? 'text-success' : 'text-destructive'}>
                           {' - '}{atividade.anexo ? `Anexo ${atividade.anexo}` : 'Não encontrado'}
                         </span>
                       )}

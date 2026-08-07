@@ -1533,11 +1533,11 @@ const EmpresaFormPage = () => {
               }}
             />
 
-            <Card>
+            <Card className="hidden" aria-hidden="true">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Configuração operacional NFS-e</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Defina aqui as preferências operacionais que o ZERA tentará aplicar na PlugNotas durante a sincronização do prestador.
+                  Preferências históricas preservadas para compatibilidade de dados, sem uso operacional.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1574,13 +1574,13 @@ const EmpresaFormPage = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Os toggles por ator já ficam persistidos no cadastro do ZERA. A automação direta deles na PlugNotas continua dependendo de contrato oficial confirmado do provider.
+                  Estes campos pertencem ao contrato histórico e não habilitam o provider legado.
                 </p>
               </CardContent>
             </Card>
 
             {isEdit && (
-              <Card>
+              <Card className="hidden" aria-hidden="true">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm">Sincronização com a PlugNotas</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -1597,7 +1597,7 @@ const EmpresaFormPage = () => {
                   </Alert>
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>O que o ZERA já tenta automatizar</AlertTitle>
+                    <AlertTitle>Compatibilidade histórica preservada</AlertTitle>
                     <AlertDescription>
                       <p>Certificado, cadastro da empresa, ativação mínima de NFS-e Nacional, consulta automática de DF-e e numeração inicial de RPS.</p>
                       <p className="mt-2">

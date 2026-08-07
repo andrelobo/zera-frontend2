@@ -69,7 +69,7 @@ const formatSourceLabel = (source?: string) => {
   if (normalized === 'brasilapi') return 'BrasilAPI';
   if (normalized === 'receitaws') return 'ReceitaWS';
   if (normalized === 'brasilapi+receitaws') return 'BrasilAPI + ReceitaWS';
-  if (normalized === 'plugnotas') return 'PlugNotas';
+  if (normalized === 'plugnotas') return 'Legado (PlugNotas)';
   if (normalized === 'hubdev_cadastropf' || normalized === 'hubdev' || normalized === 'hub_do_desenvolvedor') return 'Hub do Desenvolvedor';
   return source as string;
 };

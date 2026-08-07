@@ -1,4 +1,4 @@
-// API Types for ZERA NFSe System
+// API types for the Jupati frontend. Public fiscal contracts retain their original identifiers.
 
 export interface ApiError {
   code: string;
@@ -358,7 +358,7 @@ export interface TomadorCpfLookupResponse {
 }
 
 // NFSe
-export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELLED';
+export type NfseStatus = 'PENDING' | 'PROCESSING' | 'AUTHORIZED' | 'REJECTED' | 'ERROR' | 'CANCELED' | 'CANCELLED';
 export type NfseProvider = 'PLUGNOTAS' | 'MANAUS' | 'MOCK' | 'LOBONOTAS';
 
 export interface NfseCanonicalIdentifiers {

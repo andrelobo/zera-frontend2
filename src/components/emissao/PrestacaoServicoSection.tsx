@@ -283,7 +283,7 @@ const PrestacaoServicoSection: React.FC<Props> = ({ data, onChange, mostrarReten
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {/* Serviços Favoritos */}
         <div ref={favoritosDropdownRef} className="relative">
-          <label className="field-label flex items-center gap-1.5" style={{ color: 'hsl(43, 80%, 45%)' }}><Star className="w-4 h-4" fill="currentColor" />Serviços Favoritos</label>
+          <label className="field-label flex items-center gap-1.5 text-warning-foreground"><Star className="w-4 h-4" fill="currentColor" />Serviços Favoritos</label>
           <div className="relative">
             <input
               className="field-input pr-8"

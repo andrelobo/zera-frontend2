@@ -12,9 +12,9 @@ import { formatCurrency, formatPercent } from '@/utils/simples-nacional';
 const DASHBOARD_MIN_EMISSAO_DATE = new Date(2026, 1, 11, 0, 0, 0, 0);
 
 const trendTone = (value: number) => {
-  if (value >= 30) return 'text-emerald-300';
-  if (value >= 20) return 'text-sky-300';
-  if (value >= 10) return 'text-amber-300';
+  if (value >= 30) return 'text-success';
+  if (value >= 20) return 'text-info';
+  if (value >= 10) return 'text-warning';
   return 'text-rose-300';
 };
 
@@ -87,20 +87,20 @@ const Dash2Page = () => {
   if (empresasQuery.isError && !empresa) return <ErrorState onRetry={() => empresasQuery.refetch()} />;
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_28%),radial-gradient(circle_at_85%_18%,_rgba(249,115,22,0.15),_transparent_24%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_45%,_#f8fafc_100%)] px-1 py-1">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(108,166,93,0.14),_transparent_30%),linear-gradient(180deg,_#F7F5F0_0%,_#EBE6DE_52%,_#F7F5F0_100%)] px-1 py-1">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <section className="overflow-hidden rounded-[36px] bg-[linear-gradient(135deg,_#0f172a_0%,_#132b57_55%,_#1447a6_100%)] p-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:p-8">
+        <section className="overflow-hidden rounded-[18px] border border-white/10 bg-[linear-gradient(135deg,_#071020_0%,_#0A1728_58%,_#122238_100%)] p-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
               <Badge variant="outline" className="border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/80">
                 Dash2 Fiscal Premium
               </Badge>
               <div className="space-y-2">
-                <p className="text-sm uppercase tracking-[0.28em] text-sky-200/80">Resumo Executivo</p>
-                <h1 className="text-3xl font-black tracking-tight sm:text-5xl">
+                <p className="text-sm uppercase tracking-[0.28em] text-silver-300">Resumo Executivo</p>
+                <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
                   {empresa?.razaoSocial || 'Dashboard Financeiro'}
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-silver-300 sm:text-base">
                   Leitura visual mais limpa para faturamento, DAS, concentracao de clientes e pulso operacional do fiscal,
                   sem alterar nenhuma regra do motor atual.
                 </p>
@@ -152,10 +152,10 @@ const Dash2Page = () => {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Radar Fiscal</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">Pulso da operacao tributaria</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Radar Fiscal</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">Pulso da operacao tributaria</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <InsightBlock
@@ -181,24 +181,24 @@ const Dash2Page = () => {
             </CardContent>
           </Card>
 
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Alertas</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">O que pede atencao agora</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Alertas</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">O que pede atencao agora</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {alertas.length === 0 && (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="rounded-[14px] border border-success/25 bg-success/10 p-4 text-sm text-foreground">
                   Nenhum alerta relevante identificado no motor atual.
                 </div>
               )}
               {alertas.map((alerta, index) => (
                 <div
                   key={`${alerta.tipo}-${index}`}
-                  className={`rounded-2xl border p-4 text-sm leading-6 ${
+                  className={`rounded-[14px] border p-4 text-sm leading-6 ${
                     alerta.tipo === 'danger'
-                      ? 'border-rose-200 bg-rose-50 text-rose-900'
-                      : 'border-amber-200 bg-amber-50 text-amber-900'
+                      ? 'border-destructive/25 bg-destructive/10 text-foreground'
+                      : 'border-warning/25 bg-warning/10 text-foreground'
                   }`}
                 >
                   <div className="mb-2 flex items-center gap-2 font-semibold">
@@ -209,7 +209,7 @@ const Dash2Page = () => {
                 </div>
               ))}
               {alertasCriticos.length === 0 && maiorCliente && (
-                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+                <div className="rounded-[14px] border border-info/25 bg-info/10 p-4 text-sm text-foreground">
                   <p className="mb-1 font-semibold">Concentracao mais alta</p>
                   <p>
                     {maiorCliente.nome} responde por {maiorCliente.percentual.toFixed(1)}% da receita observada.
@@ -221,10 +221,10 @@ const Dash2Page = () => {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Clientes</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">Concentracao de receita</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Clientes</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">Concentracao de receita</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {topClientes.length === 0 && <EmptyCopy copy="Ainda nao ha dados suficientes para listar tomadores relevantes." />}
@@ -232,55 +232,55 @@ const Dash2Page = () => {
                 <div key={cliente.tomadorId} className="space-y-2">
                   <div className="flex items-end justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-900">{cliente.nome}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="truncate text-sm font-semibold text-foreground">{cliente.nome}</p>
+                      <p className="text-xs text-muted-foreground">
                         {cliente.quantidadeNf} NF • ticket medio {formatCurrency(cliente.ticketMedio)}
                       </p>
                     </div>
-                    <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">
+                    <Badge variant="outline" className="border-border bg-muted/40 text-foreground/80">
                       Classe {cliente.classificacao}
                     </Badge>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-slate-200/80">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,#0f766e_0%,#06b6d4_100%)]"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,#466A3F_0%,#6CA65D_100%)]"
                       style={{ width: `${Math.min(cliente.percentual, 100)}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{cliente.percentual.toFixed(1)}% da receita</span>
-                    <span className="font-semibold text-slate-900">{formatCurrency(cliente.faturamento)}</span>
+                    <span className="font-semibold text-foreground">{formatCurrency(cliente.faturamento)}</span>
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Linha do tempo</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">Ultimas emissões lidas</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Linha do tempo</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">Ultimas emissões lidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {ultimasNotas.length === 0 && <EmptyCopy copy="Nenhuma emissao encontrada para compor a timeline operacional." />}
               {ultimasNotas.map((nota) => (
-                <div key={nota.id} className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4">
-                  <div className="mt-0.5 rounded-full bg-slate-900 p-2 text-white">
+                <div key={nota.id} className="flex items-start gap-3 rounded-[14px] border border-border bg-white/80 p-4">
+                  <div className="mt-0.5 rounded-full bg-night-950 p-2 text-ivory-100">
                     <Receipt className="h-3.5 w-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-slate-900">{nota.tomador_nome || 'Emissao expressa'}</p>
-                      <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">
+                      <p className="truncate text-sm font-semibold text-foreground">{nota.tomador_nome || 'Emissao expressa'}</p>
+                      <Badge variant="outline" className="border-border bg-muted/40 text-foreground/80">
                         {nota.status}
                       </Badge>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">{new Date(nota.data_emissao).toLocaleString('pt-BR')}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{new Date(nota.data_emissao).toLocaleString('pt-BR')}</p>
                     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                      <span className="text-slate-500">Valor</span>
-                      <span className="font-semibold text-slate-900">{formatCurrency(nota.valor_servico)}</span>
-                      <span className="text-slate-500">Liquido</span>
-                      <span className="font-semibold text-slate-900">{formatCurrency(nota.valor_liquido)}</span>
+                      <span className="text-muted-foreground">Valor</span>
+                      <span className="font-semibold text-foreground">{formatCurrency(nota.valor_servico)}</span>
+                      <span className="text-muted-foreground">Liquido</span>
+                      <span className="font-semibold text-foreground">{formatCurrency(nota.valor_liquido)}</span>
                     </div>
                   </div>
                 </div>
@@ -290,10 +290,10 @@ const Dash2Page = () => {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Competencia</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">Resumo do periodo atual</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Competencia</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">Resumo do periodo atual</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <MiniPanel label="Empresa" value={empresa?.razaoSocial || 'Nao identificada'} icon={<Building2 className="h-4 w-4" />} />
@@ -303,12 +303,12 @@ const Dash2Page = () => {
             </CardContent>
           </Card>
 
-          <Card className={`${surfaceClass} border-slate-200/70`}>
+          <Card className={`${surfaceClass} border-border`}>
             <CardHeader className="pb-4">
-              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Direcao visual</CardDescription>
-              <CardTitle className="text-xl font-black text-slate-900">O que muda no Dash2</CardTitle>
+              <CardDescription className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Direcao visual</CardDescription>
+              <CardTitle className="text-xl font-semibold text-foreground">O que muda no Dash2</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+            <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
               <p>Menos widgets, mais hierarquia. O numero principal aparece primeiro, os alertas sobem e as listas viram apoio.</p>
               <p>As mesmas regras do dashboard atual continuam ativas. O que mudou foi a leitura: respiro, contraste e prioridade.</p>
               <p>Este Dash2 existe em paralelo para validar a nova direcao sem risco de regressao no painel antigo.</p>
@@ -336,7 +336,7 @@ const HeroMetric = ({
       <span className="text-[11px] uppercase tracking-[0.22em]">{label}</span>
       {icon}
     </div>
-    <p className="text-2xl font-black tracking-tight text-white">{value}</p>
+    <p className="text-2xl font-semibold tracking-tight text-white">{value}</p>
     <p className="mt-2 text-xs text-white/70">{supporting}</p>
   </div>
 );
@@ -352,14 +352,14 @@ const StatCard = ({
   hint: string;
   icon: React.ReactNode;
 }) => (
-  <Card className={`${surfaceClass} border-slate-200/70`}>
+  <Card className={`${surfaceClass} border-border`}>
     <CardContent className="flex items-start justify-between gap-4 p-5">
       <div className="space-y-2">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
-        <p className="text-2xl font-black tracking-tight text-slate-950">{value}</p>
-        <p className="text-xs text-slate-500">{hint}</p>
+        <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+        <p className="text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
-      <div className="rounded-2xl bg-slate-950 p-3 text-white shadow-lg">
+      <div className="rounded-[14px] bg-night-950 p-3 text-white shadow-lg">
         {icon}
       </div>
     </CardContent>
@@ -375,10 +375,10 @@ const InsightBlock = ({
   value: string;
   copy: string;
 }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4">
-    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{title}</p>
-    <p className="mt-3 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-    <p className="mt-2 text-xs leading-5 text-slate-500">{copy}</p>
+  <div className="rounded-[14px] border border-border bg-white/90 p-4">
+    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{title}</p>
+    <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+    <p className="mt-2 text-xs leading-5 text-muted-foreground">{copy}</p>
   </div>
 );
 
@@ -391,17 +391,17 @@ const MiniPanel = ({
   value: string;
   icon: React.ReactNode;
 }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4">
-    <div className="mb-3 flex items-center gap-2 text-slate-500">
+  <div className="rounded-[14px] border border-border bg-white/90 p-4">
+    <div className="mb-3 flex items-center gap-2 text-muted-foreground">
       {icon}
       <span className="text-[11px] uppercase tracking-[0.18em]">{label}</span>
     </div>
-    <p className="text-sm font-semibold text-slate-900">{value}</p>
+    <p className="text-sm font-semibold text-foreground">{value}</p>
   </div>
 );
 
 const EmptyCopy = ({ copy }: { copy: string }) => (
-  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+  <div className="rounded-[14px] border border-dashed border-border bg-muted/40 p-5 text-sm text-muted-foreground">
     {copy}
   </div>
 );

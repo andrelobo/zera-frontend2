@@ -26,7 +26,7 @@ const formatNfseStatus = (status?: string) => {
   if (status === 'PENDING' || status === 'PROCESSING') return 'Processando';
   if (status === 'AUTHORIZED') return 'Autorizada';
   if (status === 'REJECTED') return 'Rejeitada';
-  if (status === 'CANCELLED') return 'Cancelada';
+  if (status === 'CANCELED' || status === 'CANCELLED') return 'Cancelada';
   if (status === 'ERROR') return 'Erro';
   return status || '-';
 };

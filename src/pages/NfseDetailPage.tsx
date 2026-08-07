@@ -12,7 +12,7 @@ import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, ExternalL
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
-import { inferNfseDataFromProvider } from '@/lib/nfse-provider';
+import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
 import { formatCNPJ } from '@/utils/validators';
 import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
@@ -255,7 +255,7 @@ const NfseDetailPage = () => {
     providerResp?.externalId == null &&
     providerResp?.providerResponse == null;
 
-  const isPlugNotasProvider = nfse.provider?.trim().toUpperCase() === 'PLUGNOTAS';
+  const isPlugNotasProvider = isLegacyProvider(nfse.provider);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -276,8 +276,7 @@ const NfseDetailPage = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button
-            variant="outline"
-            className="rounded-full border-sky-200 bg-sky-50 text-sky-900 shadow-sm hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950"
+            className="h-11 rounded-md px-4"
             onClick={openPdfPreview}
           >
             <Eye className="mr-2 h-4 w-4" />
@@ -285,7 +284,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-900 shadow-sm hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-950"
+            className="h-11 rounded-md px-4"
             onClick={() => downloadFile(() => nfseApi.downloadXml(id!), `nfse-${id}.xml`)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -293,7 +292,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="outline"
-            className="rounded-full border-amber-200 bg-amber-50 text-amber-900 shadow-sm hover:border-amber-300 hover:bg-amber-100 hover:text-amber-950"
+            className="h-11 rounded-md px-4"
             onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -301,7 +300,7 @@ const NfseDetailPage = () => {
           </Button>
           <Button
             variant="ghost"
-            className="rounded-full border border-slate-200 bg-white/70 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+            className="h-11 rounded-md border border-border px-4 hover:bg-muted"
             onClick={() => window.open(window.location.href, '_blank', 'noopener,noreferrer')}
           >
             <ExternalLink className="mr-2 h-4 w-4" />
@@ -321,7 +320,7 @@ const NfseDetailPage = () => {
             <Row label="Valor ISS" value={nfse.valorIss?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || '—'} />
             <Row label="Parâmetro Tributário" value={formatParametroIssAplicado(nfse.parametroIssAplicado)} />
             <Row label="Cód. Serviço" value={codigoServico} />
-            <Row label="Provedor" value={nfse.provider} />
+            <Row label="Provedor" value={getProviderDisplayName(nfse.provider)} />
             <Row label="Tomador" value={tomador} />
             <Row label="CPF/CNPJ Tomador" value={tomadorDoc} />
           </CardContent>

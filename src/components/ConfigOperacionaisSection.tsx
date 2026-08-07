@@ -86,8 +86,8 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
                   onChange={e => setDraft(d => ({ ...d, descricao: e.target.value }))}
                 />
                 <div className="flex gap-1 w-16 justify-center">
-                  <button type="button" onClick={saveEdit} className="p-1 rounded hover:bg-accent text-green-600"><Check className="w-3.5 h-3.5" /></button>
-                  <button type="button" onClick={cancelEdit} className="p-1 rounded hover:bg-accent text-muted-foreground"><X className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={saveEdit} className="rounded p-1 text-success hover:bg-accent" aria-label="Salvar configuração"><Check className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={cancelEdit} className="rounded p-1 text-muted-foreground hover:bg-accent" aria-label="Cancelar edição"><X className="w-3.5 h-3.5" /></button>
                 </div>
               </>
             ) : (
@@ -120,8 +120,8 @@ const ConfigOperacionaisSection: React.FC<Props> = ({ items, onChange }) => {
               onChange={e => setNewItem(n => ({ ...n, descricao: e.target.value }))}
             />
             <div className="flex gap-1 w-16 justify-center">
-              <button type="button" onClick={addItem} className="p-1 rounded hover:bg-accent text-green-600"><Check className="w-3.5 h-3.5" /></button>
-              <button type="button" onClick={() => { setAdding(false); setNewItem({ natureza: '', descricao: '' }); }} className="p-1 rounded hover:bg-accent text-muted-foreground"><X className="w-3.5 h-3.5" /></button>
+              <button type="button" onClick={addItem} className="rounded p-1 text-success hover:bg-accent" aria-label="Adicionar configuração"><Check className="w-3.5 h-3.5" /></button>
+              <button type="button" onClick={() => { setAdding(false); setNewItem({ natureza: '', descricao: '' }); }} className="rounded p-1 text-muted-foreground hover:bg-accent" aria-label="Cancelar nova configuração"><X className="w-3.5 h-3.5" /></button>
             </div>
           </div>
         )}

@@ -109,7 +109,7 @@ describe('emissao PrestadorSection UI', () => {
 
     expect(onSimplesDetected).toHaveBeenCalledWith(true);
     expect(mocks.toastSuccess).toHaveBeenCalled();
-    expect(await screen.findByText(/Fonte do autocomplete: Banco \(ZERA\)/)).toBeTruthy();
+    expect(await screen.findByText(/Fonte do autocomplete: Base Jupati/)).toBeTruthy();
   });
 
   it('autocompletes address by cep', async () => {

@@ -1,5 +1,20 @@
 import type { ProviderResponse } from '@/types/api';
 
+const normalizeProviderName = (provider?: string | null): string => provider?.trim().toUpperCase() || '';
+
+export const isLegacyProvider = (provider?: string | null): boolean => (
+  normalizeProviderName(provider) === 'PLUGNOTAS'
+);
+
+export const getProviderDisplayName = (provider?: string | null): string => {
+  const normalized = normalizeProviderName(provider);
+  if (normalized === 'LOBONOTAS') return 'Ambiente Nacional';
+  if (normalized === 'PLUGNOTAS') return 'Legado (PlugNotas)';
+  if (normalized === 'MANAUS') return 'Manaus';
+  if (normalized === 'MOCK') return 'Ambiente de teste';
+  return provider?.trim() || 'Não informado';
+};
+
 interface NfseInferredData {
   valor?: number;
   descricao?: string;

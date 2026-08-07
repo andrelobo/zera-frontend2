@@ -440,7 +440,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 items-stretch">
         {/* CNAE Card */}
         <div ref={cnaeDropdownRef} className={`radio-card flex flex-col items-start ${manualCnae ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>1. Código Cnae<span className="text-red-500">*</span></div>
+          <div className="flex min-h-[2rem] items-center text-sm font-bold leading-tight text-primary">1. Código Cnae<span className="text-destructive">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
@@ -484,7 +484,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
         {/* CTN Card */}
         <div ref={ctnDropdownRef} className={`radio-card flex flex-col items-start ${manualCtn ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>2. Código Tributação Nacional<span className="text-red-500">*</span></div>
+          <div className="flex min-h-[2rem] items-center text-sm font-bold leading-tight text-primary">2. Código Tributação Nacional<span className="text-destructive">*</span></div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
@@ -539,7 +539,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
 
         {/* NBS Card */}
         <div ref={nbsDropdownRef} className={`radio-card flex flex-col items-start ${manualNbs ? 'radio-card-selected' : ''}`}>
-          <div className="text-sm font-bold leading-tight min-h-[2rem] flex items-center" style={{ color: 'rgb(20, 123, 61)' }}>3. Nomenclatura Brasileira Serviços</div>
+          <div className="flex min-h-[2rem] items-center text-sm font-bold leading-tight text-primary">3. Nomenclatura Brasileira Serviços</div>
           <div className="w-full space-y-1">
             <div className="relative">
               <Input
@@ -644,7 +644,7 @@ const CTNSection: React.FC<Props> = ({ ctnSelecionado, onCtnChange, savedCnaes, 
         </div>
       )}
 
-      <h3 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'rgb(207, 155, 23)' }}>
+      <h3 className="flex items-center gap-1.5 text-sm font-bold text-warning-foreground">
         <Star className="w-4 h-4" fill="currentColor" />
         Serviços Favoritos
       </h3>
@@ -744,7 +744,7 @@ const CnaeListItem: React.FC<CnaeListItemProps> = ({
             <span className="font-mono text-xs font-semibold text-primary">{formatCNAECode(cnae.codigo)}</span>
             <span className="text-xs text-foreground/90 truncate">{cnae.cnaeDescricao.replace(/[.\s]+$/, '')}</span>
             {cnae.isManual && (
-              <span className="text-[10px] font-medium bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded shrink-0">Manual</span>
+              <span className="shrink-0 rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-medium text-warning-foreground">Manual</span>
             )}
           </div>
           {cnae.vinculos.length > 0 && (

@@ -35,12 +35,12 @@ interface Props {
 const formatSourceLabel = (source?: string) => {
   const normalized = String(source || '').trim().toLowerCase();
   if (!normalized) return 'Não informada';
-  if (normalized === 'banco') return 'Banco (ZERA)';
+  if (normalized === 'banco') return 'Base Jupati';
   if (normalized === 'cnpja') return 'CNPJá';
   if (normalized === 'brasilapi') return 'BrasilAPI';
   if (normalized === 'receitaws') return 'ReceitaWS';
   if (normalized === 'brasilapi+receitaws') return 'BrasilAPI + ReceitaWS';
-  if (normalized === 'plugnotas') return 'PlugNotas';
+  if (normalized === 'plugnotas') return 'Legado (PlugNotas)';
   return source as string;
 };
 

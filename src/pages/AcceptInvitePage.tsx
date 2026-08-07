@@ -60,7 +60,7 @@ const AcceptInvitePage = () => {
       }
       await login(accessToken);
       toast({
-        title: 'Bem-vindo ao ZERA',
+        title: 'Bem-vindo à Jupati',
         description: 'Seu acesso foi ativado com sucesso.',
       });
       navigate('/');
@@ -80,19 +80,19 @@ const AcceptInvitePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fbff_0%,#eef4f8_42%,#e8efe9_100%)] p-4">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#F7F5F0_0%,#EBE6DE_48%,#C3C5B6_140%)] p-4">
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center">
         <div className="grid w-full gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
-          <Card className="hidden overflow-hidden border-0 bg-[hsl(216,60%,16%)] text-white shadow-xl lg:block">
+          <Card className="hidden overflow-hidden border-0 bg-night-950 text-ivory-100 shadow-xl lg:block">
             <CardContent className="flex h-full flex-col justify-between p-8">
               <div>
-                <BrandLogo size="lg" showTagline className="mb-10" />
+                <BrandLogo size="lg" showTagline inverse className="mb-10" />
                 <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/45">Onboarding seguro</p>
                 <h1 className="mt-4 text-3xl font-semibold leading-tight">
                   Primeiro acesso com senha definida pelo próprio usuário.
                 </h1>
                 <p className="mt-4 max-w-sm text-sm leading-6 text-white/70">
-                  O administrador libera o convite, você cria sua senha e o ZERA ativa sua conta sem trafegar senha por e-mail.
+                  O administrador libera o convite, você cria sua senha e a Jupati ativa sua conta sem trafegar senha por e-mail.
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/10 p-4 text-sm text-white/80">
@@ -110,12 +110,12 @@ const AcceptInvitePage = () => {
           <Card className="border-0 shadow-xl">
             <CardHeader className="space-y-3 text-center">
               <BrandLogo size="lg" showTagline centered className="mx-auto flex-col gap-2 lg:hidden" />
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
               <CardTitle className="text-2xl tracking-tight">Ative seu acesso</CardTitle>
               <CardDescription>
-                Defina sua senha para entrar no painel ZERA.
+                Defina sua senha para entrar na Jupati.
               </CardDescription>
             </CardHeader>
             <CardContent>
