@@ -24,6 +24,7 @@ Classificacao aplicada antes das alteracoes da primeira fase.
 - dashboard principal e Dash2 aproximados dos tokens Jupati;
 - listas de empresas, tomadores e usuarios alinhadas aos cabecalhos, superficies, acoes destrutivas e estados compartilhados do design system;
 - controles iconograficos das listas com rotulos acessiveis e alvos de interacao ampliados;
+- operacao fiscal, emissao rapida e formularios de usuario/certificado alinhados a hierarquia visual e microcopy Jupati;
 - status `CANCELED` na UI com leitura temporaria de `CANCELLED`;
 - nenhuma mudanca em contrato fiscal, rota, persistencia ou autenticacao.
 

@@ -209,14 +209,17 @@ const NfseQuickEmitPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in w-full">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/nfse')}>
+      <div className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm">
+        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => navigate('/nfse')} aria-label="Voltar para notas fiscais">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">Emissão Rápida</h1>
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Emissão rápida</h1>
+          <p className="text-sm text-muted-foreground">Fluxo reduzido para operações simples e supervisionadas.</p>
+        </div>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">NFSe rápida com seleção de prestador, CPF e valor</CardTitle>
         </CardHeader>

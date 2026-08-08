@@ -122,7 +122,7 @@ const UserFormPage = () => {
   if (!isAdmin) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Usuários</h1>
         <Alert>
           <ShieldCheck className="h-4 w-4" />
           <AlertTitle>Acesso restrito</AlertTitle>
@@ -136,12 +136,12 @@ const UserFormPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in w-full">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/users')}>
+      <div className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm">
+        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => navigate('/users')} aria-label="Voltar para usuários">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{isEdit ? 'Editar Usuário' : 'Convidar Usuário'}</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{isEdit ? 'Editar usuário' : 'Convidar usuário'}</h1>
           <p className="text-sm text-muted-foreground">
             {isEdit ? 'Atualize perfil, status ou senha.' : 'Crie acesso sem enviar senha por e-mail.'}
           </p>
@@ -173,7 +173,7 @@ const UserFormPage = () => {
         </Card>
       ) : null}
 
-      <Card>
+      <Card className="shadow-sm">
         <CardContent className="pt-6">
           <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-5">
             {!isEdit ? (
@@ -266,10 +266,10 @@ const UserFormPage = () => {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={() => navigate('/users')}>
+              <Button type="button" variant="outline" onClick={() => navigate('/users')}>
                 Voltar
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" size="lg" disabled={mutation.isPending}>
                 {mutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : creationMode === 'invite' && !isEdit ? (
@@ -277,7 +277,7 @@ const UserFormPage = () => {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                {isEdit ? 'Salvar' : creationMode === 'invite' ? 'Gerar convite' : 'Cadastrar'}
+                {isEdit ? 'Salvar usuário' : creationMode === 'invite' ? 'Gerar convite' : 'Cadastrar usuário'}
               </Button>
             </div>
           </form>

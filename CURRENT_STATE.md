@@ -10,6 +10,14 @@ Snapshot operacional do frontend em **21/04/2026**.
 - Consultas, mutations, permissoes, rotas e contratos permaneceram inalterados.
 - Validacao: `151/151` testes aprovados e lint sem erros; build registrado apos a verificacao final deste lote.
 
+## 0.2. ATUALIZACAO (08/08/2026) - OPERACAO FISCAL E FORMULARIOS
+
+- A listagem de documentos passou a ser apresentada como "Operacao fiscal", preservando a rota tecnica `/nfse`.
+- Filtros apresentam LOBONOTAS como "Ambiente Nacional", PlugNotas como legado e MOCK como ambiente de teste.
+- Emissao rapida, certificado digital e formulario de usuarios receberam cabecalhos e superficies Jupati.
+- Chamadas de API, mutations, payloads, providers tecnicos, status e destinos de navegacao permaneceram inalterados.
+- Validacao: `151/151` testes aprovados; lint e build registrados apos a verificacao final deste lote.
+
 ## 0. ATUALIZACAO (07/08/2026) - REBRANDING INCREMENTAL PARA JUPATI (FUNDAMENTOS + SHELL + LEITURA OPERACIONAL)
 
 Fonte: `docs/JUPATI_DESIGN_SYSTEM.md` + prancha visual aprovada + codigo local +

@@ -144,16 +144,19 @@ const CertificadoDigitalPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in w-full">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/empresas')}>
+      <div className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm">
+        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => navigate('/empresas')} aria-label="Voltar para empresas">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">Certificado Digital</h1>
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Certificado digital</h1>
+          <p className="text-sm text-muted-foreground">Credencial A1 usada pelo motor fiscal para operações autorizadas.</p>
+        </div>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Importação de Certificado A1</CardTitle>
+          <CardTitle className="font-display text-lg">Importação de certificado A1</CardTitle>
           <p className="text-sm text-muted-foreground">
             Este passo libera emissão da NFSe para o prestador selecionado.
           </p>

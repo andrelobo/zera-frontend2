@@ -152,17 +152,20 @@ const NfseListPage = () => {
   if (shouldShowError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Notas Fiscais</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Operação fiscal</h1>
+          <p className="text-sm text-muted-foreground">Emissão, acompanhamento e consulta dos documentos fiscais.</p>
+        </div>
         <div className="flex gap-2">
           {!isReadOnly ? (
             <>
-              <Button variant="outline" onClick={() => navigate('/nfse/rapida')}>
-                <Zap className="mr-2 h-4 w-4" /> Emissão Rápida
+              <Button variant="outline" size="lg" onClick={() => navigate('/nfse/rapida')}>
+                <Zap className="mr-2 h-4 w-4" /> Emissão rápida
               </Button>
-              <Button onClick={() => navigate('/nfse/nova')}>
-                <Plus className="mr-2 h-4 w-4" /> Nova DANFSE
+              <Button size="lg" onClick={() => navigate('/nfse/nova')}>
+                <Plus className="mr-2 h-4 w-4" /> Nova NFS-e
               </Button>
             </>
           ) : null}
@@ -170,7 +173,7 @@ const NfseListPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 rounded-lg border bg-card p-3 shadow-sm" aria-label="Filtros da operação fiscal">
         <Select value={status || 'all'} onValueChange={v => updateFilter('status', v)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Status" />
@@ -190,11 +193,11 @@ const NfseListPage = () => {
             <SelectValue placeholder="Provedor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos Provedores</SelectItem>
-            <SelectItem value="LOBONOTAS">Nacional</SelectItem>
+            <SelectItem value="all">Todos os ambientes</SelectItem>
+            <SelectItem value="LOBONOTAS">Ambiente Nacional</SelectItem>
             <SelectItem value="PLUGNOTAS">Legado (PlugNotas)</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
-            <SelectItem value="MOCK">Mock</SelectItem>
+            <SelectItem value="MOCK">Ambiente de teste</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -204,7 +207,7 @@ const NfseListPage = () => {
         <EmptyState message="Nenhuma NFSe encontrada com os filtros atuais." />
       ) : (
         <>
-          <div className="rounded-lg border bg-card overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border bg-card shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -222,7 +225,7 @@ const NfseListPage = () => {
                 {items.map(nfse => (
                   <TableRow
                     key={nfse.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer transition-colors hover:bg-muted/50"
                     onClick={() => navigate(`/nfse/${nfse.id}`)}
                   >
                     <TableCell className="font-medium">{nfse.numero || inferredById[nfse.id]?.numeroNfse || '—'}</TableCell>
