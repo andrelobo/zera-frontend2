@@ -2,6 +2,14 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0.1. ATUALIZACAO (08/08/2026) - LISTAS OPERACIONAIS JUPATI
+
+- Listas de empresas, tomadores e usuarios receberam cabecalhos, superficies e hierarquia visual Jupati.
+- Estados vazios e de erro compartilhados foram normalizados com tokens semanticos.
+- Acoes por linha receberam rotulos acessiveis e confirmacoes destrutivas explicitas.
+- Consultas, mutations, permissoes, rotas e contratos permaneceram inalterados.
+- Validacao: `151/151` testes aprovados e lint sem erros; build registrado apos a verificacao final deste lote.
+
 ## 0. ATUALIZACAO (07/08/2026) - REBRANDING INCREMENTAL PARA JUPATI (FUNDAMENTOS + SHELL + LEITURA OPERACIONAL)
 
 Fonte: `docs/JUPATI_DESIGN_SYSTEM.md` + prancha visual aprovada + codigo local +

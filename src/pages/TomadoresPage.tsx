@@ -70,11 +70,12 @@ const TomadoresPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <UserRound className="w-5 h-5" />
+      <div>
+        <h1 className="flex items-center gap-2 font-display text-3xl font-semibold tracking-tight">
+          <UserRound className="h-6 w-6 text-primary" />
           Tomadores
         </h1>
+        <p className="mt-1 text-sm text-muted-foreground">Pessoas e empresas atendidas pela sua operação.</p>
       </div>
 
       <TomadoresLista

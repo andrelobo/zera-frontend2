@@ -65,13 +65,13 @@ const UsersPage = () => {
   if (isError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Usuários</h1>
           <p className="text-sm text-muted-foreground">Convites, perfis e acessos administrativos.</p>
         </div>
-        <Button onClick={() => navigate('/users/novo')}>
+        <Button size="lg" onClick={() => navigate('/users/novo')}>
           <Plus className="mr-2 h-4 w-4" /> Convidar usuário
         </Button>
       </div>
@@ -79,7 +79,7 @@ const UsersPage = () => {
       {!users?.length ? (
         <EmptyState message="Nenhum usuário cadastrado." />
       ) : (
-        <div className="rounded-lg border bg-card overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border bg-card shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -94,7 +94,7 @@ const UsersPage = () => {
             </TableHeader>
             <TableBody>
               {users.map(u => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} className="transition-colors hover:bg-muted/40">
                   <TableCell className="font-medium">{u.name || '—'}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
@@ -114,12 +114,12 @@ const UsersPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/users/${u.id}`)}>
+                      <Button variant="outline" size="icon" className="h-11 w-11" onClick={() => navigate(`/users/${u.id}`)} aria-label={`Editar usuário ${u.name || u.email}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          <Button variant="outline" size="icon" className="h-11 w-11 border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15" aria-label={`Excluir usuário ${u.name || u.email}`}><Trash2 className="h-4 w-4" /></Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
@@ -128,7 +128,7 @@ const UsersPage = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMutation.mutate(u.id)}>Excluir</AlertDialogAction>
+                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(u.id)}>Excluir usuário</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

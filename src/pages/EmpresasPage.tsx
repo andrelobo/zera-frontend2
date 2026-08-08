@@ -38,13 +38,16 @@ const EmpresasPage = () => {
   if (shouldShowError) return <ErrorState onRetry={() => refetch()} />;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Empresas</h1>
+          <p className="text-sm text-muted-foreground">Cadastros, parâmetros e prontidão operacional das prestadoras.</p>
+        </div>
         <div className="flex gap-2">
           {!isReadOnly ? (
-            <Button onClick={() => navigate('/empresas/nova')}>
-              <Plus className="mr-2 h-4 w-4" /> Nova Empresa
+            <Button size="lg" onClick={() => navigate('/empresas/nova')}>
+              <Plus className="mr-2 h-4 w-4" /> Nova empresa
             </Button>
           ) : null}
         </div>
@@ -53,7 +56,7 @@ const EmpresasPage = () => {
       {!empresas?.length ? (
         <EmptyState message="Nenhuma empresa cadastrada." action={!isReadOnly ? <Button onClick={() => navigate('/empresas/nova')}>Cadastrar empresa</Button> : undefined} />
       ) : (
-        <div className="rounded-lg border bg-card overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border bg-card shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -66,7 +69,7 @@ const EmpresasPage = () => {
             </TableHeader>
             <TableBody>
               {empresas.map(e => (
-                <TableRow key={e.id}>
+                <TableRow key={e.id} className="transition-colors hover:bg-muted/40">
                   <TableCell className="font-medium">{e.razaoSocial}</TableCell>
                   <TableCell className="font-mono text-sm">{formatCNPJ(e.cnpj || '')}</TableCell>
                   <TableCell>{(e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade) ? `${e.cidade || e.endereco?.cidade || e.endereco?.descricaoCidade}/${e.uf || e.endereco?.uf || e.endereco?.estado || '—'}` : '—'}</TableCell>
@@ -74,12 +77,12 @@ const EmpresasPage = () => {
                   <TableCell>
                     {!isReadOnly ? (
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/empresas/${e.id}`)}>
+                        <Button variant="outline" size="icon" className="h-11 w-11" onClick={() => navigate(`/empresas/${e.id}`)} aria-label={`Editar empresa ${e.razaoSocial}`}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            <Button variant="outline" size="icon" className="h-11 w-11 border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15" aria-label={`Excluir empresa ${e.razaoSocial}`}><Trash2 className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -88,7 +91,7 @@ const EmpresasPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteMutation.mutate(e.id)}>Excluir</AlertDialogAction>
+                              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(e.id)}>Excluir empresa</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>

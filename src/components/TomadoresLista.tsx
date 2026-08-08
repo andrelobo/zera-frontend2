@@ -47,7 +47,7 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
   }
 
   return (
-    <div className="section-card">
+    <div className="section-card shadow-sm">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <h2 className="section-title mb-0">
           <Users className="w-5 h-5 text-primary" />
@@ -56,8 +56,11 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <label htmlFor="pesquisa-tomador" className="sr-only">Pesquisar tomador</label>
             <input
-              className="field-input pl-8 py-1.5 text-sm w-48 sm:w-64"
+              id="pesquisa-tomador"
+              type="search"
+              className="field-input h-10 w-48 pl-8 text-sm sm:w-64"
               placeholder="Pesquisar tomador..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
@@ -66,7 +69,7 @@ const TomadoresLista: React.FC<Props> = ({ tomadores, loading, onEditar, onExclu
           {canCreate ? (
             <button
               onClick={() => onNovo?.()}
-              className="btn-primary flex items-center gap-1.5 text-sm py-1.5 px-3"
+              className="btn-primary flex h-10 items-center gap-1.5 px-3 text-sm"
             >
               <PlusCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Novo Tomador</span>

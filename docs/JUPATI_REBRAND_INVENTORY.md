@@ -22,6 +22,8 @@ Classificacao aplicada antes das alteracoes da primeira fase.
 - shell consolidado em Phosphor, mantendo light/dark;
 - helper tipado de apresentacao de providers;
 - dashboard principal e Dash2 aproximados dos tokens Jupati;
+- listas de empresas, tomadores e usuarios alinhadas aos cabecalhos, superficies, acoes destrutivas e estados compartilhados do design system;
+- controles iconograficos das listas com rotulos acessiveis e alvos de interacao ampliados;
 - status `CANCELED` na UI com leitura temporaria de `CANCELLED`;
 - nenhuma mudanca em contrato fiscal, rota, persistencia ou autenticacao.
 
