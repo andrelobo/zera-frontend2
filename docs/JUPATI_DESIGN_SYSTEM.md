@@ -480,12 +480,12 @@ O frontend deve padronizar `CANCELED`. Não introduzir `CANCELLED` em novos cont
 
 Para usuário operacional:
 
-- `LOBONOTAS` → “Ambiente Nacional”;
-- `PLUGNOTAS` → “Legado (PlugNotas)” apenas em documentos históricos;
+- `LOBONOTAS` → “LOBONOTAS — Ambiente Nacional”, valorizando o motor fiscal próprio e contextualizando o destino da operação;
+- `PLUGNOTAS` → “PlugNotas — legado desativado” apenas em documentos históricos;
 - não mostrar filtro PlugNotas em fluxos de novas operações;
 - nunca oferecer sincronização, emissão, cancelamento ou download remoto pelo provider legado.
 
-Para observabilidade administrativa, o identificador técnico pode aparecer junto ao rótulo amigável.
+O nome LOBONOTAS não deve ser ocultado em selects, detalhes ou observabilidade. A expressão “Ambiente Nacional” descreve o ambiente fiscal, não substitui o nome do motor próprio.
 
 ## 11. Gráficos e inteligência
 
@@ -730,4 +730,3 @@ Até essas decisões, Jupati é a direção de produto aprovada, mas ZERA pode c
 **JUPATI**  
 Sua operação, bem conectada.  
 Uma solução Muirakitan Tecnologia.
-
