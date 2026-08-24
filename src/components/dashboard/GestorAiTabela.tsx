@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import EmptyState from '@/components/EmptyState';
 import type { NotaDashboard } from '@/hooks/useDashboardData';
 
 interface Props {
@@ -92,16 +92,11 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
   }, [notas, tomadores]);
 
   if (linhas.length === 0) {
-    return (
-      <div className="rounded-lg border bg-card flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <Users className="w-10 h-10 mb-3 opacity-40" />
-        <p className="text-sm">Nenhuma nota fiscal emitida ainda.</p>
-      </div>
-    );
+    return <EmptyState title="Ainda não há dados para análise" message="As leituras por tomador aparecerão depois que a operação fiscal registrar emissões." />;
   }
 
   return (
-    <div className="rounded-lg border bg-card overflow-x-auto">
+    <div className="overflow-x-auto rounded-lg border bg-card shadow-sm">
       <Table className="table-fixed w-full">
         <colgroup>
           <col className="w-[24%]" />
@@ -114,16 +109,16 @@ const GestorAiTabela: React.FC<Props> = ({ notas, tomadores }) => {
         <TableHeader>
           <TableRow>
             <TableHead className="text-left">Tomador(a)</TableHead>
-            <TableHead className="text-right">Qtd. Notas</TableHead>
-            <TableHead className="text-left">Valores das Notas</TableHead>
-            <TableHead className="text-right">Total Emitido</TableHead>
-            <TableHead className="text-right">Ticket Médio</TableHead>
-            <TableHead className="text-right">% Fat.</TableHead>
+            <TableHead className="text-right">Qtd. notas</TableHead>
+            <TableHead className="text-left">Valores das notas</TableHead>
+            <TableHead className="text-right">Total emitido</TableHead>
+            <TableHead className="text-right">Ticket médio</TableHead>
+            <TableHead className="text-right">% faturamento</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {linhas.map((row) => (
-            <TableRow key={row.id} className="hover:bg-muted/40">
+            <TableRow key={row.id} className="transition-colors hover:bg-muted/40">
               <TableCell className="text-left">
                 <div className="min-w-0">
                   <div className="truncate font-medium text-foreground text-sm">{row.nome}</div>

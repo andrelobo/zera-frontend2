@@ -21,10 +21,14 @@ Classificacao aplicada antes das alteracoes da primeira fase.
 - textos visiveis prioritarios;
 - shell consolidado em Phosphor, mantendo light/dark;
 - helper tipado de apresentacao de providers;
+- LOBONOTAS explicitamente valorizado em selects e detalhes como motor proprio conectado ao Ambiente Nacional; PlugNotas marcado como legado desativado;
+- identidade LOBONOTAS propagada para nomes e metadados de artefatos, sem modificar o XML fiscal oficial;
 - dashboard principal e Dash2 aproximados dos tokens Jupati;
 - listas de empresas, tomadores e usuarios alinhadas aos cabecalhos, superficies, acoes destrutivas e estados compartilhados do design system;
 - controles iconograficos das listas com rotulos acessiveis e alvos de interacao ampliados;
 - operacao fiscal, emissao rapida e formularios de usuario/certificado alinhados a hierarquia visual e microcopy Jupati;
+- modulo visivel "Gestor AI" reposicionado como "Jupati Insights", sem robo ou promessa de decisao automatica; rota e identificadores tecnicos preservados;
+- observabilidade fiscal alinhada as superficies Jupati, mantendo diagnosticos e rastreio administrativos;
 - status `CANCELED` na UI com leitura temporaria de `CANCELLED`;
 - nenhuma mudanca em contrato fiscal, rota, persistencia ou autenticacao.
 

@@ -8,11 +8,20 @@ export const isLegacyProvider = (provider?: string | null): boolean => (
 
 export const getProviderDisplayName = (provider?: string | null): string => {
   const normalized = normalizeProviderName(provider);
-  if (normalized === 'LOBONOTAS') return 'Ambiente Nacional';
-  if (normalized === 'PLUGNOTAS') return 'Legado (PlugNotas)';
+  if (normalized === 'LOBONOTAS') return 'LOBONOTAS — Ambiente Nacional';
+  if (normalized === 'PLUGNOTAS') return 'PlugNotas — legado desativado';
   if (normalized === 'MANAUS') return 'Manaus';
   if (normalized === 'MOCK') return 'Ambiente de teste';
   return provider?.trim() || 'Não informado';
+};
+
+export const getProviderArtifactFileName = (
+  provider: string | null | undefined,
+  id: string,
+  extension: 'xml' | 'pdf',
+): string => {
+  const prefix = normalizeProviderName(provider) === 'LOBONOTAS' ? 'lobonotas-nfse' : 'nfse';
+  return `${prefix}-${id}.${extension}`;
 };
 
 interface NfseInferredData {

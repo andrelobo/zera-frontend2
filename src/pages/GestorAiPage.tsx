@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bot } from 'lucide-react';
+import { Network } from 'lucide-react';
 import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import GestorAiTabela from '@/components/dashboard/GestorAiTabela';
@@ -49,15 +49,20 @@ const GestorAiPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Bot className="w-5 h-5" />
-            Gestor AI
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Visão consolidada por tomador para apoiar decisões fiscais e comerciais.
-          </p>
+      <div className="rounded-lg border bg-card p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+            <Network className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Inteligência operacional</p>
+            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
+              Jupati Insights
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Visão consolidada por tomador para apoiar análises fiscais e comerciais com decisão supervisionada.
+            </p>
+          </div>
         </div>
       </div>
 

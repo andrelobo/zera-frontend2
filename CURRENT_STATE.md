@@ -13,10 +13,27 @@ Snapshot operacional do frontend em **21/04/2026**.
 ## 0.2. ATUALIZACAO (08/08/2026) - OPERACAO FISCAL E FORMULARIOS
 
 - A listagem de documentos passou a ser apresentada como "Operacao fiscal", preservando a rota tecnica `/nfse`.
-- Filtros apresentam LOBONOTAS como "Ambiente Nacional", PlugNotas como legado e MOCK como ambiente de teste.
+- Filtros apresentam "LOBONOTAS — Ambiente Nacional", "PlugNotas — legado desativado" e MOCK como ambiente de teste.
 - Emissao rapida, certificado digital e formulario de usuarios receberam cabecalhos e superficies Jupati.
 - Chamadas de API, mutations, payloads, providers tecnicos, status e destinos de navegacao permaneceram inalterados.
 - Validacao: `151/151` testes aprovados; lint e build registrados apos a verificacao final deste lote.
+
+## 0.3. ATUALIZACAO (08/08/2026) - JUPATI INSIGHTS E OBSERVABILIDADE
+
+- A capacidade anteriormente apresentada como "Gestor AI" passou a usar a marca visivel "Jupati Insights".
+- A iconografia de robo foi removida conforme o design system; conexoes e estrutura representam a inteligencia operacional.
+- A interface reforca analise assistiva e decisao supervisionada, sem prometer automacao fiscal irreversivel.
+- Observabilidade fiscal recebeu hierarquia, superficies e linha do tempo alinhadas a Jupati.
+- Rotas, query keys, consultas, permissoes e contratos tecnicos permaneceram inalterados.
+- Feature desenvolvida na branch `feature/jupati-inteligencia-ui`.
+
+## 0.4. ATUALIZACAO (08/08/2026) - IDENTIDADE LOBONOTAS NOS ARTEFATOS
+
+- Selects, listas e detalhes exibem "LOBONOTAS — Ambiente Nacional"; o nome do motor proprio nao fica mais oculto.
+- PlugNotas aparece como "PlugNotas — legado desativado" em consultas historicas.
+- O backend identifica downloads LOBONOTAS nos filenames de PDF/XML e nos headers de resposta.
+- PDFs gerados pelo motor usam metadados `JUPATI LOBONOTAS`.
+- O XML fiscal oficial permanece byte a byte inalterado para preservar schema, assinatura e validade juridica.
 
 ## 0. ATUALIZACAO (07/08/2026) - REBRANDING INCREMENTAL PARA JUPATI (FUNDAMENTOS + SHELL + LEITURA OPERACIONAL)
 
@@ -39,8 +56,8 @@ Estado atual:
   loading e textos prioritarios migrados para a linguagem Jupati.
 - Shell consolidado em Phosphor; seletor `classic/elegant` e implementacao associada
   removidos. Light/dark permanece.
-- Provider na UI: LOBONOTAS -> "Ambiente Nacional"; PLUGNOTAS -> "Legado
-  (PlugNotas)". Paineis de sincronizacao PlugNotas permanecem ocultos e sem acao.
+- Provider na UI: LOBONOTAS -> "LOBONOTAS — Ambiente Nacional"; PLUGNOTAS ->
+  "PlugNotas — legado desativado". Paineis de sincronizacao PlugNotas permanecem ocultos e sem acao.
 - Status novo da UI = `CANCELED`; `CANCELLED` segue aceito somente como leitura
   temporaria de compatibilidade.
 

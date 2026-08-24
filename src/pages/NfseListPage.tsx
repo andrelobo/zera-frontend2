@@ -13,7 +13,7 @@ import { Plus, Zap, Eye, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import type { NfseStatus, NfseProvider } from '@/types/api';
 import { getNfsePrestadorDocumento, getNfsePrestadorNome, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
-import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
+import { getProviderArtifactFileName, getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
 import useDebouncedTruthy from '@/hooks/useDebouncedTruthy';
 import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
@@ -127,7 +127,7 @@ const NfseListPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `nfse-${nfseId}.pdf`;
+      a.download = getProviderArtifactFileName(provider, nfseId, 'pdf');
       a.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
@@ -139,7 +139,7 @@ const NfseListPage = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `nfse-${nfseId}-remote.pdf`;
+        a.download = getProviderArtifactFileName(provider, nfseId, 'pdf');
         a.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       } catch {
@@ -194,8 +194,8 @@ const NfseListPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os ambientes</SelectItem>
-            <SelectItem value="LOBONOTAS">Ambiente Nacional</SelectItem>
-            <SelectItem value="PLUGNOTAS">Legado (PlugNotas)</SelectItem>
+            <SelectItem value="LOBONOTAS">LOBONOTAS — Ambiente Nacional</SelectItem>
+            <SelectItem value="PLUGNOTAS">PlugNotas — legado desativado</SelectItem>
             <SelectItem value="MANAUS">Manaus</SelectItem>
             <SelectItem value="MOCK">Ambiente de teste</SelectItem>
           </SelectContent>
