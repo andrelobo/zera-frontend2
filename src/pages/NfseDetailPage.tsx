@@ -12,7 +12,7 @@ import { ArrowLeft, Download, RefreshCw, FileText, AlertTriangle, Eye, ExternalL
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { getNfseCodigoServico, getNfseDescricao, getNfseTomadorDocumento, getNfseTomadorNome, getNfseValor } from '@/lib/nfse';
-import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
+import { getProviderArtifactFileName, getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from '@/lib/nfse-provider';
 import { formatCNPJ } from '@/utils/validators';
 import { useAuth } from '@/contexts/AuthContext';
 import { isReadOnlyRole } from '@/lib/roles';
@@ -285,7 +285,7 @@ const NfseDetailPage = () => {
           <Button
             variant="outline"
             className="h-11 rounded-md px-4"
-            onClick={() => downloadFile(() => nfseApi.downloadXml(id!), `nfse-${id}.xml`)}
+            onClick={() => downloadFile(() => nfseApi.downloadXml(id!), getProviderArtifactFileName(nfse.provider, id!, 'xml'))}
           >
             <Download className="mr-2 h-4 w-4" />
             Baixar XML
@@ -293,7 +293,7 @@ const NfseDetailPage = () => {
           <Button
             variant="outline"
             className="h-11 rounded-md px-4"
-            onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), `nfse-${id}.pdf`)}
+            onClick={() => downloadFile(() => nfseApi.downloadPdf(id!), getProviderArtifactFileName(nfse.provider, id!, 'pdf'))}
           >
             <Download className="mr-2 h-4 w-4" />
             Baixar PDF

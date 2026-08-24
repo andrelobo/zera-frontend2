@@ -111,7 +111,7 @@ const ObservabilidadeFiscalPage = () => {
   if (!isAdmin) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <h1 className="text-2xl font-bold tracking-tight">Observabilidade Fiscal</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Observabilidade fiscal</h1>
         <Alert>
           <ShieldCheck className="h-4 w-4" />
           <AlertTitle>Acesso restrito</AlertTitle>
@@ -123,16 +123,17 @@ const ObservabilidadeFiscalPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Observabilidade Fiscal</h1>
-        <p className="text-sm text-muted-foreground">Rastrear webhook, polling e emissões por `externalId`.</p>
+      <div className="rounded-lg border bg-card p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Diagnóstico operacional</p>
+        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Observabilidade fiscal</h1>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">Rastreie webhook, polling e emissões pelo identificador externo, sem executar novas operações fiscais.</p>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
             <RadioTower className="h-4 w-4 text-primary" />
-            Diagnóstico do Webhook
+            Diagnóstico do webhook
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -143,27 +144,27 @@ const ObservabilidadeFiscalPage = () => {
             </Alert>
           ) : null}
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Rota</p>
               <p className="mt-1 text-sm font-medium">{loadingDiagnostics ? 'Carregando...' : diagnostics?.route || '—'}</p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Segredo</p>
               <p className="mt-1 text-sm font-medium">
                 {loadingDiagnostics ? 'Carregando...' : diagnostics?.sharedSecretConfigured ? 'Configurado' : 'Ausente'}
               </p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Header</p>
               <p className="mt-1 text-sm font-medium">{loadingDiagnostics ? 'Carregando...' : diagnostics?.sharedSecretHeader || '—'}</p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Polling Fallback</p>
               <p className="mt-1 text-sm font-medium">
                 {loadingDiagnostics ? 'Carregando...' : diagnostics?.pollingFallbackEnabled ? 'Ativo' : 'Inativo'}
               </p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Sync Autorizado</p>
               <p className="mt-1 text-sm font-medium">
                 {loadingDiagnostics ? 'Carregando...' : diagnostics?.artifactSyncOnAuthorizedWebhook ? 'Ativo' : 'Inativo'}
@@ -173,11 +174,11 @@ const ObservabilidadeFiscalPage = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Waypoints className="h-4 w-4 text-primary" />
-            Rastrear Emissão
+            Rastrear emissão
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -193,9 +194,9 @@ const ObservabilidadeFiscalPage = () => {
                 }
               }}
             />
-            <Button type="button" onClick={() => void handleLookup()} disabled={!externalId.trim() || loadingTrace}>
+            <Button type="button" size="lg" onClick={() => void handleLookup()} disabled={!externalId.trim() || loadingTrace}>
               {loadingTrace ? <RefreshCcw className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-              Consultar
+              Consultar rastreio
             </Button>
           </div>
 
@@ -209,28 +210,28 @@ const ObservabilidadeFiscalPage = () => {
           {trace ? (
             <div className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">ExternalId</p>
                   <p className="mt-1 break-all text-sm font-medium">{trace.externalId || '—'}</p>
                 </div>
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Status Atual</p>
                   <div className="mt-1">
                     <Badge variant="secondary">{trace.status || '—'}</Badge>
                   </div>
                 </div>
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Última Origem</p>
                   <p className="mt-1 text-sm font-medium">{trace.observability?.webhook?.lastUpdateSource || '—'}</p>
                 </div>
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Tentativas de Polling</p>
                   <p className="mt-1 text-sm font-medium">{trace.observability?.poll?.attempts ?? 0}</p>
                 </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <div className="flex items-center gap-2">
                     <Clock3 className="h-4 w-4 text-primary" />
                     <p className="text-sm font-medium">Webhook</p>
@@ -248,7 +249,7 @@ const ObservabilidadeFiscalPage = () => {
                   </div>
                 </div>
 
-                <div className="rounded-lg border p-3">
+                <div className="rounded-lg border bg-muted/20 p-3">
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-primary" />
                     <p className="text-sm font-medium">Polling</p>
@@ -271,14 +272,14 @@ const ObservabilidadeFiscalPage = () => {
                 </div>
               </div>
 
-              <Card>
+              <Card className="border-border/70 shadow-sm">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Timeline</CardTitle>
+                  <CardTitle className="font-display text-lg">Linha do tempo</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {timeline.length > 0 ? timeline.map((item, index) => (
-                      <div key={`${item.type || 'item'}-${index}`} className="rounded-lg border p-3">
+                      <div key={`${item.type || 'item'}-${index}`} className="rounded-lg border bg-muted/20 p-3">
                         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">{item.type || 'EVENT'}</Badge>

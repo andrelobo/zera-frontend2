@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NfseCanonicalIdentifiers, NfseStatus, ProviderResponse } from '@/types/api';
-import { getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from './nfse-provider';
+import { getProviderArtifactFileName, getProviderDisplayName, inferNfseDataFromProvider, isLegacyProvider } from './nfse-provider';
 
 const buildProviderResponse = (overrides: Partial<ProviderResponse> = {}): ProviderResponse => ({
   id: 'prov-1',
@@ -10,15 +10,21 @@ const buildProviderResponse = (overrides: Partial<ProviderResponse> = {}): Provi
 });
 
 describe('provider presentation', () => {
-  it('uses operational labels without changing provider identifiers', () => {
-    expect(getProviderDisplayName('LOBONOTAS')).toBe('Ambiente Nacional');
-    expect(getProviderDisplayName('PLUGNOTAS')).toBe('Legado (PlugNotas)');
+  it('values the proprietary engine without changing provider identifiers', () => {
+    expect(getProviderDisplayName('LOBONOTAS')).toBe('LOBONOTAS — Ambiente Nacional');
+    expect(getProviderDisplayName('PLUGNOTAS')).toBe('PlugNotas — legado desativado');
     expect(getProviderDisplayName('MOCK')).toBe('Ambiente de teste');
   });
 
   it('recognizes only PlugNotas as legacy provider', () => {
     expect(isLegacyProvider(' plugnotas ')).toBe(true);
     expect(isLegacyProvider('LOBONOTAS')).toBe(false);
+  });
+
+  it('identifies LOBONOTAS PDF and XML filenames without changing legacy artifacts', () => {
+    expect(getProviderArtifactFileName('LOBONOTAS', 'NFS123', 'pdf')).toBe('lobonotas-nfse-NFS123.pdf');
+    expect(getProviderArtifactFileName('LOBONOTAS', 'NFS123', 'xml')).toBe('lobonotas-nfse-NFS123.xml');
+    expect(getProviderArtifactFileName('PLUGNOTAS', 'legacy-1', 'xml')).toBe('nfse-legacy-1.xml');
   });
 });
 
