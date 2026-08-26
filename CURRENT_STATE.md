@@ -850,3 +850,17 @@ Sempre que houver divergência entre o que a UI aparenta e o que a emissão most
 1. inspecionar `GET /empresas`;
 2. validar `parametroMunicipal`, `ctnCodigo`, `nbsCodigo`;
 3. só depois investigar a renderização do frontend.
+
+## 5. Checkpoint da auditoria (26/08/2026)
+
+- Estado examinado: `docs/readme-jupati-sdd` em `84ce76e`.
+- Gates: 152 testes e build aprovados; nenhuma correcao funcional aplicada.
+- Riscos: JWT em `localStorage`, upstream HTTP padrao no proxy, detalhes de
+  upstream no 502, ausencia de CI, 3 advisories moderados no React Router.
+- Backend consumido pelo front nao possui isolamento multi-tenant; filtro visual
+  por CNPJ nao constitui autorizacao.
+- CNPJ alfanumerico: ausente em toda a jornada.
+- Bundle principal: aproximadamente 526 kB minificado.
+- WCAG/browser, teclado, contraste, leitor de tela e responsividade ainda
+  pendentes; conformidade nao atestada.
+- Retomada: fiscal CNPJ/IBS-CBS, UX/acessibilidade, E2E/CI e roadmap P0-P3.

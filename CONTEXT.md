@@ -1895,3 +1895,21 @@ Fonte: `execucao local`
 - Ultima atualizacao: 2026-03-06T18:20:00-04:00
 - Responsavel: Codex (GPT-5)
 - Tipo de atualizacao: hardening de DANFSE (favoritos/lista servico), padronizacao de CNPJ e melhoria operacional do card Portal Nacional.
+
+## 26. Checkpoint da auditoria estrategica (26/08/2026)
+
+- Evidencia: branch `docs/readme-jupati-sdd`, commit `84ce76e`.
+- Auditoria diagnostica; nenhuma correcao funcional aplicada.
+- Validacao: 152/152 testes em 28 arquivos e build aprovados.
+- Build: bundle principal de aproximadamente 526 kB minificado, com warning de
+  chunk acima de 500 kB.
+- Dependencias: 3 alertas moderados no React Router, pendentes de validacao de
+  aplicabilidade e plano de upgrade.
+- Seguranca: JWT em `localStorage`; proxy usa upstream HTTP padrao e inclui
+  detalhes do upstream em erros 502; configuracao real de producao nao validada.
+- Nao existe workflow CI versionado no frontend.
+- CNPJ alfanumerico e incompativel com mascaras, validadores, filtros e payloads.
+- Acessibilidade: apenas triagem estatica iniciada; Axe/browser, teclado,
+  contraste e leitor de tela pendentes. Nao declarar conformidade WCAG.
+- Retomada: contrato CNPJ/IBS-CBS, jornadas criticas, acessibilidade,
+  responsividade, E2E/CI e consolidacao P0-P3.
