@@ -24,6 +24,7 @@ export interface TomadorSectionData {
 }
 
 interface Props {
+  empresaCnpj: string;
   data: TomadorSectionData;
   onChange: (data: TomadorSectionData) => void;
   onAutosave: () => void;
@@ -201,9 +202,9 @@ async function fetchCNPJData(cnpj: string) {
   };
 }
 
-async function fetchCpfData(cpf: string) {
+async function fetchCpfData(cpf: string, empresaCnpj: string) {
   const cleaned = cpf.replace(/\D/g, '');
-  return tomadoresApi.lookupCpf(cleaned);
+  return tomadoresApi.lookupCpf(cleaned, empresaCnpj);
 }
 
 async function fetchCEPData(cep: string) {
@@ -216,7 +217,7 @@ async function fetchCEPData(cep: string) {
   };
 }
 
-const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
+const TomadorSection: React.FC<Props> = ({ data, empresaCnpj, onChange, onAutosave }) => {
   const [loadingCNPJ, setLoadingCNPJ] = useState(false);
   const [loadingCPF, setLoadingCPF] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
@@ -278,7 +279,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
     const requestId = ++cpfRequestSeq.current;
     setLoadingCPF(true);
     try {
-      const result = await fetchCpfData(cleaned);
+      const result = await fetchCpfData(cleaned, empresaCnpj);
       if (requestId !== cpfRequestSeq.current) return;
       if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
       setLookupSource(result.source || '');
@@ -315,7 +316,7 @@ const TomadorSection: React.FC<Props> = ({ data, onChange, onAutosave }) => {
         setLoadingCPF(false);
       }
     }
-  }, [onChange, onAutosave]);
+  }, [empresaCnpj, onChange, onAutosave]);
 
   const buscarCEP = useCallback(async (cepValue: string) => {
     const cleaned = cepValue.replace(/\D/g, '');

@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import TomadorEmissao, { INITIAL_TOMADOR } from './TomadorEmissao';
+import TomadorEmissaoBase, { INITIAL_TOMADOR } from './TomadorEmissao';
+import type { ComponentProps } from 'react';
+
+const TEST_EMPRESA_CNPJ = '43521115000134';
+const TomadorEmissao = (props: Omit<ComponentProps<typeof TomadorEmissaoBase>, 'empresaCnpj'>) => (
+  <TomadorEmissaoBase {...props} empresaCnpj={TEST_EMPRESA_CNPJ} />
+);
 
 const mocks = vi.hoisted(() => ({
   previewByCnpj: vi.fn(),
@@ -100,7 +106,7 @@ describe('TomadorEmissao UI', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.lookupCpf).toHaveBeenCalledWith('61020788100');
+      expect(mocks.lookupCpf).toHaveBeenCalledWith('61020788100', TEST_EMPRESA_CNPJ);
       expect(screen.getByDisplayValue('Andre Lobo')).toBeTruthy();
     });
   });

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy, ArrowLeft, KeyRound, Loader2, MailPlus, Save, ShieldCheck } from 'lucide-react';
-import { usersApi } from '@/services/api';
+import { empresasApi, usersApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ import LoadingState from '@/components/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { normalizeRole } from '@/lib/roles';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { formatCNPJ } from '@/utils/validators';
 
 type CreationMode = 'invite' | 'manual';
 
@@ -40,12 +42,19 @@ const UserFormPage = () => {
     enabled: isEdit && isAdmin,
   });
 
+  const { data: empresas = [], isLoading: isLoadingEmpresas } = useQuery({
+    queryKey: ['empresas', 'user-access-scope'],
+    queryFn: () => empresasApi.list({ limit: 500 }),
+    enabled: isAdmin,
+  });
+
   const [form, setForm] = useState<CreateUserRequest>({
     name: '',
     email: '',
     password: '',
     role: 'user',
     status: 'active',
+    allowedCompanyCnpjs: [],
   });
 
   useEffect(() => {
@@ -56,6 +65,7 @@ const UserFormPage = () => {
         password: '',
         role: existing.role,
         status: existing.status || 'active',
+        allowedCompanyCnpjs: existing.allowedCompanyCnpjs || [],
       });
     }
   }, [existing]);
@@ -68,6 +78,7 @@ const UserFormPage = () => {
           email: form.email,
           role: form.role,
           status: form.status,
+          allowedCompanyCnpjs: form.allowedCompanyCnpjs || [],
         };
         if (form.password) payload.password = form.password;
         return { kind: 'update' as const, data: await usersApi.update(id!, payload) };
@@ -80,6 +91,7 @@ const UserFormPage = () => {
             name: form.name,
             email: form.email,
             role: form.role,
+            allowedCompanyCnpjs: form.allowedCompanyCnpjs || [],
           }),
         };
       }
@@ -104,6 +116,17 @@ const UserFormPage = () => {
   });
 
   const inviteLink = buildLocalInviteLink(inviteResult);
+  const isGlobalAdmin = normalizeRole(form.role || 'user') === 'admin';
+
+  const toggleCompany = (cnpj: string, checked: boolean) => {
+    const normalized = cnpj.replace(/\D/g, '');
+    setForm((current) => {
+      const selected = new Set(current.allowedCompanyCnpjs || []);
+      if (checked) selected.add(normalized);
+      else selected.delete(normalized);
+      return { ...current, allowedCompanyCnpjs: Array.from(selected) };
+    });
+  };
 
   const copyInviteLink = async () => {
     if (!inviteLink) return;
@@ -262,6 +285,46 @@ const UserFormPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-3 rounded-xl border p-4">
+              <div>
+                <Label className="text-base">Empresas permitidas</Label>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {isGlobalAdmin
+                    ? 'Administradores possuem acesso global e auditado.'
+                    : 'Sem uma empresa selecionada, o acesso aos dados fiscais fica bloqueado.'}
+                </p>
+              </div>
+              {!isGlobalAdmin ? (
+                isLoadingEmpresas ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Carregando empresas...
+                  </div>
+                ) : empresas.length ? (
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {empresas.map((empresa) => {
+                      const cnpj = String(empresa.cnpj || '').replace(/\D/g, '');
+                      const checked = (form.allowedCompanyCnpjs || []).includes(cnpj);
+                      return (
+                        <label key={empresa.id || cnpj} className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-muted/40">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(value) => toggleCompany(cnpj, value === true)}
+                            aria-label={`Permitir acesso a ${empresa.razaoSocial}`}
+                          />
+                          <span className="min-w-0 text-sm">
+                            <span className="block truncate font-medium">{empresa.razaoSocial}</span>
+                            <span className="text-muted-foreground">{formatCNPJ(cnpj)}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-destructive">Nenhuma empresa cadastrada para atribuir.</p>
+                )
               ) : null}
             </div>
 

@@ -155,11 +155,26 @@ describe('new API flows', () => {
     };
     mockGet.mockResolvedValue({ data: response });
 
-    const result = await tomadoresApi.lookupCpf('610.207.881-00');
+    const result = await tomadoresApi.lookupCpf('610.207.881-00', '43.521.115/0001-34');
 
     expect(result).toEqual(response);
     expect(mockGet).toHaveBeenCalledWith('/tomadores/lookup/cpf', {
-      params: { cpf: '61020788100' },
+      params: { cpf: '61020788100', empresaCnpj: '43521115000134' },
+    });
+  });
+
+  it('normalizes and deduplicates company scopes when updating a user', async () => {
+    const { usersApi } = await import('@/services/api');
+    mockPatch.mockResolvedValue({ data: { id: 'user-1' } });
+
+    await usersApi.update('user-1', {
+      role: 'manager',
+      allowedCompanyCnpjs: ['43.521.115/0001-34', '43521115000134'],
+    });
+
+    expect(mockPatch).toHaveBeenCalledWith('/users/user-1', {
+      role: 'manager',
+      allowedCompanyCnpjs: ['43521115000134'],
     });
   });
 
