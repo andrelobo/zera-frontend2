@@ -21,6 +21,7 @@ export interface TomadorEmissaoData {
 }
 
 interface Props {
+  empresaCnpj: string;
   data: TomadorEmissaoData;
   onChange: (data: TomadorEmissaoData) => void;
   tomadores?: Tomador[];
@@ -128,9 +129,9 @@ async function fetchCnpjData(cnpj: string) {
   };
 }
 
-async function fetchCpfData(cpf: string) {
+async function fetchCpfData(cpf: string, empresaCnpj: string) {
   const cleaned = cpf.replace(/\D/g, '');
-  return tomadoresApi.lookupCpf(cleaned);
+  return tomadoresApi.lookupCpf(cleaned, empresaCnpj);
 }
 
 async function fetchCepData(cep: string) {
@@ -219,6 +220,7 @@ const mergeTomadorFromCepResult = (
 });
 
 const TomadorEmissao = ({
+  empresaCnpj,
   data,
   onChange,
   tomadores = [],
@@ -327,7 +329,7 @@ const TomadorEmissao = ({
     const requestId = ++cpfRequestSeq.current;
     setLoadingCpf(true);
     try {
-      const result = await fetchCpfData(cleaned);
+      const result = await fetchCpfData(cleaned, empresaCnpj);
       if (requestId !== cpfRequestSeq.current) return;
       if (dataRef.current.cnpjCpf.replace(/\D/g, '') !== cleaned) return;
 
@@ -360,7 +362,7 @@ const TomadorEmissao = ({
         setLoadingCpf(false);
       }
     }
-  }, [onChange]);
+  }, [empresaCnpj, onChange]);
 
   const handleDocChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');

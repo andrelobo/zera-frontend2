@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import TomadorSection, { type TomadorSectionData } from './TomadorSection';
+import TomadorSectionBase, { type TomadorSectionData } from './TomadorSection';
+import type { ComponentProps } from 'react';
+
+const TEST_EMPRESA_CNPJ = '43521115000134';
+const TomadorSection = (props: Omit<ComponentProps<typeof TomadorSectionBase>, 'empresaCnpj'>) => (
+  <TomadorSectionBase {...props} empresaCnpj={TEST_EMPRESA_CNPJ} />
+);
 
 const mocks = vi.hoisted(() => ({
   previewByCnpj: vi.fn(),
@@ -95,7 +101,7 @@ describe('TomadorSection UI', () => {
       fireEvent.change(docInput, { target: { value: '61020788100' } });
     });
 
-    expect(mocks.lookupCpf).toHaveBeenCalledWith('61020788100');
+    expect(mocks.lookupCpf).toHaveBeenCalledWith('61020788100', TEST_EMPRESA_CNPJ);
     expect(await screen.findByDisplayValue('Andre Lobo')).toBeTruthy();
   });
 

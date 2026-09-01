@@ -12,7 +12,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const AcceptInvitePage = lazy(() => import("@/pages/AcceptInvitePage"));
-const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardOperationalPage"));
 const DashboardClassicPage = lazy(() => import("@/pages/DashboardClassicPage"));
 const Dash2Page = lazy(() => import("@/pages/Dash2Page"));
 const GestorAiPage = lazy(() => import("@/pages/GestorAiPage"));

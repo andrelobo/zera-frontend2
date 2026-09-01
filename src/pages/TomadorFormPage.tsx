@@ -297,7 +297,12 @@ const TomadorFormPage = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-2">
         <form onSubmit={handleSubmit} className="space-y-2">
-          <TomadorSection data={form} onChange={handleSectionChange} onAutosave={() => undefined} />
+          <TomadorSection
+            data={form}
+            empresaCnpj={empresaCnpjContext}
+            onChange={handleSectionChange}
+            onAutosave={() => undefined}
+          />
 
           <div className="mt-4 pt-4 border-t border-border no-print">
             <div className="flex justify-end">

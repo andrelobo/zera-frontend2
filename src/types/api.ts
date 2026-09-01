@@ -36,6 +36,7 @@ export interface User {
   email: string;
   name?: string;
   role: UserRole;
+  allowedCompanyCnpjs: string[];
   status?: 'active' | 'inactive';
   onboardingStatus?: 'manual' | 'invited' | 'accepted';
   invitedAt?: string;
@@ -55,12 +56,14 @@ export interface CreateUserRequest {
   password: string;
   role?: UserRole;
   status?: 'active' | 'inactive';
+  allowedCompanyCnpjs?: string[];
 }
 
 export interface InviteUserRequest {
   email: string;
   name: string;
   role?: UserRole;
+  allowedCompanyCnpjs?: string[];
 }
 
 export interface InviteUserResponse {
@@ -75,6 +78,7 @@ export interface UpdateUserRequest {
   password?: string;
   role?: UserRole;
   status?: 'active' | 'inactive';
+  allowedCompanyCnpjs?: string[];
 }
 
 // Empresa

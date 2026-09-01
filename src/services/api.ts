@@ -682,9 +682,12 @@ export const tomadoresApi = {
         limit: input.limit,
       },
     }).then(r => (r.data || []).map((item) => normalizeTomador(item))),
-  lookupCpf: (cpf: string) =>
+  lookupCpf: (cpf: string, empresaCnpj: string) =>
     api.get<TomadorCpfLookupResponse>('/tomadores/lookup/cpf', {
-      params: { cpf: cpf.replace(/\D/g, '') || undefined },
+      params: {
+        cpf: cpf.replace(/\D/g, '') || undefined,
+        empresaCnpj: empresaCnpj.replace(/\D/g, '') || undefined,
+      },
     }).then((r) => r.data),
   getById: (id: string) =>
     api.get<Tomador>(`/tomadores/${id}`).then(r => normalizeTomador(r.data)),
@@ -709,6 +712,12 @@ export const tomadoresApi = {
 };
 
 // Users
+const normalizeCompanyScopes = (values?: string[]) => (
+  values
+    ? Array.from(new Set(values.map((value) => value.replace(/\D/g, '')).filter(Boolean)))
+    : undefined
+);
+
 export const usersApi = {
   list: () =>
     api.get<User[]>('/users').then(r => r.data),
@@ -719,16 +728,19 @@ export const usersApi = {
       ...data,
       role: data.role ? roleToApi(data.role) : undefined,
       status: data.status || 'active',
+      allowedCompanyCnpjs: normalizeCompanyScopes(data.allowedCompanyCnpjs),
     }).then(r => r.data),
   invite: (data: InviteUserRequest) =>
     api.post<InviteUserResponse>('/users/invite', {
       ...data,
       role: data.role ? roleToApi(data.role) : undefined,
+      allowedCompanyCnpjs: normalizeCompanyScopes(data.allowedCompanyCnpjs),
     }).then(r => r.data),
   update: (id: string, data: UpdateUserRequest) =>
     api.patch<User>(`/users/${id}`, {
       ...data,
       role: data.role ? roleToApi(data.role) : undefined,
+      allowedCompanyCnpjs: normalizeCompanyScopes(data.allowedCompanyCnpjs),
     }).then(r => r.data),
   delete: (id: string) =>
     api.delete(`/users/${id}`).then(r => r.data),

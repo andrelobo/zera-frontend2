@@ -559,6 +559,7 @@ const NfseEmitPage: React.FC = () => {
         />
 
         <TomadorEmissao
+          empresaCnpj={prestadorCnpjDigits}
           data={tomador}
           onChange={setTomador}
           onTomadorSelecionado={handleTomadorSelecionado}
