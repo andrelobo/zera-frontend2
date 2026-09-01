@@ -2,6 +2,19 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. ATUALIZACAO (31/08/2026) - NOVO COCKPIT OPERACIONAL EM `/`
+
+Fonte: `spec local` + `codigo local` + `testes` + `lint` + `build`.
+
+- A home anterior foi preservada em `DashboardPage.tsx` para rollback; `/` agora carrega `DashboardOperationalPage.tsx`.
+- A composicao deixou de explicar o proprio redesign e passou a priorizar decisao: indicadores da fila recente, taxa de autorizacao, prioridades ordenadas, ultimas emissoes e prestadoras que exigem acao.
+- A lista de prestadoras foi limitada as quatro pendencias mais relevantes; empresas prontas nao dominam mais a primeira tela.
+- A role `readonly` continua sem CTA de emissao e recebe acesso de consulta.
+- APIs, query keys, contratos fiscais e rotas de detalhe foram preservados.
+- Modelo de apresentacao isolado em `src/lib/dashboard-operational.ts`, com testes para resumo de status, taxa, ordenacao de prioridades e limite de empresas.
+- Spec rastreavel: `docs/DASHBOARD_OPERACIONAL_SPEC.md`.
+- Validacao: `158/158` testes verdes em 29 arquivos; lint completo com 0 erros e 40 warnings preexistentes; build Vite concluido.
+
 ## 0. ATUALIZACAO (31/08/2026) - INCIDENTE 502 DO LOGIN ENCERRADO
 
 - `GET /api/health` e `POST /api/auth/login` retornaram 502 porque o proxy Vercel nao conseguia conectar ao backend Oracle na porta 3000.
