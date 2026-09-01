@@ -5,6 +5,16 @@ Objetivo: fonte unica de contexto tecnico para desenvolvimento, review e manuten
 Escopo deste arquivo: app frontend na raiz deste repositorio `zera-frontend/` (onde fica o `package.json`).
 Padrao de auditabilidade: cada afirmacao relevante deve indicar origem (`codigo local`, `execucao local`, `Swagger/backend`) e timestamp da ultima verificacao.
 
+## 0. HANDOVER IMEDIATO (2026-08-31) - LOGIN RESTAURADO APOS INCIDENTE DE BACKEND
+
+Fonte: `Network do navegador` + `curl publico` + `proxy Vercel` + `SSH/Docker na Oracle VPS`.
+
+- O frontend exibiu "Falha no login" com HTTP 502 porque `/api` nao alcancava o backend Oracle; o erro ocorreu antes de qualquer verificacao de credencial, role ou empresa permitida.
+- O deploy backend run `33180713358` foi cancelado depois da sincronizacao e deixou o Compose sem `zera-backend-api`.
+- Backend restaurado em 31/08; `/api/health` voltou a 200 nos dominios Vercel e Jupati/ZERA, e `/api/auth/login` voltou a responder pela aplicacao.
+- Nenhuma alteracao de frontend foi necessaria para o incidente.
+- A branch `fix/multitenancy-authorization` do frontend esta pronta para o contrato novo (`allowedCompanyCnpjs` e `empresaCnpj`), mas ainda nao esta em producao e deve ser implantada junto com o backend.
+
 ## 0. HANDOVER IMEDIATO (2026-08-05) - acoes de sincronizacao/remoto PlugNotas desabilitadas na UI
 
 Fonte: `codigo local` + `eslint local` + `build local` + `testes locais`.

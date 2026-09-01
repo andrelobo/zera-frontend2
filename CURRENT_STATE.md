@@ -2,6 +2,26 @@
 
 Snapshot operacional do frontend em **21/04/2026**.
 
+## 0. ATUALIZACAO (31/08/2026) - INCIDENTE 502 DO LOGIN ENCERRADO
+
+- `GET /api/health` e `POST /api/auth/login` retornaram 502 porque o proxy Vercel nao conseguia conectar ao backend Oracle na porta 3000.
+- A causa nao era credencial, role ou escopo multiempresa: o container `zera-backend-api` nao existia apos um deploy backend cancelado em 28/08.
+- O backend foi reconstruido em 31/08; health voltou a 200 em `manaus-nfse-dashboard.vercel.app` e `www.zera.net.br`, e o login voltou a produzir respostas semanticas da API.
+- Nenhuma mudanca ou novo deploy do frontend foi necessario para encerrar o incidente.
+- Producao permanece sem o P0 multiempresa; a branch `fix/multitenancy-authorization` deve ser publicada junto com o backend correspondente.
+
+## 0. ATUALIZACAO (28/08/2026) - COMPATIBILIDADE FRONTEND DO ISOLAMENTO MULTIEMPRESA
+
+Estado da branch `fix/multitenancy-authorization` (`e33b9f8`):
+- criacao, convite e edicao de usuarios enviam `allowedCompanyCnpjs`;
+- o formulario administrativo permite selecionar explicitamente as empresas acessiveis por usuario; admin permanece global;
+- consultas de tomador/CPF recebem `empresaCnpj`, inclusive nos fluxos de emissao;
+- contrato alinhado ao backend fail-closed, que bloqueia usuario nao-admin sem empresa atribuida;
+- diff da branch: 10 arquivos, 134 insercoes e 19 remocoes; `git diff --check` verde;
+- validacao completa deve ser repetida fora do sandbox antes do merge/deploy.
+
+Rollout obrigatoriamente coordenado: backend e frontend na mesma janela, seguido da atribuicao dos CNPJs aos usuarios nao-admin existentes.
+
 ## 0.1. ATUALIZACAO (08/08/2026) - LISTAS OPERACIONAIS JUPATI
 
 - Listas de empresas, tomadores e usuarios receberam cabecalhos, superficies e hierarquia visual Jupati.
